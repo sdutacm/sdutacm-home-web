@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import "reflect-metadata"
 
 const isProd = process.env.NODE_ENV === 'production';
 const moduleAlias = require('module-alias');
@@ -21,6 +22,7 @@ import DefaultResponseHandler from '@server/response-handlers/default.response-h
 import { IPageRenderer } from './lib/page-renderer.interface';
 import { BwcxClientVueClientRoutesMapId } from 'bwcx-client-vue/server';
 import { clientRoutesMap } from '@common/router/client-routes';
+import appDataSource from './db';
 
 export default class OurApp extends App {
   protected baseDir = path.join(__dirname, '..');
@@ -68,6 +70,12 @@ export default class OurApp extends App {
   }
 
   protected async beforeWire() {
+    try {
+      await appDataSource.initialize();
+    } catch (error) {
+      console.error('Error during Data Source initialization', error);
+      throw error;
+    }
     // favicon.ico
     this.instance.use(favicon(`${process.cwd()}/public/favicon.ico`));
     // serve static files (remove it if use other way to serve static files like CDN)

@@ -15,7 +15,8 @@
     "build": "pnpm run build:client && pnpm run build:server",
     "start": "cross-env NODE_ENV=production node --unhandled-rejections=warn app/server/index.js",
     "deploy": "cross-env NODE_ENV=production pm2 pm2.config.js",
-    "deploy:foreground": "cross-env NODE_ENV=production pm2-runtime pm2.config.js"
+    "deploy:foreground": "cross-env NODE_ENV=production pm2-runtime pm2.config.js",
+    "seed": "ts-node src/server/db/seeds/index.ts"
   },
   "keywords": [
     "sdutacm",
@@ -56,9 +57,11 @@
     "koa-mount": "^4.0.0",
     "koa-static": "^5.0.0",
     "module-alias": "^2.2.2",
+    "mysql2": "^3.16.0",
     "node-fetch": "^2.7.0",
     "pm2": "^5.1.2",
     "statuses": "^2.0.1",
+    "typeorm": "^0.3.28",
     "urlcat-fork": "^2.0.5",
     "vite": "~2.7.13",
     "vite-ssr": "^0.16.0",
