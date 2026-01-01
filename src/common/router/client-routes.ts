@@ -9,6 +9,7 @@ import { DemoDetailRPO } from '../modules/demo/demo.rpo';
 
 export const clientRoutesMap = new Map<string, { path: string; routeProps: Newable | undefined; renderMethod: RenderMethodKind | undefined }>([
   ['About', { path: '/about', routeProps: undefined, renderMethod: undefined }],
+  ['AdminView', { path: '/admin', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
   ['DemoDetail', { path: '/demo/detail/:id', routeProps: DemoDetailRPO, renderMethod: RenderMethodKind.SSR }],
   ['HomeView', { path: '/', routeProps: undefined, renderMethod: RenderMethodKind.SSR }],
 ]);

@@ -1,3 +1,13 @@
+<script lang="ts">
+import { last5News } from '@client/data/news';
+import { Vue, Options } from 'vue-class-component';
+
+@Options({})
+export default class SectionNews extends Vue {
+  newsItems = last5News;
+}
+</script>
+
 <template>
   <div class="news">
     <div
@@ -35,15 +45,7 @@
   </div>
 </template>
 
-<script lang="ts">
-import { last5News } from '@client/data/news';
-import { Vue, Options } from 'vue-class-component';
 
-@Options({})
-export default class SectionNews extends Vue {
-  newsItems = last5News;
-}
-</script>
 
 <style lang="less" scoped>
 // 最新动态

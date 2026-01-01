@@ -1,11 +1,13 @@
 <script lang="ts">
-import { Vue, Options } from 'vue-class-component'
-import { sdutlinks, fastlinks } from '@client/data/fastlinks'
-import { throttle } from '@client/utils'
-import { RenderMethodKind } from 'bwcx-client-vue'
-import IconMenu from './icon/icon-menu.vue'
-import { ElIcon } from 'element-plus'
-import { Right } from '@element-plus/icons-vue'
+import { Vue, Options } from 'vue-class-component';
+import { sdutlinks, fastlinks } from '@client/data/fastlinks';
+import { throttle } from '@client/utils';
+import { Prop } from 'vue-property-decorator';
+import { GetLogoResDTO } from '@common/modules/logo/logo.dto';
+
+import IconMenu from './icon/icon-menu.vue';
+import { ElIcon } from 'element-plus';
+import { Right } from '@element-plus/icons-vue';
 
 @Options({
   components: {
@@ -15,17 +17,24 @@ import { Right } from '@element-plus/icons-vue'
   },
 })
 export default class NavigationBar extends Vue {
-  sdutlinks = sdutlinks
-  fastlinks = fastlinks
-  isFastLinkShow = false
-  isFastLinkHover = false
-  isDropDownHover = false
-  fastlinkShowIndex = 1
+  @Prop({ required: true})
+  logo!: GetLogoResDTO;
+
+  sdutlinks = sdutlinks;
+  fastlinks = fastlinks;
+  isFastLinkShow = false;
+  isFastLinkHover = false;
+  isDropDownHover = false;
+  fastlinkShowIndex = 1;
 
   clickFastLinkTitle = (index: number) => {
-    this.fastlinkShowIndex = index === this.fastlinkShowIndex ? 0 : index
+    this.fastlinkShowIndex = index === this.fastlinkShowIndex ? 0 : index;
+  };
+  throttle = throttle;
+
+  parseLogoPathURL(path: string) {
+    return '/logo' + path;
   }
-  throttle = throttle
 }
 </script>
 
@@ -38,7 +47,7 @@ export default class NavigationBar extends Vue {
 
     <!-- LOGO(PC端居左, 移动端居中) -->
     <a class="logo" href="/" rel="noopener noreferrer">
-      <img src="../../assets/logo/sdutacm_logo_colorful.svg" alt="logo" />
+      <img :src="parseLogoPathURL(logo.path)" alt="logo" />
       <h1>SDUTACM</h1>
     </a>
     <!-- 导航条(仅在PC端居中显示) -->
@@ -55,7 +64,7 @@ export default class NavigationBar extends Vue {
         @mouseover="isFastLinkHover = true"
         @mouseleave="
           throttle(() => {
-            isFastLinkHover = false
+            isFastLinkHover = false;
           }, 200)()
         "
       >
@@ -70,13 +79,12 @@ export default class NavigationBar extends Vue {
   <div
     class="dropdown"
     :style="{
-      transform:
-        isFastLinkShow || isFastLinkHover || isDropDownHover ? '' : 'translate(-50%, -100%)'
+      transform: isFastLinkShow || isFastLinkHover || isDropDownHover ? '' : 'translate(-50%, -100%)',
     }"
     @mouseover="isDropDownHover = true"
     @mouseleave="
       throttle(() => {
-        isDropDownHover = false
+        isDropDownHover = false;
       }, 200)()
     "
   >
@@ -114,9 +122,7 @@ export default class NavigationBar extends Vue {
         class="container"
         :class="{ 'is-show': fastlinkShowIndex === groups.index }"
       >
-        <span class="dropdown-title" @click="clickFastLinkTitle(groups.index)"
-          >算法竞赛{{ groups.title }}</span
-        >
+        <span class="dropdown-title" @click="clickFastLinkTitle(groups.index)">算法竞赛{{ groups.title }}</span>
         <div class="dropdown-group">
           <a
             v-for="item in groups.links"
@@ -134,9 +140,7 @@ export default class NavigationBar extends Vue {
               </span>
             </div>
             <div class="dropdown-content">
-              <span class="dropdown-content-title" :class="{ desc: item.desc !== '' }">{{
-                item.title
-              }}</span>
+              <span class="dropdown-content-title" :class="{ desc: item.desc !== '' }">{{ item.title }}</span>
               <span class="dropdown-content-desc">{{ item.desc }}</span>
               <el-icon>
                 <Right />
@@ -241,9 +245,7 @@ header {
         height: 0.04rem;
         background-color: var(--ah-c-text1);
         opacity: 0;
-        transition:
-          transform var(--ah-t-short),
-          opacity var(--ah-t-short);
+        transition: transform var(--ah-t-short), opacity var(--ah-t-short);
         content: '';
         transform: translate(-50%, 0);
         animation: hide-animation 0.3s forwards;
@@ -409,9 +411,7 @@ header {
           color: var(--ah-c-text3);
           opacity: 0;
           visibility: hidden;
-          transition:
-            opacity var(--ah-t-short),
-            transform var(--ah-t-short);
+          transition: opacity var(--ah-t-short), transform var(--ah-t-short);
           transform: translate(0, -50%);
           line-height: 0.4rem;
           user-select: none;
@@ -544,8 +544,8 @@ header {
       span {
         display: block;
         border-radius: 10%;
-        width: 0.40rem;
-        height: 0.40rem;
+        width: 0.4rem;
+        height: 0.4rem;
         font-size: 0.36rem;
         font-weight: 700;
       }

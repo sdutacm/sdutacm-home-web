@@ -19,12 +19,6 @@ export class Image {
   @Column({ nullable: true })
   alt?: string;
 
-  @Column({ nullable: true })
-  type?: string; // logo / cover / preview / banner
-
-  @Column({ default: 0 })
-  sort: number;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

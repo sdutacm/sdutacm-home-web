@@ -8,7 +8,7 @@ const appDataSource = new DataSource({
   password: '123456',
   database: 'sdutacm-home-web-test',
   logging: true,
-  synchronize: true,
+  synchronize: false,
   entities: [__dirname + '/entity/*.ts'],
 });
 

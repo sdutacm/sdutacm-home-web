@@ -7,6 +7,7 @@
 import { AllowedRequestMethod, IBwcxApiRequestAdaptorArgs, AbstractResponseParser } from 'bwcx-api-client';
 import { configure as configureUrlcat } from 'urlcat-fork';
 import { DemoGetReqDTO, DemoGetRespDTO } from '../modules/demo/demo.dto';
+import { GetHomeDataResDTO } from '../modules/home/home.dto';
 
 const urlcat = configureUrlcat({ arrayFormat: 'repeat' });
 
@@ -33,6 +34,17 @@ export class ApiClient<T = undefined> {
     return this._r(this._rArgs.a(req, opts)).then((resp) => this._rp.pat(DemoGetRespDTO, resp));
   }
 
+  /**
+   * 获取首页数据
+   *
+   * @param {null} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetHomeDataResDTO} The response data (RespDTO).
+   */
+  public async getHomeData(req?: null, opts?: T): Promise<GetHomeDataResDTO> {
+    return this._r(this._rArgs.b(req, opts)).then((resp) => this._rp.pat(GetHomeDataResDTO, resp));
+  }
+
   private _rArgs = {
     a: (req: DemoGetReqDTO, opts?: any) => {
       return {
@@ -53,6 +65,24 @@ export class ApiClient<T = undefined> {
           path: '/api/demoGet/:id',
           req: DemoGetReqDTO,
           resp: DemoGetRespDTO,
+        },
+      };
+    },
+    b: (req: null, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getHomeData', {
+          param: {},
+          query: {},
+        }),
+        data: {},
+        extraOpts: opts,
+        metadata: {
+          name: 'getHomeData',
+          method: 'POST',
+          path: '/api/getHomeData',
+          req: null as null,
+          resp: GetHomeDataResDTO,
         },
       };
     },

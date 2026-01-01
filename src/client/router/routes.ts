@@ -18,6 +18,16 @@ const clientRoutes = parseRoutes([
     otherOptions: undefined,
   },
   {
+    name: 'AdminView',
+    path: '/admin',
+    fullPath: '/admin',
+    component: () => import(/* webpackChunkName: "AdminView" */ '../modules/admin/admin.view.vue'),
+    routeProps: undefined,
+    priority: undefined,
+    renderMethod: RenderMethodKind.CSR,
+    otherOptions: undefined,
+  },
+  {
     name: 'DemoDetail',
     path: '/demo/detail/:id',
     fullPath: '/demo/detail/:id',

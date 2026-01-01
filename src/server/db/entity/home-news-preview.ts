@@ -18,9 +18,6 @@ export class HomeNewsPreview {
   @JoinColumn()
   news: News;
 
-  @Column()
-  position: number;
-
   @Column({ length: 255, nullable: true, name: 'cover_image', comment: '封面图片' })
   previewImage?: string;
 

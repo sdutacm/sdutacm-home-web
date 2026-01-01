@@ -6,7 +6,7 @@ export async function seedGlobalConfig(ds: DataSource) {
   const repo = ds.getRepository(GlobalConfig);
   const logoRepo = ds.getRepository(Logo);
 
-  const exists = await repo.findOne({});
+  const exists = await repo.findOneBy({});
   if (exists) return;
 
   const logo = logoRepo.create({

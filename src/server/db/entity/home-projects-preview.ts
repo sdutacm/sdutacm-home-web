@@ -11,9 +11,6 @@ export class HomeProjectsPreview {
   @JoinColumn()
   project: Project;
 
-  @Column()
-  position: number;
-
   @Column({ length: 255, nullable: true, name: 'cover_image', comment: '封面图片' })
   coverImage?: string;
 

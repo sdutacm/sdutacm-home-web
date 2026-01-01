@@ -1,7 +1,10 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
+import { Provide, Prop } from 'vue-property-decorator';
 import { View } from 'bwcx-client-vue3';
 import { RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
+import { GetHomeDataResDTO } from '@common/modules/home/home.dto';
+import { AsyncDataOptions } from '@client/typings';
 
 import NavigationBar from '@client/components/homepage/navigation-bar.vue';
 import SectionNews from '@client/components/homepage/section-news.vue';
@@ -17,7 +20,18 @@ import SectionProject from '@client/components/homepage/section-project.vue';
   },
 })
 export default class HomeView extends Vue {
+  @Prop()
+  homeState!: GetHomeDataResDTO;
+
+  async asyncData({ apiClient }: AsyncDataOptions) {
+    const res = await apiClient.getHomeData();
+    return {
+      homeState: res,
+    };
+  }
+
   mounted() {
+    console.log(this.homeState);
     console.log(
       String.raw`      _/_/_/  _/_/_/    _/    _/  _/_/_/_/_/    _/_/      _/_/_/  _/      _/   ` +
         '\n' +
@@ -32,12 +46,21 @@ export default class HomeView extends Vue {
         '🎉欢迎来到 SDUTACM 官网🤔💡🎈',
     );
   }
+
+  parseDesc(text: string) {
+    const lines = text.split('\n');
+    const wrapped = lines
+      .filter((line) => line.trim() !== '')
+      .map((line) => `<p class="desc">${line}</p>`)
+      .join('');
+    return wrapped;
+  }
 }
 </script>
 
 <template>
   <!-- 顶部导航栏及其下拉列表 -->
-  <NavigationBar />
+  <!-- <NavigationBar :logo="homeState.logo"/> -->
 
   <main>
     <!-- 页面位置指示器 -->
@@ -49,16 +72,9 @@ export default class HomeView extends Vue {
 
     <!-- SDUTACM简介 -->
     <div class="summary" id="1">
-      <span class="title" ref="section1">山东理工大学ACM</span>
-      <span class="slogan">NO EFFORT GOES IN VAIN</span>
-      <div class="text">
-        <p>山东理工大学 ACM 实验室，包含 ACM 集训队、光锥实验室（原运维技术中心）以及 ACM 协会（社团）。</p>
-        <p>自 2008 年成立，我们一直专注于编程竞赛体系的完善，培养拥有计算机专业素养的优秀人才。</p>
-        <p>
-          我们拥有自研的在线评测平台和榜单系统，以及全面的训练计划和培养方案，并提供更多的竞赛机遇和更大的发展平台。
-        </p>
-        <p>我们秉持“宁拙毋巧，功不唐捐”的培养理念，与各位同仁共同推动算法竞赛的发展。</p>
-      </div>
+      <span class="title" ref="section1">{{ homeState.title }}</span>
+      <span class="slogan">{{ homeState.slogan }}</span>
+      <div class="text" v-html="parseDesc(homeState.description)"></div>
     </div>
 
     <!-- 最新动态 -->
@@ -189,7 +205,7 @@ main {
     justify-content: center;
     align-items: flex-start;
 
-    p {
+    & :deep(.desc) {
       margin: 0.1rem 0;
       font-size: 0.32rem;
       color: var(--ah-c-text2);

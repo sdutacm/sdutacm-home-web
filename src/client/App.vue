@@ -1,15 +1,10 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
-import HomeView from './modules/home/home.view.vue';
 
-@Options({
-  components: {
-    HomeView,
-  },
-})
+@Options({})
 export default class App extends Vue {}
 </script>
 
 <template>
-  <home-view />
+  <router-view />
 </template>

@@ -16,7 +16,7 @@
     "start": "cross-env NODE_ENV=production node --unhandled-rejections=warn app/server/index.js",
     "deploy": "cross-env NODE_ENV=production pm2 pm2.config.js",
     "deploy:foreground": "cross-env NODE_ENV=production pm2-runtime pm2.config.js",
-    "seed": "ts-node src/server/db/seeds/index.ts"
+    "seed": "ts-node-dev scripts/seed.ts"
   },
   "keywords": [
     "sdutacm",
