@@ -6,7 +6,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Logo } from './logo';
+import { Media } from './media';
 
 @Entity('global_config')
 export class GlobalConfig {
@@ -22,8 +22,8 @@ export class GlobalConfig {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @ManyToOne(() => Logo, { nullable: true })
-  logo?: Logo;
+  @ManyToOne(() => Media, { nullable: true })
+  logo?: Media;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -1,8 +1,10 @@
 export enum MediaTypeEnum {
+  // Logo
+  LOGO = 'logo',
   // 图片
-  IMAGE,
+  IMAGE = 'image',
   // 音频
-  AUDIO,
+  AUDIO = 'audio',
   // 视频
-  VIDEO,
+  VIDEO = 'video',
 }

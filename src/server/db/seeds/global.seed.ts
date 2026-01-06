@@ -1,18 +1,22 @@
 import { DataSource } from 'typeorm';
 import { GlobalConfig } from '../entity/global-config';
-import { Logo } from '../entity/logo';
+import { Media } from '../entity/media';
+import { MediaTypeEnum } from '@common/enums/media-type.enum';
 
 export async function seedGlobalConfig(ds: DataSource) {
   const repo = ds.getRepository(GlobalConfig);
-  const logoRepo = ds.getRepository(Logo);
+  const mediaRepo = ds.getRepository(Media);
 
   const exists = await repo.findOneBy({});
   if (exists) return;
 
-  const logo = logoRepo.create({
+  const logo = mediaRepo.create({
     path: 'sdutacm_logo_colorful.svg',
+    type: MediaTypeEnum.LOGO,
+    alt: 'SDUTACM Logo',
+    active: true,
   });
-  await logoRepo.save(logo);
+  await mediaRepo.save(logo);
 
   const home = repo.create({
     title: '山东理工大学ACM',

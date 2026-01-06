@@ -1,7 +1,7 @@
 import { IsString } from 'class-validator';
 import { GetProjectPreviewResDTO } from '../project/project.dto';
 import { GetNewsPreviewResDTO } from '../news/news.dto';
-import { GetLogoResDTO } from '../logo/logo.dto';
+import { MediaResDTO } from '../media/media.dto';
 
 export class GetHomeDataResDTO {
   title: string;
@@ -10,7 +10,7 @@ export class GetHomeDataResDTO {
 
   description: string;
 
-  logo: GetLogoResDTO;
+  logo: MediaResDTO;
 
   newsPreview: GetNewsPreviewResDTO[];
 

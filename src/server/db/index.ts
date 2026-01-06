@@ -1,5 +1,7 @@
 import { DataSource } from 'typeorm';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const appDataSource = new DataSource({
   type: 'mysql',
   host: '127.0.0.1',
@@ -7,9 +9,9 @@ const appDataSource = new DataSource({
   username: 'wjh',
   password: '123456',
   database: 'sdutacm-home-web-test',
-  logging: true,
-  synchronize: false,
-  entities: [__dirname + '/entity/*.ts'],
+  logging: false,
+  synchronize: !isProd,
+  entities: [__dirname + '/entity/*.{ts,js}'],
 });
 
 export default appDataSource;

@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { HomeNewsPreview } from './home-news-preview';
-import { Image } from './image';
+import { Media } from './media';
 
 @Entity('news')
 export class News {
@@ -36,8 +36,8 @@ export class News {
   @OneToOne(() => HomeNewsPreview, (preview) => preview.news)
   homePreview?: HomeNewsPreview;
 
-  @OneToMany(() => Image, (image) => image.news)
-  images?: Image[];
+  @OneToMany(() => Media, (media) => media.news)
+  medias?: Media[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

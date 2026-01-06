@@ -3,7 +3,7 @@ import { Vue, Options } from 'vue-class-component';
 import { sdutlinks, fastlinks } from '@client/data/fastlinks';
 import { throttle } from '@client/utils';
 import { Prop } from 'vue-property-decorator';
-import { GetLogoResDTO } from '@common/modules/logo/logo.dto';
+import { MediaResDTO } from '@common/modules/media/media.dto';
 
 import IconMenu from './icon/icon-menu.vue';
 import { ElIcon } from 'element-plus';
@@ -17,9 +17,6 @@ import { Right } from '@element-plus/icons-vue';
   },
 })
 export default class NavigationBar extends Vue {
-  @Prop({ required: true})
-  logo!: GetLogoResDTO;
-
   sdutlinks = sdutlinks;
   fastlinks = fastlinks;
   isFastLinkShow = false;
@@ -47,7 +44,7 @@ export default class NavigationBar extends Vue {
 
     <!-- LOGO(PC端居左, 移动端居中) -->
     <a class="logo" href="/" rel="noopener noreferrer">
-      <img :src="parseLogoPathURL(logo.path)" alt="logo" />
+      <img src="../../assets/logo/sdutacm_logo_colorful.svg" alt="logo" />
       <h1>SDUTACM</h1>
     </a>
     <!-- 导航条(仅在PC端居中显示) -->

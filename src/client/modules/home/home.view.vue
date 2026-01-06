@@ -60,7 +60,7 @@ export default class HomeView extends Vue {
 
 <template>
   <!-- 顶部导航栏及其下拉列表 -->
-  <!-- <NavigationBar :logo="homeState.logo"/> -->
+  <NavigationBar />
 
   <main>
     <!-- 页面位置指示器 -->
@@ -84,16 +84,6 @@ export default class HomeView extends Vue {
     <!-- 我们的项目 -->
     <div class="section-title" ref="section3" id="3">我们的项目</div>
     <SectionProject />
-
-    <!-- 时间线 -->
-    <!-- <div class="section-title">时间线</div>
-    <div class="time-line">
-      敬请期待
-    </div> -->
-
-    <!-- 加入我们 -->
-    <!-- <div class="section-title">加入我们</div>
-    <div class="join-us">敬请期待</div> -->
   </main>
 
   <footer>

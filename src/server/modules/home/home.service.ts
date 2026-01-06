@@ -15,15 +15,21 @@ export default class HomeService  {
 
   /** methods */
   public async getHomeData(): Promise<GetHomeDataResDTO> {
-        try {
+    try {
       const globalConfigRepo = appDataSource.getRepository(GlobalConfig);
       const projectPreviewRepo = appDataSource.getRepository(HomeProjectsPreview);
       const newsPreviewRepo = appDataSource.getRepository(HomeNewsPreview);
 
-      const globalConfig = await globalConfigRepo.findOne({
+      const globalConfigs = await globalConfigRepo.find({
         relations: ['logo'],
-        where: { id: 2 },
+        take: 1,
       });
+
+      if (!globalConfigs || globalConfigs.length === 0) {
+        throw new Error('Global config not found');
+      }
+
+      const globalConfig = globalConfigs[0];
 
       const newsPreviews = await newsPreviewRepo.find({
         where: { visible: true },
@@ -39,7 +45,14 @@ export default class HomeService  {
         title: globalConfig.title,
         slogan: globalConfig.slogan,
         description: globalConfig.description,
-        logo: { path: globalConfig.logo.path, active: globalConfig.logo.active },
+        logo: {
+          id: globalConfig.logo.id,
+          path: globalConfig.logo.path,
+          type: globalConfig.logo.type,
+          alt: globalConfig.logo.alt,
+          active: globalConfig.logo.active,
+          createdAt: globalConfig.logo.createdAt,
+        },
         newsPreview: newsPreviews.map((preview) => ({
           title: preview.news.title,
           summary: preview.news.summary,
@@ -57,6 +70,7 @@ export default class HomeService  {
       return res;
     } catch (error) {
       console.error('Get home data failed:', error);
+      throw error;
     }
   }
 }

@@ -28,6 +28,7 @@ module.exports = defineConfig({
   },
   build: {
     sourcemap: true,
+    cssCodeSplit: false
   },
   plugins: [
     viteSSR({
