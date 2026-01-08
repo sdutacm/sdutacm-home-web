@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -23,6 +24,7 @@ export class GlobalConfig {
   description?: string;
 
   @ManyToOne(() => Media, { nullable: true })
+  @JoinColumn({ name: 'logo_id' })
   logo?: Media;
 
   @CreateDateColumn({ name: 'created_at' })

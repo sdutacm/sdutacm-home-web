@@ -36,6 +36,9 @@ export default class HomeService  {
         relations: ['news'],
       });
 
+      // 过滤掉未发布的新闻
+      const publishedNewsPreviews = newsPreviews.filter(preview => preview.news.isPublished);
+
       const projectPreviews = await projectPreviewRepo.find({
         where: { visible: true },
         relations: ['project'],
@@ -45,15 +48,15 @@ export default class HomeService  {
         title: globalConfig.title,
         slogan: globalConfig.slogan,
         description: globalConfig.description,
-        logo: {
+        logo: globalConfig.logo ? {
           id: globalConfig.logo.id,
           path: globalConfig.logo.path,
           type: globalConfig.logo.type,
           alt: globalConfig.logo.alt,
           active: globalConfig.logo.active,
           createdAt: globalConfig.logo.createdAt,
-        },
-        newsPreview: newsPreviews.map((preview) => ({
+        } : null,
+        newsPreview: publishedNewsPreviews.map((preview) => ({
           title: preview.news.title,
           summary: preview.news.summary,
           coverImage: preview.news.coverImage,
@@ -65,6 +68,7 @@ export default class HomeService  {
           description: preview.project.description,
           repoUrl: preview.project.repoUrl,
           websiteUrl: preview.project.websiteUrl,
+          coverImage: preview.project.coverImage,
         })),
       };
       return res;

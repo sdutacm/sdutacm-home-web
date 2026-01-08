@@ -3,7 +3,6 @@ import { Vue, Options } from 'vue-class-component';
 import { sdutlinks, fastlinks } from '@client/data/fastlinks';
 import { throttle } from '@client/utils';
 import { Prop } from 'vue-property-decorator';
-import { MediaResDTO } from '@common/modules/media/media.dto';
 
 import IconMenu from './icon/icon-menu.vue';
 import { ElIcon } from 'element-plus';
@@ -17,21 +16,23 @@ import { Right } from '@element-plus/icons-vue';
   },
 })
 export default class NavigationBar extends Vue {
-  sdutlinks = sdutlinks;
-  fastlinks = fastlinks;
   isFastLinkShow = false;
   isFastLinkHover = false;
   isDropDownHover = false;
   fastlinkShowIndex = 1;
+
+  @Prop()
+  logoPath!: string;
 
   clickFastLinkTitle = (index: number) => {
     this.fastlinkShowIndex = index === this.fastlinkShowIndex ? 0 : index;
   };
   throttle = throttle;
 
-  parseLogoPathURL(path: string) {
-    return '/logo' + path;
+  mounted() {
+    console.log(this.logoPath);
   }
+
 }
 </script>
 
@@ -44,17 +45,17 @@ export default class NavigationBar extends Vue {
 
     <!-- LOGO(PC端居左, 移动端居中) -->
     <a class="logo" href="/" rel="noopener noreferrer">
-      <img src="../../assets/logo/sdutacm_logo_colorful.svg" alt="logo" />
+      <img :src="logoPath" alt="logo" />
       <h1>SDUTACM</h1>
     </a>
     <!-- 导航条(仅在PC端居中显示) -->
     <div class="nav">
-      <div v-for="link in sdutlinks" :key="link.title" class="nav-item">
+      <!-- <div v-for="link in sdutlinks" :key="link.title" class="nav-item">
         <a target="_blank" rel="noopener noreferrer" :href="link.link">
           <span>{{ link.title }}</span>
         </a>
-      </div>
-      <div
+      </div> -->
+      <!-- <div
         class="nav-item"
         :class="{ 'is-show': isFastLinkShow }"
         ref="pcFastLinkElement"
@@ -66,7 +67,7 @@ export default class NavigationBar extends Vue {
         "
       >
         <span>快速链接</span>
-      </div>
+      </div> -->
     </div>
     <!-- 切换主题(居右显示) -->
     <!-- <ToggleThemeButton /> -->
@@ -88,7 +89,7 @@ export default class NavigationBar extends Vue {
     <!-- 内部快速链接 -->
     <div class="inside">
       <span class="dropdown-title">我们的项目</span>
-      <div class="dropdown-group">
+      <!-- <div class="dropdown-group">
         <a
           v-for="item in sdutlinks"
           :key="item.link"
@@ -98,7 +99,6 @@ export default class NavigationBar extends Vue {
           rel="noopener noreferrer"
         >
           <div class="dropdown-icon">
-            <!-- <span :style="{ backgroundImage: `url(${item.icon})` }"></span> -->
             <img :src="item.icon" alt="" />
           </div>
           <div class="dropdown-content">
@@ -108,12 +108,12 @@ export default class NavigationBar extends Vue {
             </el-icon>
           </div>
         </a>
-      </div>
+      </div> -->
     </div>
     <!-- 外部快速链接 -->
     <div class="outside">
       <!-- 外部容器 -->
-      <div
+      <!-- <div
         v-for="groups in fastlinks"
         :key="groups.index"
         class="container"
@@ -130,7 +130,6 @@ export default class NavigationBar extends Vue {
             rel="noopener noreferrer"
           >
             <div class="dropdown-icon">
-              <!-- <span v-if="item.local_icon" :style="{ backgroundImage: `url(${item.local_icon})` }"></span> -->
               <img v-if="item.icon" :src="item.icon" alt="" />
               <span v-else>
                 {{ item.title[0] }}
@@ -145,7 +144,7 @@ export default class NavigationBar extends Vue {
             </div>
           </a>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

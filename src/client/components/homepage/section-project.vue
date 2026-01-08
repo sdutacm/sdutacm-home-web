@@ -1,8 +1,15 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
+import { Prop } from 'vue-property-decorator';
+import { GetProjectPreviewResDTO } from '@common/modules/project/project.dto';
 
 @Options({})
 export default class SectionProject extends Vue {
+  @Prop({ required: true })
+  projectItems!: GetProjectPreviewResDTO[];
+
+  bgColorList = ['#f4f4f4', '#fff2df', '#d6e6f2'];
+
   acitveProject = 0;
   clickProject = (target) => {
     this.acitveProject = target === this.acitveProject ? 0 : target;
@@ -12,7 +19,22 @@ export default class SectionProject extends Vue {
 
 <template>
   <div class="project">
-    <div class="project-item1 project-item" :class="{ active: acitveProject === 1 }" @click="() => this.clickProject(1)">
+    <div
+      class="project-item"
+      v-for="(project, index) in projectItems"
+      :key="index"
+      :class="{ active: acitveProject === index + 1 }"
+      :style="{ backgroundImage: `url(${project.coverImage})`, backgroundRepeat: 'no-repeat', backgroundPosition: '10% 50%', backgroundSize: '50%', backgroundColor: bgColorList[index % bgColorList.length] }"
+      @click="() => this.clickProject(index + 1)"
+    >
+      <div class="project-bubble"></div>
+      <span class="project-title">{{ project.name }}</span>
+      <p class="project-summary">
+        <span>{{ project.description }}</span>
+        <span></span>
+      </p>
+    </div>
+    <!-- <div class="project-item1 project-item" :class="{ active: acitveProject === 1 }" @click="() => this.clickProject(1)">
       <div class="project-bubble"></div>
       <span class="project-title">SDUT OJ 3</span>
       <p class="project-summary">
@@ -92,7 +114,7 @@ export default class SectionProject extends Vue {
           <a class="link" target="_blank" href="https://lcl-magicbook.sdutacm.cn/pleasant-gallery">古怪展馆</a>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 

@@ -6,11 +6,11 @@ import { errCodeConfigs } from '@server/err-code-configs';
 @ExceptionHandler(GuardNotPassException)
 export default class GuardNotPassExceptionHandler implements IBwcxExceptionHandler {
   public catch(e: GuardNotPassException, ctx: RequestContext) {
-    ctx.error(`GuardNotPassException caught: url: ${ctx.url}, ua: ${ctx.request.headers['user-agent']}, err:`, e);
+    ctx.redirect('/login')
     ctx.body = {
       success: false,
-      code: ErrCode.IllegalRequest,
-      msg: errCodeConfigs[ErrCode.IllegalRequest],
+      code: ErrCode.AdminNotLoggedIn,
+      msg: errCodeConfigs[ErrCode.AdminNotLoggedIn],
     };
   }
 }

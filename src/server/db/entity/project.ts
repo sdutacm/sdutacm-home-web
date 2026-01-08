@@ -27,6 +27,9 @@ export class Project {
   @Column({ length: 255, nullable: true, name: 'website_url', comment: '项目官网链接' })
   websiteUrl?: string;
 
+  @Column({ length: 255, nullable: true, name: 'cover_image', comment: '项目封面图片' })
+  coverImage?: string;
+
   @Column({ default: false, name: 'is_featured', comment: '是否在首页展示' })
   isFeatured: boolean;
 

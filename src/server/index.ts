@@ -16,6 +16,7 @@ import path from 'path';
 import favicon from 'koa-favicon';
 import mount from 'koa-mount';
 import koaStatic from 'koa-static';
+import session from 'koa-session';
 import UtilityHeaderMiddleware from './middlewares/utility-header.middleware';
 import LoggerMiddleware from './middlewares/logger.middleware';
 import DefaultResponseHandler from '@server/response-handlers/default.response-handler';
@@ -76,8 +77,26 @@ export default class OurApp extends App {
       console.error('Error during Data Source initialization', error);
       throw error;
     }
+    // 设置签名密钥用于 session cookies
+    this.instance.keys = ['sdutacm-secret-key-1', 'sdutacm-secret-key-2'];
+    // session
+    const sessionConfig = {
+      key: 'sdutacm:sess',
+      maxAge: 86400000, // 24小时
+      autoCommit: true,
+      overwrite: true,
+      httpOnly: true,
+      signed: true,
+      rolling: false,
+      renew: false,
+    }
+    this.instance.use(session(sessionConfig, this.instance));
     // favicon.ico
     this.instance.use(favicon(`${process.cwd()}/public/favicon.ico`));
+    // serve static files from public directory (for uploaded images, etc.)
+    this.instance.use(koaStatic(`${process.cwd()}/public`, {
+      maxage: isProd ? 2592000000 : 0, // 30 days in production, no cache in dev
+    }));
     // serve static files (remove it if use other way to serve static files like CDN)
     this.instance.use(
       mount(

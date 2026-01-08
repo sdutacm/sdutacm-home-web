@@ -1,6 +1,6 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
-import { Provide, Prop } from 'vue-property-decorator';
+import { Prop } from 'vue-property-decorator';
 import { View } from 'bwcx-client-vue3';
 import { RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import { GetHomeDataResDTO } from '@common/modules/home/home.dto';
@@ -60,7 +60,7 @@ export default class HomeView extends Vue {
 
 <template>
   <!-- 顶部导航栏及其下拉列表 -->
-  <NavigationBar />
+  <NavigationBar :logoPath="homeState.logo.path"/>
 
   <main>
     <!-- 页面位置指示器 -->
@@ -79,11 +79,11 @@ export default class HomeView extends Vue {
 
     <!-- 最新动态 -->
     <div class="section-title" ref="section2" id="2">最新动态</div>
-    <SectionNews />
+    <SectionNews :newsItems="homeState.newsPreview" />
 
     <!-- 我们的项目 -->
     <div class="section-title" ref="section3" id="3">我们的项目</div>
-    <SectionProject />
+    <SectionProject :projectItems="homeState.projectsPreview" />
   </main>
 
   <footer>

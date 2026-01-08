@@ -4,7 +4,7 @@ import { RenderMethodKind } from 'bwcx-client-vue';
 import ViewService from './view.service';
 import { HtmlResponse } from '@server/response-handlers/html.response-handler';
 
-@Controller('', { priority: -999, when: 'production' })
+@Controller('', { priority: -999 })
 @HtmlResponse()
 export default class ViewFallbackController {
   public constructor(

@@ -1,10 +1,14 @@
 <script lang="ts">
 import { last5News } from '@client/data/news';
 import { Vue, Options } from 'vue-class-component';
+import { Inject, Prop } from 'vue-property-decorator';
+import { GetNewsPreviewResDTO } from '@common/modules/news/news.dto';
+import { parse } from 'path';
 
 @Options({})
 export default class SectionNews extends Vue {
-  newsItems = last5News;
+  @Prop({ required: true })
+  newsItems!: GetNewsPreviewResDTO[];
 }
 </script>
 
@@ -15,32 +19,29 @@ export default class SectionNews extends Vue {
       :key="index"
       :class="'news-item news-item' + (index + 1)"
     >
-      <a
-        v-if="item.link && item.link !== '#'"
+      <div
         class="n-link"
-        :href="item.link"
-        target="_blank"
         rel="noopener noreferrer"
       >
         <div class="news-img">
-          <img :src="item.imgSrc" :alt="'新闻 ' + item.title" />
+          <img :src="item.coverImage" />
         </div>
         <div class="news-info">
           <span class="news-title">{{ item.title }}</span>
           <span class="news-summary">{{ item.summary }}</span>
-          <span class="news-date">{{ item.date }}</span>
+          <span class="news-date">{{ item.publishedAt }}</span>
         </div>
-      </a>
-      <a v-else class="n-link">
+      </div>
+      <!-- <div class="n-link">
         <div class="news-img">
-          <img :src="item.imgSrc" alt="" />
+          <img :src="item.coverImage" alt="" />
         </div>
         <div class="news-info">
           <span class="news-title">{{ item.title }}</span>
           <span class="news-summary">{{ item.summary }}</span>
-          <span class="news-date">{{ item.date }}</span>
+          <span class="news-date">{{ item.publishedAt }}</span>
         </div>
-      </a>
+      </div> -->
     </div>
   </div>
 </template>

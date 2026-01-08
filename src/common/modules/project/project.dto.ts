@@ -1,3 +1,5 @@
+import { FromBody } from 'bwcx-common';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
 
 export class GetProjectPreviewResDTO {
   name: string;
@@ -7,4 +9,111 @@ export class GetProjectPreviewResDTO {
   repoUrl?: string;
 
   websiteUrl?: string;
+
+  coverImage?: string;
+}
+
+// 创建项目
+export class CreateProjectReqDTO {
+  @FromBody()
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  repoUrl?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  websiteUrl?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  coverImage?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
+}
+
+// 更新项目
+export class UpdateProjectReqDTO {
+  @FromBody()
+  @IsNotEmpty()
+  @IsNumber()
+  id: number;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  repoUrl?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  websiteUrl?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  coverImage?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
+}
+
+// 删除项目
+export class DeleteProjectReqDTO {
+  @FromBody()
+  @IsNotEmpty()
+  @IsNumber()
+  id: number;
+}
+
+// 获取单个项目详情
+export class GetProjectDetailResDTO {
+  id: number;
+  name: string;
+  description?: string;
+  repoUrl?: string;
+  websiteUrl?: string;
+  coverImage?: string;
+  isFeatured: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 获取项目列表
+export class GetProjectListResDTO {
+  rows: GetProjectDetailResDTO[];
+}
+
+// 获取项目详情请求
+export class GetProjectReqDTO {
+  @FromBody()
+  @IsNotEmpty()
+  @IsNumber()
+  id: number;
 }

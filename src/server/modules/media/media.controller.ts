@@ -1,15 +1,9 @@
-import { InjectCtx, RequestContext, Data, Contract, Post } from 'bwcx-ljsm';
+import { Controller, InjectCtx, RequestContext, Post, Data, Contract } from 'bwcx-ljsm';
+import { Inject } from 'bwcx-core';
 import { ApiController } from '@server/decorators';
 import { Api } from 'bwcx-api';
-import { Inject } from 'bwcx-core';
-import {
-  UploadMediaReqDTO,
-  GetMediaListReqDTO,
-  GetMediaByIdReqDTO,
-  DeleteMediaReqDTO,
-  MediaResDTO,
-} from '@common/modules/media/media.dto';
 import MediaService from './media.service';
+import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO, DeleteMediaReqDTO } from '@common/modules/media/media.dto';
 
 @ApiController()
 export default class MediaController {
@@ -21,28 +15,22 @@ export default class MediaController {
   ) {}
 
   /** routes */
-  @Api.Summary('媒体资源上传接口')
-  @Post('/uploadMedia')
-  @Contract(UploadMediaReqDTO, MediaResDTO)
-  public async uploadMedia(@Data() data: UploadMediaReqDTO): Promise<MediaResDTO> {
-    return await this.mediaService.uploadMedia(data);
-  }
-
-  @Api.Summary('获取媒体资源列表')
+  @Api.Summary('获取媒体列表')
   @Post('/getMediaList')
-  @Contract(GetMediaListReqDTO, [MediaResDTO])
-  public async getMediaList(@Data() data: GetMediaListReqDTO): Promise<MediaResDTO[]> {
+  @Contract(GetMediaListReqDTO, GetMediaResDTO)
+  public async getMediaList(@Data() data: GetMediaListReqDTO): Promise<GetMediaResDTO> {
     return await this.mediaService.getMediaList(data.type);
   }
 
-  @Api.Summary('根据 ID 获取媒体资源')
-  @Post('/getMediaById')
-  @Contract(GetMediaByIdReqDTO, MediaResDTO)
-  public async getMediaById(@Data() data: GetMediaByIdReqDTO): Promise<MediaResDTO | null> {
-    return await this.mediaService.getMediaById(data.id);
+  @Api.Summary('上传媒体文件')
+  @Post('/uploadMedia')
+  @Contract(UploadMediaReqDTO, null)
+  public async uploadMedia(@Data() data: UploadMediaReqDTO): Promise<any> {
+    const media = await this.mediaService.uploadMedia(data);
+    return { success: true, data: media };
   }
 
-  @Api.Summary('删除媒体资源')
+  @Api.Summary('删除媒体文件')
   @Post('/deleteMedia')
   @Contract(DeleteMediaReqDTO, null)
   public async deleteMedia(@Data() data: DeleteMediaReqDTO): Promise<void> {

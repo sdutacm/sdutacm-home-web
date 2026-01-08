@@ -1,7 +1,11 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
+import { Inject } from 'bwcx-core';
+import { MediaTypeEnum } from '@common/enums/media-type.enum';
+import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO } from '@common/modules/media/media.dto';
 import appDataSource from '@server/db';
-import { UploadMediaReqDTO, MediaResDTO } from '@common/modules/media/media.dto';
 import { Media } from '@server/db/entity/media';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Service()
 export default class MediaService {
@@ -10,75 +14,80 @@ export default class MediaService {
     private readonly ctx: RequestContext,
   ) {}
 
-  /** methods */
-  public async uploadMedia(data: UploadMediaReqDTO): Promise<MediaResDTO> {
+  async getMediaList(type: MediaTypeEnum): Promise<GetMediaResDTO> {
+    try {
+      const mediaRepo = appDataSource.getRepository(Media);
+      const list = await mediaRepo.find({
+        where: {
+          type: type,
+        },
+      });
+      return { rows: list };
+    } catch (error) {
+      console.error('Error fetching media list:', error);
+    }
+  }
+
+  async uploadMedia(data: UploadMediaReqDTO): Promise<Media> {
+    const { file, type, alt } = data;
+
+    // 确保 public 目录存在
+    const publicDir = path.join(process.cwd(), 'public');
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+
+    // 根据类型确定目标目录
+    const typeDir = path.join(publicDir, type);
+    if (!fs.existsSync(typeDir)) {
+      fs.mkdirSync(typeDir, { recursive: true });
+    }
+
+    // 创建数据库记录以获取 id
     const mediaRepo = appDataSource.getRepository(Media);
-
-    // TODO: 实现文件上传逻辑，保存文件到服务器
-    // const filePath = await this.saveFile(data.file, data.fileName);
-
     const media = mediaRepo.create({
-      path: data.fileName, // 这里应该是上传后的实际路径
-      type: data.type,
-      alt: data.alt,
+      type,
+      alt,
+      path: '', // 临时路径，稍后更新
       active: true,
     });
-
     await mediaRepo.save(media);
 
-    return {
-      id: media.id,
-      path: media.path,
-      type: media.type,
-      alt: media.alt,
-      active: media.active,
-      createdAt: media.createdAt,
-    };
+    // 获取文件扩展名
+    const originalName = file.originalname || file.name;
+    const extName = path.extname(originalName);
+
+    // 基于 id 生成文件名
+    const fileName = `${media.id}${extName}`;
+    const filePath = path.join(typeDir, fileName);
+
+    // 保存文件
+    const fileBuffer = file.buffer || fs.readFileSync(file.path);
+    fs.writeFileSync(filePath, fileBuffer);
+
+    // 更新数据库中的路径
+    const relativePath = `/${type}/${fileName}`;
+    media.path = relativePath;
+    await mediaRepo.save(media);
+
+    return media;
   }
 
-  public async getMediaList(type?: string): Promise<MediaResDTO[]> {
+  async deleteMedia(id: number): Promise<void> {
     const mediaRepo = appDataSource.getRepository(Media);
-
-    const query = mediaRepo.createQueryBuilder('media');
-
-    if (type) {
-      query.where('media.type = :type', { type });
-    }
-
-    query.orderBy('media.createdAt', 'DESC');
-
-    const medias = await query.getMany();
-
-    return medias.map(media => ({
-      id: media.id,
-      path: media.path,
-      type: media.type,
-      alt: media.alt,
-      active: media.active,
-      createdAt: media.createdAt,
-    }));
-  }
-
-  public async getMediaById(id: number): Promise<MediaResDTO | null> {
-    const mediaRepo = appDataSource.getRepository(Media);
-    const media = await mediaRepo.findOneBy({ id });
+    const media = await mediaRepo.findOne({ where: { id } });
 
     if (!media) {
-      return null;
+      throw new Error('Media not found');
     }
 
-    return {
-      id: media.id,
-      path: media.path,
-      type: media.type,
-      alt: media.alt,
-      active: media.active,
-      createdAt: media.createdAt,
-    };
-  }
+    // 删除文件
+    const filePath = path.join(process.cwd(), 'public', media.path);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
 
-  public async deleteMedia(id: number): Promise<void> {
-    const mediaRepo = appDataSource.getRepository(Media);
-    await mediaRepo.delete(id);
+    // 删除数据库记录
+    await mediaRepo.remove(media);
   }
 }

@@ -6,6 +6,11 @@ export enum ErrCode {
   /** 非法参数 */
   IllegalParameters = -3,
 
+  /** 管理员未登录 */
+  AdminNotLoggedIn = -4,
+  /** 管理员权限不足 */
+  AdminPermissionDenied = -5,
+
   // 自定义逻辑异常错误码
   // ...
 }

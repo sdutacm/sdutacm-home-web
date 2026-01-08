@@ -12,5 +12,6 @@ export const clientRoutesMap = new Map<string, { path: string; routeProps: Newab
   ['AdminView', { path: '/admin', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
   ['DemoDetail', { path: '/demo/detail/:id', routeProps: DemoDetailRPO, renderMethod: RenderMethodKind.SSR }],
   ['HomeView', { path: '/', routeProps: undefined, renderMethod: RenderMethodKind.SSR }],
+  ['LoginView', { path: '/login', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
 ]);
 export { DemoDetailRPO } from '../modules/demo/demo.rpo';

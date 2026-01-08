@@ -47,6 +47,16 @@ const clientRoutes = parseRoutes([
     renderMethod: RenderMethodKind.SSR,
     otherOptions: undefined,
   },
+  {
+    name: 'LoginView',
+    path: '/login',
+    fullPath: '/login',
+    component: () => import(/* webpackChunkName: "LoginView" */ '../modules/login/login.view.vue'),
+    routeProps: undefined,
+    priority: undefined,
+    renderMethod: RenderMethodKind.CSR,
+    otherOptions: undefined,
+  },
 ]);
 
 export default clientRoutes;

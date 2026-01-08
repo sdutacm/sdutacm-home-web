@@ -6,8 +6,13 @@
 
 import { AllowedRequestMethod, IBwcxApiRequestAdaptorArgs, AbstractResponseParser } from 'bwcx-api-client';
 import { configure as configureUrlcat } from 'urlcat-fork';
+import { GetGlobalConfigResDTO, UpdateGlobalConfigReqDTO } from '../modules/global-config/global-config.dto';
+import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '../modules/auth/auth.dto';
 import { DemoGetReqDTO, DemoGetRespDTO } from '../modules/demo/demo.dto';
 import { GetHomeDataResDTO } from '../modules/home/home.dto';
+import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO, DeleteMediaReqDTO } from '../modules/media/media.dto';
+import { CreateNewsReqDTO, UpdateNewsReqDTO, DeleteNewsReqDTO, GetNewsReqDTO, GetNewsDetailResDTO, GetNewsListResDTO } from '../modules/news/news.dto';
+import { CreateProjectReqDTO, UpdateProjectReqDTO, DeleteProjectReqDTO, GetProjectReqDTO, GetProjectDetailResDTO, GetProjectListResDTO } from '../modules/project/project.dto';
 
 const urlcat = configureUrlcat({ arrayFormat: 'repeat' });
 
@@ -24,6 +29,105 @@ export class ApiClient<T = undefined> {
   }
 
   /**
+   * 获取全局配置
+   *
+   * @param {null} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetGlobalConfigResDTO} The response data (RespDTO).
+   */
+  public async getGlobalConfig(req?: null, opts?: T): Promise<GetGlobalConfigResDTO> {
+    return this._r(this._rArgs.a(req, opts)).then((resp) => this._rp.pat(GetGlobalConfigResDTO, resp));
+  }
+
+  /**
+   * 更新全局配置
+   *
+   * @param {UpdateGlobalConfigReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async updateGlobalConfig(req: UpdateGlobalConfigReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.b(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 管理员注册
+   *
+   * @param {RegisterAdminReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async register(req: RegisterAdminReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.c(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 管理员登录
+   *
+   * @param {LoginAdminWithUserNameReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async login(req: LoginAdminWithUserNameReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.d(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 管理员登出
+   *
+   * @param {null} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async logout(req?: null, opts?: T): Promise<null> {
+    return this._r(this._rArgs.e(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 获取管理员会话信息
+   *
+   * @param {null} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetSessionResDTO} The response data (RespDTO).
+   */
+  public async getSession(req?: null, opts?: T): Promise<GetSessionResDTO> {
+    return this._r(this._rArgs.f(req, opts)).then((resp) => this._rp.pat(GetSessionResDTO, resp));
+  }
+
+  /**
+   * 更新管理员头像
+   *
+   * @param {UpdateAdminAvatarReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async updateAdminAvatar(req: UpdateAdminAvatarReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.g(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 获取所有管理员
+   *
+   * @param {null} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetAllAdminsListResDTO} The response data (RespDTO).
+   */
+  public async getAllAdmins(req?: null, opts?: T): Promise<GetAllAdminsListResDTO> {
+    return this._r(this._rArgs.h(req, opts)).then((resp) => this._rp.pat(GetAllAdminsListResDTO, resp));
+  }
+
+  /**
+   * 更新管理员角色
+   *
+   * @param {UpdateAdminRoleReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async updateAdminRole(req: UpdateAdminRoleReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.i(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
    * 一个示例接口
    *
    * @param {DemoGetReqDTO} req The request data (compatible with ReqDTO).
@@ -31,7 +135,7 @@ export class ApiClient<T = undefined> {
    * @returns {DemoGetRespDTO} The response data (RespDTO).
    */
   public async demoGet(req: DemoGetReqDTO, opts?: T): Promise<DemoGetRespDTO> {
-    return this._r(this._rArgs.a(req, opts)).then((resp) => this._rp.pat(DemoGetRespDTO, resp));
+    return this._r(this._rArgs.j(req, opts)).then((resp) => this._rp.pat(DemoGetRespDTO, resp));
   }
 
   /**
@@ -42,11 +146,334 @@ export class ApiClient<T = undefined> {
    * @returns {GetHomeDataResDTO} The response data (RespDTO).
    */
   public async getHomeData(req?: null, opts?: T): Promise<GetHomeDataResDTO> {
-    return this._r(this._rArgs.b(req, opts)).then((resp) => this._rp.pat(GetHomeDataResDTO, resp));
+    return this._r(this._rArgs.k(req, opts)).then((resp) => this._rp.pat(GetHomeDataResDTO, resp));
+  }
+
+  /**
+   * 获取媒体列表
+   *
+   * @param {GetMediaListReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetMediaResDTO} The response data (RespDTO).
+   */
+  public async getMediaList(req: GetMediaListReqDTO, opts?: T): Promise<GetMediaResDTO> {
+    return this._r(this._rArgs.l(req, opts)).then((resp) => this._rp.pat(GetMediaResDTO, resp));
+  }
+
+  /**
+   * 上传媒体文件
+   *
+   * @param {UploadMediaReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async uploadMedia(req: UploadMediaReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.m(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 删除媒体文件
+   *
+   * @param {DeleteMediaReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async deleteMedia(req: DeleteMediaReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.n(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 创建新闻
+   *
+   * @param {CreateNewsReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async createNews(req: CreateNewsReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.o(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 更新新闻
+   *
+   * @param {UpdateNewsReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async updateNews(req: UpdateNewsReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.p(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 删除新闻
+   *
+   * @param {DeleteNewsReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async deleteNews(req: DeleteNewsReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.q(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 获取新闻详情
+   *
+   * @param {GetNewsReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetNewsDetailResDTO} The response data (RespDTO).
+   */
+  public async getNews(req: GetNewsReqDTO, opts?: T): Promise<GetNewsDetailResDTO> {
+    return this._r(this._rArgs.r(req, opts)).then((resp) => this._rp.pat(GetNewsDetailResDTO, resp));
+  }
+
+  /**
+   * 获取所有新闻列表
+   *
+   * @param {null} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetNewsListResDTO} The response data (RespDTO).
+   */
+  public async getAllNews(req?: null, opts?: T): Promise<GetNewsListResDTO> {
+    return this._r(this._rArgs.s(req, opts)).then((resp) => this._rp.pat(GetNewsListResDTO, resp));
+  }
+
+  /**
+   * 创建项目
+   *
+   * @param {CreateProjectReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async createProject(req: CreateProjectReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.t(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 更新项目
+   *
+   * @param {UpdateProjectReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async updateProject(req: UpdateProjectReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.u(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 删除项目
+   *
+   * @param {DeleteProjectReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async deleteProject(req: DeleteProjectReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.v(req, opts)).then((resp) => this._rp.pat(null, resp));
+  }
+
+  /**
+   * 获取项目详情
+   *
+   * @param {GetProjectReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetProjectDetailResDTO} The response data (RespDTO).
+   */
+  public async getProject(req: GetProjectReqDTO, opts?: T): Promise<GetProjectDetailResDTO> {
+    return this._r(this._rArgs.w(req, opts)).then((resp) => this._rp.pat(GetProjectDetailResDTO, resp));
+  }
+
+  /**
+   * 获取所有项目列表
+   *
+   * @param {null} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetProjectListResDTO} The response data (RespDTO).
+   */
+  public async getAllProjects(req?: null, opts?: T): Promise<GetProjectListResDTO> {
+    return this._r(this._rArgs.x(req, opts)).then((resp) => this._rp.pat(GetProjectListResDTO, resp));
   }
 
   private _rArgs = {
-    a: (req: DemoGetReqDTO, opts?: any) => {
+    a: (req: null, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getGlobalConfig', {
+          param: {},
+          query: {},
+        }),
+        data: {},
+        extraOpts: opts,
+        metadata: {
+          name: 'getGlobalConfig',
+          method: 'POST',
+          path: '/api/getGlobalConfig',
+          req: null as null,
+          resp: GetGlobalConfigResDTO,
+        },
+      };
+    },
+    b: (req: UpdateGlobalConfigReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/updateGlobalConfig', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          title: req.title,
+          slogan: req.slogan,
+          description: req.description,
+          logoId: req.logoId,
+          homeNewsPreviewIds: req.homeNewsPreviewIds,
+          homeProjectsPreviewIds: req.homeProjectsPreviewIds,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'updateGlobalConfig',
+          method: 'POST',
+          path: '/api/updateGlobalConfig',
+          req: UpdateGlobalConfigReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    c: (req: RegisterAdminReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/register', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          username: req.username,
+          password: req.password,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'register',
+          method: 'POST',
+          path: '/api/register',
+          req: RegisterAdminReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    d: (req: LoginAdminWithUserNameReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/login', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          username: req.username,
+          password: req.password,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'login',
+          method: 'POST',
+          path: '/api/login',
+          req: LoginAdminWithUserNameReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    e: (req: null, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/logout', {
+          param: {},
+          query: {},
+        }),
+        data: {},
+        extraOpts: opts,
+        metadata: {
+          name: 'logout',
+          method: 'POST',
+          path: '/api/logout',
+          req: null as null,
+          resp: null as null,
+        },
+      };
+    },
+    f: (req: null, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getSession', {
+          param: {},
+          query: {},
+        }),
+        data: {},
+        extraOpts: opts,
+        metadata: {
+          name: 'getSession',
+          method: 'POST',
+          path: '/api/getSession',
+          req: null as null,
+          resp: GetSessionResDTO,
+        },
+      };
+    },
+    g: (req: UpdateAdminAvatarReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/updateAdminAvatar', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          avatar: req.avatar,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'updateAdminAvatar',
+          method: 'POST',
+          path: '/api/updateAdminAvatar',
+          req: UpdateAdminAvatarReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    h: (req: null, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getAllAdmins', {
+          param: {},
+          query: {},
+        }),
+        data: {},
+        extraOpts: opts,
+        metadata: {
+          name: 'getAllAdmins',
+          method: 'POST',
+          path: '/api/getAllAdmins',
+          req: null as null,
+          resp: GetAllAdminsListResDTO,
+        },
+      };
+    },
+    i: (req: UpdateAdminRoleReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/updateAdminRole', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          adminId: req.adminId,
+          role: req.role,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'updateAdminRole',
+          method: 'POST',
+          path: '/api/updateAdminRole',
+          req: UpdateAdminRoleReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    j: (req: DemoGetReqDTO, opts?: any) => {
       return {
         method: 'GET' as AllowedRequestMethod,
         url: this._uf('/api/demoGet/:id', {
@@ -68,7 +495,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    b: (req: null, opts?: any) => {
+    k: (req: null, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getHomeData', {
@@ -83,6 +510,287 @@ export class ApiClient<T = undefined> {
           path: '/api/getHomeData',
           req: null as null,
           resp: GetHomeDataResDTO,
+        },
+      };
+    },
+    l: (req: GetMediaListReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getMediaList', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          type: req.type,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'getMediaList',
+          method: 'POST',
+          path: '/api/getMediaList',
+          req: GetMediaListReqDTO,
+          resp: GetMediaResDTO,
+        },
+      };
+    },
+    m: (req: UploadMediaReqDTO, opts?: any) => {
+      const formData = new FormData();
+      formData.append('file', req.file);
+      formData.append('type', req.type);
+      formData.append('alt', req.alt);
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/uploadMedia', {
+          param: {},
+          query: {},
+        }),
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'uploadMedia',
+          method: 'POST',
+          path: '/api/uploadMedia',
+          req: UploadMediaReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    n: (req: DeleteMediaReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/deleteMedia', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          id: req.id,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'deleteMedia',
+          method: 'POST',
+          path: '/api/deleteMedia',
+          req: DeleteMediaReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    o: (req: CreateNewsReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/createNews', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          title: req.title,
+          summary: req.summary,
+          content: req.content,
+          coverImage: req.coverImage,
+          isPublished: req.isPublished,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'createNews',
+          method: 'POST',
+          path: '/api/createNews',
+          req: CreateNewsReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    p: (req: UpdateNewsReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/updateNews', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          id: req.id,
+          title: req.title,
+          summary: req.summary,
+          content: req.content,
+          coverImage: req.coverImage,
+          isPublished: req.isPublished,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'updateNews',
+          method: 'POST',
+          path: '/api/updateNews',
+          req: UpdateNewsReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    q: (req: DeleteNewsReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/deleteNews', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          id: req.id,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'deleteNews',
+          method: 'POST',
+          path: '/api/deleteNews',
+          req: DeleteNewsReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    r: (req: GetNewsReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getNews', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          id: req.id,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'getNews',
+          method: 'POST',
+          path: '/api/getNews',
+          req: GetNewsReqDTO,
+          resp: GetNewsDetailResDTO,
+        },
+      };
+    },
+    s: (req: null, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getAllNews', {
+          param: {},
+          query: {},
+        }),
+        data: {},
+        extraOpts: opts,
+        metadata: {
+          name: 'getAllNews',
+          method: 'POST',
+          path: '/api/getAllNews',
+          req: null as null,
+          resp: GetNewsListResDTO,
+        },
+      };
+    },
+    t: (req: CreateProjectReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/createProject', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          name: req.name,
+          description: req.description,
+          repoUrl: req.repoUrl,
+          websiteUrl: req.websiteUrl,
+          coverImage: req.coverImage,
+          isFeatured: req.isFeatured,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'createProject',
+          method: 'POST',
+          path: '/api/createProject',
+          req: CreateProjectReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    u: (req: UpdateProjectReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/updateProject', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          id: req.id,
+          name: req.name,
+          description: req.description,
+          repoUrl: req.repoUrl,
+          websiteUrl: req.websiteUrl,
+          coverImage: req.coverImage,
+          isFeatured: req.isFeatured,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'updateProject',
+          method: 'POST',
+          path: '/api/updateProject',
+          req: UpdateProjectReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    v: (req: DeleteProjectReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/deleteProject', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          id: req.id,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'deleteProject',
+          method: 'POST',
+          path: '/api/deleteProject',
+          req: DeleteProjectReqDTO,
+          resp: null as null,
+        },
+      };
+    },
+    w: (req: GetProjectReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getProject', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          id: req.id,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'getProject',
+          method: 'POST',
+          path: '/api/getProject',
+          req: GetProjectReqDTO,
+          resp: GetProjectDetailResDTO,
+        },
+      };
+    },
+    x: (req: null, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getAllProjects', {
+          param: {},
+          query: {},
+        }),
+        data: {},
+        extraOpts: opts,
+        metadata: {
+          name: 'getAllProjects',
+          method: 'POST',
+          path: '/api/getAllProjects',
+          req: null as null,
+          resp: GetProjectListResDTO,
         },
       };
     },

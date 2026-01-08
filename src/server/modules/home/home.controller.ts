@@ -21,6 +21,4 @@ export default class HomeController {
   public async getHomeData(): Promise<GetHomeDataResDTO> {
     return await this.homeService.getHomeData();
   }
-
-  
 }
