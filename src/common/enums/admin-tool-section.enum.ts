@@ -8,5 +8,5 @@ export enum AdminToolSectionEnum {
   GLOBAL_CONFIG = 'global',
   NEWS_MANAGEMENT = 'news',
   PROJECT_MANAGEMENT = 'project',
-  ADMIN_VIEW = 'admin',
+  USERS = 'users',
 }

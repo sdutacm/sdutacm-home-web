@@ -12,6 +12,12 @@ declare module '@vue/runtime-core' {
     $$router: {
       to(target: 'About'): BwcxVueRouterActions;
       to(target: 'AdminView'): BwcxVueRouterActions;
+      to(target: 'GlobalConfigView'): BwcxVueRouterActions;
+      to(target: 'MediaListContainer'): BwcxVueRouterActions;
+      to(target: 'NewsListContainer'): BwcxVueRouterActions;
+      to(target: 'OverviewView'): BwcxVueRouterActions;
+      to(target: 'ProjectListContainer'): BwcxVueRouterActions;
+      to(target: 'UsersAdminView'): BwcxVueRouterActions;
       to(target: 'DemoDetail'): BwcxVueRouterActions<R.DemoDetailRPO>;
       to(target: 'HomeView'): BwcxVueRouterActions;
       to(target: 'LoginView'): BwcxVueRouterActions;

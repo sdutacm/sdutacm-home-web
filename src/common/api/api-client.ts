@@ -7,7 +7,7 @@
 import { AllowedRequestMethod, IBwcxApiRequestAdaptorArgs, AbstractResponseParser } from 'bwcx-api-client';
 import { configure as configureUrlcat } from 'urlcat-fork';
 import { GetGlobalConfigResDTO, UpdateGlobalConfigReqDTO } from '../modules/global-config/global-config.dto';
-import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '../modules/auth/auth.dto';
+import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '../modules/admin/admin.dto';
 import { DemoGetReqDTO, DemoGetRespDTO } from '../modules/demo/demo.dto';
 import { GetHomeDataResDTO } from '../modules/home/home.dto';
 import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO, DeleteMediaReqDTO } from '../modules/media/media.dto';

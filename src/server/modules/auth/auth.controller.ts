@@ -3,7 +3,7 @@ import { Inject } from 'bwcx-core';
 import { Api } from 'bwcx-api';
 import { ApiController } from '@server/decorators';
 import AuthService from './auth.service';
-import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '@common/modules/auth/auth.dto';
+import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '@common/modules/admin/admin.dto';
 
 @ApiController()
 export default class AuthController {

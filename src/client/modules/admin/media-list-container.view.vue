@@ -3,11 +3,16 @@ import { Vue, Options } from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import { GetMediaResDTO } from '@common/modules/media/media.dto';
+import { View, RenderMethod, RenderMethodKind, ChildOf } from 'bwcx-client-vue3';
+import { MediaRPO } from '@common/modules/media/media.rtp';
 
 import { ElButton, ElImage, ElUpload, ElCard, ElIcon, ElMessage, ElMessageBox, ElEmpty } from 'element-plus';
 import { Delete, Edit } from '@element-plus/icons-vue';
-import UploadMediaDialog from './upload-media-dialog.vue';
+import UploadMediaDialog from '@client/components/admin/upload-media-dialog.vue';
 
+@View('/admin/media-list/:id')
+@ChildOf('AdminView')
+@RenderMethod(RenderMethodKind.CSR)
 @Options({
   components: {
     ElButton,
@@ -18,25 +23,20 @@ import UploadMediaDialog from './upload-media-dialog.vue';
     ElEmpty,
     Delete,
     UploadMediaDialog,
-    Edit
+    Edit,
   },
-  emits: ['refresh'],
 })
 export default class MediaListContainer extends Vue {
-  @Prop({ required: true })
-  mediaType!: MediaTypeEnum;
+  mediaType: MediaTypeEnum = MediaTypeEnum.IMAGE;
 
-  @Prop({ required: true })
-  mediaList!: GetMediaResDTO;
+  mediaList: GetMediaResDTO = {
+    rows: [],
+  };
 
   uploadDialogVisible = false;
 
   showUploadDialog() {
     this.uploadDialogVisible = true;
-  }
-
-  async handleUploadSuccess(media: any) {
-    this.$emit('refresh');
   }
 
   async handleDelete(media: any) {
@@ -56,6 +56,24 @@ export default class MediaListContainer extends Vue {
         ElMessage.error('删除失败，请重试');
       }
     }
+  }
+
+  beforeRouteUpdate(to, from, next) {
+    const type = to.params.id as MediaTypeEnum;
+    this.mediaType = type;
+    this.$api.getMediaList({ type }).then((mediaList) => {
+      this.mediaList = mediaList;
+      next();
+    });
+  }
+
+
+  async mounted(): Promise<void> {
+    const type = this.$route.params.id as MediaTypeEnum;
+    this.mediaType = type;
+    console.log('媒体类型:', type);
+    this.mediaList = await this.$api.getMediaList({ type });
+    console.log(this.mediaList)
   }
 }
 </script>
@@ -81,14 +99,14 @@ export default class MediaListContainer extends Vue {
         class="media-list-card"
       >
         <div class="media-list-image-container">
-          <el-image :src="media.path" class="media-list-card-image" fit="contain" />
+          <el-image :src="media.path" class="media-list-card-image" fit="cover" />
         </div>
         <template #footer>
-          <div  class="media-list-card-alt">
+          <div class="media-list-card-alt">
             {{ media.alt ? media.alt : '无描述' }}
           </div>
           <footer class="media-list-card-footer">
-            <el-button circle >
+            <el-button circle>
               <el-icon><edit /></el-icon>
             </el-button>
             <el-button type="danger" circle @click="handleDelete(media)" plain>
@@ -99,11 +117,7 @@ export default class MediaListContainer extends Vue {
       </el-card>
     </main>
 
-    <upload-media-dialog
-      v-model:visible="uploadDialogVisible"
-      :media-type="mediaType"
-      @upload-success="handleUploadSuccess"
-    />
+    <upload-media-dialog v-model:visible="uploadDialogVisible" :media-type="mediaType" />
   </div>
 </template>
 
@@ -113,12 +127,13 @@ export default class MediaListContainer extends Vue {
   flex-direction: column;
   height: 100%;
 
-
   .media-list-main {
     flex: 1;
     display: flex;
+    flex-direction: row;
+    align-items: flex-start;
     flex-wrap: wrap;
-    gap: .5rem;
+    gap: 0.5rem;
     overflow-y: auto;
   }
 

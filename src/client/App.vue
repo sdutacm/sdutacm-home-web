@@ -6,5 +6,9 @@ export default class App extends Vue {}
 </script>
 
 <template>
-  <router-view />
+  <router-view v-slot="{ Component }">
+    <Suspense>
+      <component :is="Component" />
+    </Suspense>
+  </router-view>
 </template>

@@ -1,5 +1,8 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
+import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
+import { MediaTypeEnum } from '@common/enums/media-type.enum';
+
 import {
   ElMessage,
   ElMessageBox,
@@ -16,25 +19,25 @@ import {
   ElSwitch,
   ElUpload,
   ElImage,
-  ElSelect,
-  ElOption,
   vLoading,
 } from 'element-plus';
-import { Plus, Edit, Delete, View, Upload } from '@element-plus/icons-vue';
-import { MediaTypeEnum } from '@common/enums/media-type.enum';
+import { Plus, Edit, Delete, Upload, Link } from '@element-plus/icons-vue';
 
-interface NewsItem {
+interface ProjectItem {
   id: number;
-  title: string;
-  summary: string;
-  content: string;
-  coverImage: string;
-  isPublished: boolean;
-  publishedAt: Date;
+  name: string;
+  description?: string;
+  repoUrl?: string;
+  websiteUrl?: string;
+  coverImage?: string;
+  isFeatured: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
+@View('/admin/project-list')
+@ChildOf('AdminView')
+@RenderMethod(RenderMethodKind.CSR)
 @Options({
   directives: {
     loading: vLoading,
@@ -52,131 +55,120 @@ interface NewsItem {
     ElSwitch,
     ElUpload,
     ElImage,
-    ElSelect,
-    ElOption,
     Plus,
     Edit,
     Delete,
-    View,
     Upload,
+    Link,
   },
 })
-export default class NewsListContainer extends Vue {
-  newsList: NewsItem[] = [];
+export default class ProjectListContainer extends Vue {
+  projectList: ProjectItem[] = [];
   dialogVisible = false;
-  dialogTitle = '创建新闻';
+  dialogTitle = '创建项目';
   isEdit = false;
-  currentNewsId: number | null = null;
-  filterStatus = 'all'; // 筛选状态: 'all', 'published', 'draft'
+  currentProjectId: number | null = null;
 
-  newsForm = {
-    title: '',
-    summary: '',
-    content: '',
+  projectForm = {
+    name: '',
+    description: '',
+    repoUrl: '',
+    websiteUrl: '',
     coverImage: '',
-    isPublished: false,
+    isFeatured: false,
   };
 
   coverImageFile: any = null;
   uploadingCover = false;
 
-  get filteredNewsList() {
-    if (this.filterStatus === 'all') return this.newsList;
-    if (this.filterStatus === 'published') return this.newsList.filter(n => n.isPublished);
-    if (this.filterStatus === 'draft') return this.newsList.filter(n => !n.isPublished);
-    return this.newsList;
-  }
-
   async mounted() {
-    await this.loadNewsList();
+    await this.loadProjectList();
   }
 
-  async loadNewsList() {
+  async loadProjectList() {
     try {
-      const res = await this.$api.getAllNews();
-      this.newsList = res.rows;
+      const res = await this.$api.getAllProjects();
+      this.projectList = res.rows;
     } catch (error) {
-      console.error('加载新闻列表失败:', error);
-      ElMessage.error('加载新闻列表失败');
+      console.error('加载项目列表失败:', error);
+      ElMessage.error('加载项目列表失败');
     }
   }
 
   handleCreate() {
-    this.dialogTitle = '创建新闻';
+    this.dialogTitle = '创建项目';
     this.isEdit = false;
-    this.currentNewsId = null;
-    this.newsForm = {
-      title: '',
-      summary: '',
-      content: '',
+    this.currentProjectId = null;
+    this.projectForm = {
+      name: '',
+      description: '',
+      repoUrl: '',
+      websiteUrl: '',
       coverImage: '',
-      isPublished: false,
+      isFeatured: false,
     };
     this.coverImageFile = null;
     this.dialogVisible = true;
   }
 
-  handleEdit(news: NewsItem) {
-    this.dialogTitle = '编辑新闻';
+  handleEdit(project: ProjectItem) {
+    this.dialogTitle = '编辑项目';
     this.isEdit = true;
-    this.currentNewsId = news.id;
-    this.newsForm = {
-      title: news.title,
-      summary: news.summary || '',
-      content: news.content,
-      coverImage: news.coverImage || '',
-      isPublished: news.isPublished,
+    this.currentProjectId = project.id;
+    this.projectForm = {
+      name: project.name,
+      description: project.description || '',
+      repoUrl: project.repoUrl || '',
+      websiteUrl: project.websiteUrl || '',
+      coverImage: project.coverImage || '',
+      isFeatured: project.isFeatured,
     };
     this.coverImageFile = null;
     this.dialogVisible = true;
   }
 
-  async handleDelete(news: NewsItem) {
+  async handleDelete(project: ProjectItem) {
     try {
-      await ElMessageBox.confirm(`确定要删除新闻 "${news.title}" 吗？`, '提示', {
+      await ElMessageBox.confirm(`确定要删除项目 "${project.name}" 吗？`, '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
       });
 
-      await this.$api.deleteNews({ id: news.id });
+      await this.$api.deleteProject({ id: project.id });
       ElMessage.success('删除成功');
-      await this.loadNewsList();
+      await this.loadProjectList();
     } catch (error) {
       if (error !== 'cancel') {
-        console.error('删除新闻失败:', error);
-        ElMessage.error('删除新闻失败');
+        console.error('删除项目失败:', error);
+        ElMessage.error('删除项目失败');
       }
     }
   }
 
   async handleSubmit() {
-    if (!this.newsForm.title.trim()) {
-      ElMessage.warning('请输入新闻标题');
-      return;
-    }
-    if (!this.newsForm.content.trim()) {
-      ElMessage.warning('请输入新闻内容');
+    if (!this.projectForm.name.trim()) {
+      ElMessage.warning('请输入项目名称');
       return;
     }
 
     const loading = ElLoading.service({ fullscreen: true, text: '保存中...' });
     try {
-      if (this.isEdit && this.currentNewsId) {
-        await this.$api.updateNews({
-          id: this.currentNewsId,
-          ...this.newsForm,
+      if (this.isEdit && this.currentProjectId) {
+        await this.$api.updateProject({
+          id: this.currentProjectId,
+          ...this.projectForm,
         });
         ElMessage.success('更新成功');
       } else {
-        await this.$api.createNews(this.newsForm);
+        await this.$api.createProject(this.projectForm);
         ElMessage.success('创建成功');
       }
       this.dialogVisible = false;
-      await this.loadNewsList();
+      await this.loadProjectList();
     } catch (error) {
-      console.error('保存新闻失败:', error);
-      ElMessage.error('保存新闻失败');
+      console.error('保存项目失败:', error);
+      ElMessage.error('保存项目失败');
     } finally {
       loading.close();
     }
@@ -207,8 +199,8 @@ export default class NewsListContainer extends Vue {
     try {
       const formData = new FormData();
       formData.append('file', this.coverImageFile);
-      formData.append('type', MediaTypeEnum.NEWS_COVER);
-      formData.append('alt', `news-cover-${Date.now()}`);
+      formData.append('type', MediaTypeEnum.PROJECT_COVER);
+      formData.append('alt', `project-cover-${Date.now()}`);
 
       const response = await fetch('/api/uploadMedia', {
         method: 'POST',
@@ -221,7 +213,7 @@ export default class NewsListContainer extends Vue {
 
       const result = await response.json();
       const coverPath = result.data.data.path;
-      this.newsForm.coverImage = coverPath;
+      this.projectForm.coverImage = coverPath;
       this.coverImageFile = null;
 
       ElMessage.success('封面上传成功');
@@ -236,33 +228,47 @@ export default class NewsListContainer extends Vue {
 </script>
 
 <template>
-  <div class="news-list-container">
+  <div class="project-list-container">
     <div class="toolbar">
       <el-button type="primary" @click="handleCreate">
         <el-icon><Plus /></el-icon>
-        创建新闻
+        创建项目
       </el-button>
-      <el-select v-model="filterStatus" placeholder="筛选状态" style="width: 120px; margin-left: 12px">
-        <el-option label="全部" value="all" />
-        <el-option label="已发布" value="published" />
-        <el-option label="草稿" value="draft" />
-      </el-select>
     </div>
 
-    <el-table :data="filteredNewsList" style="width: 100%; margin-top: 16px" stripe>
+    <el-table :data="projectList" style="width: 100%; margin-top: 16px" stripe>
       <el-table-column prop="id" label="ID" width="60" />
-      <el-table-column prop="title" label="标题" min-width="200" />
-      <el-table-column prop="summary" label="摘要" min-width="150" show-overflow-tooltip />
-      <el-table-column label="状态" width="80">
+      <el-table-column label="封面" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.isPublished ? 'success' : 'info'">
-            {{ row.isPublished ? '已发布' : '草稿' }}
-          </el-tag>
+          <el-image v-if="row.coverImage" :src="row.coverImage" style="width: 60px; height: 40px" fit="cover" />
+          <span v-else style="color: #999">暂无</span>
         </template>
       </el-table-column>
-      <el-table-column label="发布时间" width="180">
+      <el-table-column prop="name" label="项目名称" min-width="150" />
+      <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
+      <el-table-column label="代码仓库" width="120">
         <template #default="{ row }">
-          {{ formatDate(row.publishedAt) }}
+          <a v-if="row.repoUrl" :href="row.repoUrl" target="_blank" style="color: #409eff">
+            <el-icon><Link /></el-icon>
+            查看
+          </a>
+          <span v-else style="color: #999">-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="官网" width="100">
+        <template #default="{ row }">
+          <a v-if="row.websiteUrl" :href="row.websiteUrl" target="_blank" style="color: #409eff">
+            <el-icon><Link /></el-icon>
+            访问
+          </a>
+          <span v-else style="color: #999">-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="首页展示" width="100">
+        <template #default="{ row }">
+          <el-tag :type="row.isFeatured ? 'success' : 'info'">
+            {{ row.isFeatured ? '是' : '否' }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" width="180">
@@ -284,26 +290,19 @@ export default class NewsListContainer extends Vue {
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
-      <el-form :model="newsForm" label-width="100px">
-        <el-form-item label="标题" required>
-          <el-input v-model="newsForm.title" placeholder="请输入新闻标题" />
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="700px">
+      <el-form :model="projectForm" label-width="100px">
+        <el-form-item label="项目名称" required>
+          <el-input v-model="projectForm.name" placeholder="请输入项目名称" />
         </el-form-item>
-        <el-form-item label="摘要">
-          <el-input
-            v-model="newsForm.summary"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入新闻摘要"
-          />
+        <el-form-item label="项目描述">
+          <el-input v-model="projectForm.description" type="textarea" :rows="3" placeholder="请输入项目描述" />
         </el-form-item>
-        <el-form-item label="内容" required>
-          <el-input
-            v-model="newsForm.content"
-            type="textarea"
-            :rows="10"
-            placeholder="请输入新闻内容（之后会集成富文本编辑器）"
-          />
+        <el-form-item label="代码仓库">
+          <el-input v-model="projectForm.repoUrl" placeholder="https://github.com/..." />
+        </el-form-item>
+        <el-form-item label="项目官网">
+          <el-input v-model="projectForm.websiteUrl" placeholder="https://..." />
         </el-form-item>
         <el-form-item label="封面图片">
           <div class="cover-upload-wrapper">
@@ -316,8 +315,8 @@ export default class NewsListContainer extends Vue {
             >
               <div class="cover-preview" v-loading="uploadingCover">
                 <el-image
-                  v-if="newsForm.coverImage"
-                  :src="newsForm.coverImage"
+                  v-if="projectForm.coverImage"
+                  :src="projectForm.coverImage"
                   style="width: 200px; height: 120px; cursor: pointer"
                   fit="cover"
                 />
@@ -330,8 +329,8 @@ export default class NewsListContainer extends Vue {
             <div class="upload-tip">支持 jpg/png 格式，大小不超过 10MB</div>
           </div>
         </el-form-item>
-        <el-form-item label="发布状态">
-          <el-switch v-model="newsForm.isPublished" active-text="已发布" inactive-text="草稿" />
+        <el-form-item label="首页展示">
+          <el-switch v-model="projectForm.isFeatured" active-text="是" inactive-text="否" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -343,7 +342,7 @@ export default class NewsListContainer extends Vue {
 </template>
 
 <style lang="less" scoped>
-.news-list-container {
+.project-list-container {
   padding: 16px;
 
   .toolbar {

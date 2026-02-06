@@ -10,6 +10,12 @@ import { DemoDetailRPO } from '../modules/demo/demo.rpo';
 export const clientRoutesMap = new Map<string, { path: string; routeProps: Newable | undefined; renderMethod: RenderMethodKind | undefined }>([
   ['About', { path: '/about', routeProps: undefined, renderMethod: undefined }],
   ['AdminView', { path: '/admin', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
+  ['GlobalConfigView', { path: '/admin/global-config', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
+  ['MediaListContainer', { path: '/admin/media-list/:id', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
+  ['NewsListContainer', { path: '/admin/news-list', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
+  ['OverviewView', { path: '/admin/overview', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
+  ['ProjectListContainer', { path: '/admin/project-list', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
+  ['UsersAdminView', { path: '/admin/users', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
   ['DemoDetail', { path: '/demo/detail/:id', routeProps: DemoDetailRPO, renderMethod: RenderMethodKind.SSR }],
   ['HomeView', { path: '/', routeProps: undefined, renderMethod: RenderMethodKind.SSR }],
   ['LoginView', { path: '/login', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],

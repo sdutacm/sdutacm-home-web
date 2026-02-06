@@ -3,7 +3,9 @@ import { Vue, Options } from 'vue-class-component';
 import { GetGlobalConfigResDTO } from '@common/modules/global-config/global-config.dto';
 import { Prop } from 'vue-property-decorator';
 import { ElForm, ElInput, ElFormItem, ElImage, ElButton, ElMessage, ElLoading, ElTransfer } from 'element-plus';
-import SelectLogoDialog from './select-logo-dialog.vue';
+import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
+
+import SelectLogoDialog from '@client/components/admin/select-logo-dialog.vue';
 
 interface NewsItem {
   id: number;
@@ -23,6 +25,9 @@ interface TransferItem {
   disabled: boolean;
 }
 
+@View('/admin/global-config')
+@ChildOf('AdminView')
+@RenderMethod(RenderMethodKind.CSR)
 @Options({
   components: {
     ElForm,
@@ -36,8 +41,7 @@ interface TransferItem {
   },
 })
 export default class GlobalConfigView extends Vue {
-  @Prop({ required: true })
-  globalConfigState!: GetGlobalConfigResDTO;
+  globalConfigState: GetGlobalConfigResDTO | null = null;
 
   selectLogoDialogVisible = false;
   selectedLogoId: number | null = null;
@@ -138,6 +142,7 @@ export default class GlobalConfigView extends Vue {
   }
 
   async mounted() {
+    this.globalConfigState = await this.$api.getGlobalConfig();
     await this.loadNewsList();
     await this.loadProjectsList();
     this.selectedNewsIds = this.globalConfigState?.homeNewsPreviewIds || [];

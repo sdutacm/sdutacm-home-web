@@ -1,9 +1,10 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
-import { GetSessionResDTO, GetAllAdminsResDTO } from '@common/modules/auth/auth.dto';
+import { GetSessionResDTO, GetAllAdminsResDTO } from '@common/modules/admin/admin.dto';
 import { AdminRoleEnum } from '@common/enums/admin-role';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
+import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import {
   ElAvatar,
   ElButton,
@@ -22,6 +23,9 @@ import {
 } from 'element-plus';
 import { Upload, Plus, User } from '@element-plus/icons-vue';
 
+@View('/admin/users')
+@ChildOf('AdminView')
+@RenderMethod(RenderMethodKind.CSR)
 @Options({
   components: {
     ElAvatar,
@@ -44,9 +48,8 @@ import { Upload, Plus, User } from '@element-plus/icons-vue';
     loading: vLoading,
   },
 })
-export default class AdminOperate extends Vue {
-  @Prop({ required: true })
-  userInfo!: GetSessionResDTO;
+export default class UsersAdminView extends Vue {
+  userInfo: GetSessionResDTO | null = null;
 
   defaultAvatarUrl = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
@@ -256,6 +259,7 @@ export default class AdminOperate extends Vue {
   }
 
   async mounted() {
+    this.userInfo = await this.$api.getSession();
     if (this.isSuperAdmin) {
       await this.loadAdminList();
     }

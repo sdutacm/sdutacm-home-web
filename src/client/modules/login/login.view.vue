@@ -3,7 +3,7 @@ import { Vue, Options } from 'vue-class-component';
 import { View } from 'bwcx-client-vue3';
 import { RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import { ElForm, ElInput, ElFormItem, ElButton } from 'element-plus';
-import { RegisterAdminReqDTO } from '@common/modules/auth/auth.dto';
+import { RegisterAdminReqDTO } from '@common/modules/admin/admin.dto';
 
 @View('/login')
 @Options({

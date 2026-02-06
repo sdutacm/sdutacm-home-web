@@ -1,5 +1,5 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
-import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '@common/modules/auth/auth.dto';
+import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '@common/modules/admin/admin.dto';
 import bcrypt from 'bcrypt';
 import appDataSource from '@server/db';
 import { Admin } from '@server/db/entity/admin';

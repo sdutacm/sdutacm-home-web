@@ -1,7 +1,9 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
-import { GetSessionResDTO } from '@common/modules/auth/auth.dto';
+import { GetSessionResDTO } from '@common/modules/admin/admin.dto';
+import { AdminToolSectionEnum } from '@common/enums/admin-tool-section.enum';
+import localForge from 'localforage';
 
 import { ElRow, ElCol, ElMenu, ElMenuItem, ElMenuItemGroup, ElSubMenu, ElIcon, ElButton, ElAvatar } from 'element-plus';
 import {
@@ -15,12 +17,15 @@ import {
   PictureFilled,
   PictureRounded,
   HomeFilled,
+  PieChart,
+  House,
+  Picture
 } from '@element-plus/icons-vue';
-import { AdminToolSectionEnum } from '@common/enums/admin-tool-section.enum';
 
 @Options({
   components: {
     ElAvatar,
+    PieChart,
     ElButton,
     ElRow,
     ElCol,
@@ -34,11 +39,12 @@ import { AdminToolSectionEnum } from '@common/enums/admin-tool-section.enum';
     Document,
     Setting,
     Box,
+    Picture,
     PictureFilled,
     PictureRounded,
     Microphone,
     VideoCamera,
-    HomeFilled,
+    House,
   },
   emits: ['menu-select'],
 })
@@ -47,10 +53,32 @@ export default class AdminTools extends Vue {
   userInfo!: GetSessionResDTO;
 
   adminToolSectionEnum = AdminToolSectionEnum;
+  adminToolSectionToRouterMap: Record<string, string> = {
+    [this.adminToolSectionEnum.OVERVIEW]: 'OverviewView',
+    [this.adminToolSectionEnum.MEDIA_LOGO]: '/admin/media-list/logo',
+    [this.adminToolSectionEnum.MEDIA_IMAGE]: '/admin/media-list/image',
+    [this.adminToolSectionEnum.MEDIA_AUDIO]: '/admin/media-list/audio',
+    [this.adminToolSectionEnum.MEDIA_VIDEO]: '/admin/media-list/video',
+    [this.adminToolSectionEnum.GLOBAL_CONFIG]: 'GlobalConfigView',
+    [this.adminToolSectionEnum.NEWS_MANAGEMENT]: 'NewsListContainer',
+    [this.adminToolSectionEnum.PROJECT_MANAGEMENT]: 'ProjectListContainer',
+    [this.adminToolSectionEnum.USERS]: 'UsersAdminView',
+  };
   defaultAvatarUrl = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
   handleSelect(index: string) {
-    this.$emit('menu-select', index);
+    if (index === 'logo' || index === 'video' || index === 'audio' || index === 'image') {
+      this.$router.push({ name: 'MediaListContainer', params: { id: index } });
+      localForge.setItem('admin-last-page', {
+        page: 'MediaListContainer',
+        param: { id: index },
+      });
+      return;
+    }
+    this.$router.push({ name: this.adminToolSectionToRouterMap[index] });
+    localForge.setItem('admin-last-page', {
+      page: this.adminToolSectionToRouterMap[index],
+    });
   }
 
   goHome() {
@@ -76,8 +104,12 @@ export default class AdminTools extends Vue {
           <el-button size="small" @click="goHome">Go Home</el-button>
         </div>
         <el-menu @select="handleSelect" mode="vertical">
+          <el-menu-item :index="adminToolSectionEnum.OVERVIEW">
+            <el-icon><pie-chart /></el-icon>
+            <span>总揽</span>
+          </el-menu-item>
           <el-menu-item :index="adminToolSectionEnum.GLOBAL_CONFIG">
-            <el-icon><home-filled /></el-icon>
+            <el-icon><house /></el-icon>
             <span>首页配置</span>
           </el-menu-item>
           <el-sub-menu :index="adminToolSectionEnum.MEDIA_MANAGEMENT">
@@ -91,7 +123,7 @@ export default class AdminTools extends Vue {
                 <span>Logo 管理</span>
               </el-menu-item>
               <el-menu-item :index="adminToolSectionEnum.MEDIA_IMAGE">
-                <el-icon><picture-filled /></el-icon>
+                <el-icon><Picture /></el-icon>
                 <span>图片管理</span>
               </el-menu-item>
               <el-menu-item :index="adminToolSectionEnum.MEDIA_AUDIO">
@@ -120,7 +152,7 @@ export default class AdminTools extends Vue {
           class="user-info"
           @click="
             () => {
-              handleSelect(adminToolSectionEnum.ADMIN_VIEW);
+              this.handleSelect(adminToolSectionEnum.USERS);
             }
           "
         >
