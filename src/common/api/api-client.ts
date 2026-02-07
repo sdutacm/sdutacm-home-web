@@ -522,6 +522,8 @@ export class ApiClient<T = undefined> {
         }),
         data: {
           type: req.type,
+          page: req.page,
+          pageSize: req.pageSize,
         },
         extraOpts: opts,
         metadata: {

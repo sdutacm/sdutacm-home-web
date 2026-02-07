@@ -19,15 +19,14 @@ export default class MediaController {
   @Post('/getMediaList')
   @Contract(GetMediaListReqDTO, GetMediaResDTO)
   public async getMediaList(@Data() data: GetMediaListReqDTO): Promise<GetMediaResDTO> {
-    return await this.mediaService.getMediaList(data.type);
+    return await this.mediaService.getMediaList(data.type, data.page, data.pageSize);
   }
 
   @Api.Summary('上传媒体文件')
   @Post('/uploadMedia')
   @Contract(UploadMediaReqDTO, null)
-  public async uploadMedia(@Data() data: UploadMediaReqDTO): Promise<any> {
-    const media = await this.mediaService.uploadMedia(data);
-    return { success: true, data: media };
+  public async uploadMedia(@Data() data: UploadMediaReqDTO): Promise<void> {
+    await this.mediaService.uploadMedia(data);
   }
 
   @Api.Summary('删除媒体文件')

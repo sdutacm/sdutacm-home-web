@@ -2,6 +2,9 @@
 import { Vue, Options } from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
+import { GetMediaResDTO } from '@common/modules/media/media.dto';
+import { UploadFile } from 'element-plus';
+
 import { ElDialog, ElButton, ElUpload, ElInput, ElMessage, ElForm, ElFormItem, ElIcon } from 'element-plus';
 import { Upload } from '@element-plus/icons-vue';
 
@@ -14,9 +17,8 @@ import { Upload } from '@element-plus/icons-vue';
     ElForm,
     ElFormItem,
     Upload,
-    ElIcon
+    ElIcon,
   },
-  emits: ['update:visible', 'upload-success'],
 })
 export default class UploadMediaDialog extends Vue {
   @Prop({ required: true, default: false })
@@ -25,13 +27,15 @@ export default class UploadMediaDialog extends Vue {
   @Prop({ required: true })
   mediaType!: MediaTypeEnum;
 
+  @Prop({ required: true })
+  updateMediaList!: (newMediaList: GetMediaResDTO) => void;
+
   formData = {
-    file: null as any,
+    files: [],
     type: MediaTypeEnum.IMAGE,
     alt: '',
   };
 
-  fileList: any[] = [];
   uploading = false;
 
   @Watch('visible')
@@ -49,11 +53,10 @@ export default class UploadMediaDialog extends Vue {
 
   resetForm() {
     this.formData = {
-      file: null,
+      files: [],
       type: this.mediaType,
       alt: '',
     };
-    this.fileList = [];
   }
 
   handleClose() {
@@ -61,51 +64,56 @@ export default class UploadMediaDialog extends Vue {
     this.resetForm();
   }
 
-  handleFileChange(file: any) {
-    this.formData.file = file.raw;
-    return false; // 阻止自动上传
+  handleFileChange(file: UploadFile, fileList: UploadFile[]) {
+    this.formData.files = fileList;
+    console.log('Selected files:', this.formData.files);
   }
 
-  handleRemove() {
-    this.formData.file = null;
-    this.fileList = [];
+  handleRemove(file: UploadFile, fileList: UploadFile[]) {
+    this.formData.files = fileList;
   }
 
   async handleUpload() {
-    if (!this.formData.file) {
+    if (!this.formData.files.length) {
       ElMessage.warning('请选择要上传的文件');
       return;
     }
-
     this.uploading = true;
     try {
-      const formData = new FormData();
-      formData.append('file', this.formData.file);
-      formData.append('type', this.formData.type);
-      if (this.formData.alt) {
-        formData.append('alt', this.formData.alt);
-      }
-
-      // 使用原生 fetch 上传，因为需要发送 FormData
-      const response = await fetch('/api/uploadMedia', {
-        method: 'POST',
-        body: formData,
+      // 使用 Promise.all 等待所有文件上传完成
+      const uploadPromises = this.formData.files.map(async (file) => {
+        return await this.$api.uploadMedia({
+          file: file.raw,
+          type: this.formData.type,
+          alt: this.formData.alt,
+        });
       });
 
-      if (!response.ok) {
-        throw new Error('上传失败');
-      }
+      await Promise.all(uploadPromises);
 
-      const result = await response.json();
       ElMessage.success('上传成功');
-      this.$emit('upload-success', result.data);
       this.handleClose();
-    } catch (error: any) {
+      const newMediaList = await this.$api.getMediaList({ type: this.mediaType });
+      this.updateMediaList(newMediaList);
+    } catch (error) {
       console.error('上传失败:', error);
       ElMessage.error(error.message || '上传失败，请重试');
     } finally {
       this.uploading = false;
     }
+  }
+
+  beforeUpload(rawFile: File) {
+    const isValidType = this.acceptTypes.includes(rawFile.type);
+    if (!isValidType) {
+      ElMessage.error(`请选择${this.mediaTypeLabel}文件`);
+      return false;
+    }
+    if (rawFile.size > 10 * 1024 * 1024) {
+      ElMessage.error('文件大小不能超过10MB');
+      return false;
+    }
+    return true;
   }
 
   get acceptTypes() {
@@ -116,6 +124,7 @@ export default class UploadMediaDialog extends Vue {
       [MediaTypeEnum.VIDEO]: 'video/*',
       [MediaTypeEnum.ADMIN_AVATAR]: 'image/*',
       [MediaTypeEnum.NEWS_COVER]: 'image/*',
+      [MediaTypeEnum.PROJECT_COVER]: 'image/*',
     };
     return typeMap[this.mediaType] || '*';
   }
@@ -128,6 +137,7 @@ export default class UploadMediaDialog extends Vue {
       [MediaTypeEnum.VIDEO]: '视频',
       [MediaTypeEnum.ADMIN_AVATAR]: '管理员头像',
       [MediaTypeEnum.NEWS_COVER]: '新闻封面',
+      [MediaTypeEnum.PROJECT_COVER]: '项目封面',
     };
     return labelMap[this.mediaType] || '媒体';
   }
@@ -135,54 +145,36 @@ export default class UploadMediaDialog extends Vue {
 </script>
 
 <template>
-  <el-dialog
-    :model-value="visible"
-    :title="`上传${mediaTypeLabel}`"
-    width="500px"
-    @close="handleClose"
-  >
+  <el-dialog :model-value="visible" :title="`上传${mediaTypeLabel}`" width="500px" @close="handleClose">
     <el-form :model="formData" label-width="80px">
       <el-form-item label="文件">
         <el-upload
-          v-model:file-list="fileList"
+          v-model:file-list="formData.files"
           :accept="acceptTypes"
           :auto-upload="false"
-          :limit="1"
           :on-change="handleFileChange"
           :on-remove="handleRemove"
+          :before-upload="beforeUpload"
+          multiple
           drag
         >
           <el-icon class="el-icon--upload"><upload /></el-icon>
-          <div class="el-upload__text">
-            将文件拖到此处，或<em>点击上传</em>
-          </div>
+          <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
           <template #tip>
-            <div class="el-upload__tip">
-              请上传{{ mediaTypeLabel }}文件
-            </div>
+            <div class="el-upload__tip">jpg/png files with a size less than 10MB.</div>
           </template>
         </el-upload>
       </el-form-item>
 
       <el-form-item label="描述">
-        <el-input
-          v-model="formData.alt"
-          type="textarea"
-          :rows="3"
-          placeholder="请输入描述信息（可选）"
-        />
+        <el-input v-model="formData.alt" type="textarea" :rows="3" placeholder="请输入描述信息（可选）" />
       </el-form-item>
     </el-form>
 
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="handleClose">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="uploading"
-          :disabled="!formData.file"
-          @click="handleUpload"
-        >
+        <el-button type="primary" :loading="uploading" :disabled="!formData.files.length" @click="handleUpload">
           {{ uploading ? '上传中...' : '确认上传' }}
         </el-button>
       </span>

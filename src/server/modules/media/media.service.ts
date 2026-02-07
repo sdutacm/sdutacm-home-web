@@ -14,63 +14,61 @@ export default class MediaService {
     private readonly ctx: RequestContext,
   ) {}
 
-  async getMediaList(type: MediaTypeEnum): Promise<GetMediaResDTO> {
+  async getMediaList(type: MediaTypeEnum, page: number = 1, pageSize: number = 20): Promise<GetMediaResDTO> {
     try {
       const mediaRepo = appDataSource.getRepository(Media);
-      const list = await mediaRepo.find({
+      const [list, total] = await mediaRepo.findAndCount({
         where: {
           type: type,
         },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        order: {
+          createdAt: 'DESC',
+        },
       });
-      return { rows: list };
+      return { rows: list, total };
     } catch (error) {
       console.error('Error fetching media list:', error);
+      throw error;
     }
   }
 
-  async uploadMedia(data: UploadMediaReqDTO): Promise<Media> {
+  async uploadMedia(data: UploadMediaReqDTO): Promise<void> {
     const { file, type, alt } = data;
-
-    // 确保 public 目录存在
+    console.log('Received file for upload:', file);
     const publicDir = path.join(process.cwd(), 'public');
     if (!fs.existsSync(publicDir)) {
       fs.mkdirSync(publicDir, { recursive: true });
     }
-
-    // 根据类型确定目标目录
     const typeDir = path.join(publicDir, type);
     if (!fs.existsSync(typeDir)) {
       fs.mkdirSync(typeDir, { recursive: true });
     }
-
-    // 创建数据库记录以获取 id
     const mediaRepo = appDataSource.getRepository(Media);
+    let newAlt = '';
+    if (!alt || alt.length === 0) {
+      const originalName = file.originalname;
+      const fileName = originalName.split('.', 1)[0];
+      newAlt = fileName;
+    }
     const media = mediaRepo.create({
       type,
-      alt,
-      path: '', // 临时路径，稍后更新
-      active: true,
+      alt: newAlt,
+      path: '',
+      size: file.size,
+      uploadedBy: this.ctx.session.admin,
     });
     await mediaRepo.save(media);
-
-    // 获取文件扩展名
-    const originalName = file.originalname || file.name;
+    const originalName = file.originalname;
     const extName = path.extname(originalName);
-
-    // 基于 id 生成文件名
     const fileName = `${media.id}${extName}`;
     const filePath = path.join(typeDir, fileName);
-
-    // 保存文件
     const fileBuffer = file.buffer || fs.readFileSync(file.path);
     fs.writeFileSync(filePath, fileBuffer);
-
-    // 更新数据库中的路径
     const relativePath = `/${type}/${fileName}`;
     media.path = relativePath;
     await mediaRepo.save(media);
-
-    return media;
   }
 
   async deleteMedia(id: number): Promise<void> {
@@ -81,7 +79,6 @@ export default class MediaService {
       throw new Error('Media not found');
     }
 
-    // 删除文件
     const filePath = path.join(process.cwd(), 'public', media.path);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);

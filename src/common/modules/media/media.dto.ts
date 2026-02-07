@@ -2,10 +2,22 @@ import { FromBody, IsFile } from 'bwcx-common';
 import { MediaTypeEnum } from '../../enums/media-type.enum';
 import { IsString, IsEnum, IsOptional, IsNumber } from 'class-validator';
 
+// Multer 文件类型定义
+export interface UploadedFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer?: any; // Buffer 类型
+  path?: string;
+  filename?: string;
+}
+
 export class UploadMediaReqDTO {
   @FromBody()
   @IsFile()
-  file: any;
+  file: UploadedFile;
 
   @FromBody()
   @IsEnum(MediaTypeEnum)
@@ -21,6 +33,16 @@ export class GetMediaListReqDTO {
   @FromBody()
   @IsEnum(MediaTypeEnum)
   type: MediaTypeEnum;
+
+  @FromBody()
+  @IsOptional()
+  @IsNumber()
+  page?: number;
+
+  @FromBody()
+  @IsOptional()
+  @IsNumber()
+  pageSize?: number;
 }
 
 export class GetMediaByIdReqDTO {
@@ -44,4 +66,5 @@ export class GetMediaResDTO {
     active: boolean;
     createdAt: Date;
   }[];
+  total: number;
 }

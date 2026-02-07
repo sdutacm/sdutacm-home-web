@@ -1,14 +1,8 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import { Project } from './project';
 import { News } from './news';
+import { Admin } from './admin';
 
 @Entity('media')
 export class Media {
@@ -18,11 +12,7 @@ export class Media {
   @Column({ length: 255 })
   path: string;
 
-  @Column({
-    type: 'enum',
-    enum: MediaTypeEnum,
-    default: MediaTypeEnum.IMAGE,
-  })
+  @Column({ type: 'enum', enum: MediaTypeEnum, default: MediaTypeEnum.IMAGE })
   type: MediaTypeEnum;
 
   @Column({ length: 255, nullable: true, comment: '描述信息/alt text' })
@@ -31,10 +21,10 @@ export class Media {
   @Column({ default: true, comment: '是否激活/启用' })
   active: boolean;
 
-  @ManyToOne(() => Project, (project) => project.medias, {
-    onDelete: 'CASCADE',
-    nullable: true,
-  })
+  @Column()
+  size: number;
+
+  @ManyToOne(() => Project, (project) => project.medias, { onDelete: 'CASCADE', nullable: true })
   project?: Project;
 
   @ManyToOne(() => News, (news) => news.medias, {
@@ -42,6 +32,9 @@ export class Media {
     nullable: true,
   })
   news?: News;
+
+  @ManyToOne(() => Admin, (admin) => admin.medias, { onDelete: 'SET NULL', nullable: true })
+  uploadedBy?: Admin;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
