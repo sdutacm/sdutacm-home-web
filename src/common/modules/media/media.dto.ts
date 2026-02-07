@@ -2,6 +2,12 @@ import { FromBody, IsFile } from 'bwcx-common';
 import { MediaTypeEnum } from '../../enums/media-type.enum';
 import { IsString, IsEnum, IsOptional, IsNumber } from 'class-validator';
 
+export interface UpdatedAdmin {
+  id: number;
+  username: string;
+  avatar: string;
+}
+
 // Multer 文件类型定义
 export interface UploadedFile {
   fieldname: string;
@@ -57,6 +63,29 @@ export class DeleteMediaReqDTO {
   id: number;
 }
 
+export class UpdateMediaReqDTO {
+  @FromBody()
+  @IsNumber()
+  id: number;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  alt?: string;
+}
+
+export class MediaDetailResDTO {
+  id: number;
+  path: string;
+  type: MediaTypeEnum;
+  alt?: string;
+  active: boolean;
+  size: number;
+  createdAt: Date;
+  updatedAt: Date;
+  uploadedBy?: UpdatedAdmin;
+}
+
 export class GetMediaResDTO {
   rows: {
     id: number;
@@ -65,6 +94,8 @@ export class GetMediaResDTO {
     alt?: string;
     active: boolean;
     createdAt: Date;
+    updatedAt: Date;
+    updatedBy: Object;
   }[];
   total: number;
 }

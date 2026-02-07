@@ -1,6 +1,9 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
 import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
+import { MediaTypeEnum } from '@common/enums/media-type.enum';
+import { NewsItemVO } from '@common/modules/news/news.dto';
+
 import {
   ElMessage,
   ElMessageBox,
@@ -22,19 +25,9 @@ import {
   vLoading,
 } from 'element-plus';
 import { Plus, Edit, Delete, View as ViewIcon, Upload } from '@element-plus/icons-vue';
-import { MediaTypeEnum } from '@common/enums/media-type.enum';
+import NewsEditDialog from '@client/components/admin/news-edit-dialog.vue';
 
-interface NewsItem {
-  id: number;
-  title: string;
-  summary: string;
-  content: string;
-  coverImage: string;
-  isPublished: boolean;
-  publishedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
+
 
 @View('/admin/news-list')
 @ChildOf('AdminView')
@@ -63,10 +56,11 @@ interface NewsItem {
     Delete,
     ViewIcon,
     Upload,
+    NewsEditDialog,
   },
 })
 export default class NewsListContainer extends Vue {
-  newsList: NewsItem[] = [];
+  newsList: NewsItemVO[] = [];
   dialogVisible = false;
   dialogTitle = '创建新闻';
   isEdit = false;
@@ -86,8 +80,8 @@ export default class NewsListContainer extends Vue {
 
   get filteredNewsList() {
     if (this.filterStatus === 'all') return this.newsList;
-    if (this.filterStatus === 'published') return this.newsList.filter(n => n.isPublished);
-    if (this.filterStatus === 'draft') return this.newsList.filter(n => !n.isPublished);
+    if (this.filterStatus === 'published') return this.newsList.filter((n) => n.isPublished);
+    if (this.filterStatus === 'draft') return this.newsList.filter((n) => !n.isPublished);
     return this.newsList;
   }
 
@@ -120,7 +114,7 @@ export default class NewsListContainer extends Vue {
     this.dialogVisible = true;
   }
 
-  handleEdit(news: NewsItem) {
+  handleEdit(news: NewsItemVO) {
     this.dialogTitle = '编辑新闻';
     this.isEdit = true;
     this.currentNewsId = news.id;
@@ -135,7 +129,7 @@ export default class NewsListContainer extends Vue {
     this.dialogVisible = true;
   }
 
-  async handleDelete(news: NewsItem) {
+  async handleDelete(news: NewsItemVO) {
     try {
       await ElMessageBox.confirm(`确定要删除新闻 "${news.title}" 吗？`, '提示', {
         confirmButtonText: '确定',
@@ -288,7 +282,10 @@ export default class NewsListContainer extends Vue {
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
+    <!-- 编辑新闻对话框 -->
+    <news-edit-dialog :visible="dialogVisible" :closeDialog="() => {dialogVisible = false}" :newsForm="newsForm" />
+
+    <!-- <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
       <el-form :model="newsForm" label-width="100px">
         <el-form-item label="标题" required>
           <el-input v-model="newsForm.title" placeholder="请输入新闻标题" />
@@ -342,7 +339,7 @@ export default class NewsListContainer extends Vue {
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSubmit">保存</el-button>
       </template>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 

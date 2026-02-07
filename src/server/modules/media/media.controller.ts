@@ -3,7 +3,7 @@ import { Inject } from 'bwcx-core';
 import { ApiController } from '@server/decorators';
 import { Api } from 'bwcx-api';
 import MediaService from './media.service';
-import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO, DeleteMediaReqDTO } from '@common/modules/media/media.dto';
+import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO, DeleteMediaReqDTO, GetMediaByIdReqDTO, MediaDetailResDTO, UpdateMediaReqDTO } from '@common/modules/media/media.dto';
 
 @ApiController()
 export default class MediaController {
@@ -27,6 +27,20 @@ export default class MediaController {
   @Contract(UploadMediaReqDTO, null)
   public async uploadMedia(@Data() data: UploadMediaReqDTO): Promise<void> {
     await this.mediaService.uploadMedia(data);
+  }
+
+  @Api.Summary('获取媒体详情')
+  @Post('/getMediaById')
+  @Contract(GetMediaByIdReqDTO, MediaDetailResDTO)
+  public async getMediaById(@Data() data: GetMediaByIdReqDTO): Promise<MediaDetailResDTO> {
+    return await this.mediaService.getMediaById(data.id);
+  }
+
+  @Api.Summary('更新媒体信息')
+  @Post('/updateMedia')
+  @Contract(UpdateMediaReqDTO, null)
+  public async updateMedia(@Data() data: UpdateMediaReqDTO): Promise<void> {
+    await this.mediaService.updateMedia(data.id, data.alt);
   }
 
   @Api.Summary('删除媒体文件')

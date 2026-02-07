@@ -70,6 +70,9 @@ dependencies:
   localforage:
     specifier: ^1.10.0
     version: 1.10.0
+  lucide-vue-next:
+    specifier: ^0.563.0
+    version: 0.563.0(vue@3.2.31)
   module-alias:
     specifier: ^2.2.2
     version: 2.2.3
@@ -4124,6 +4127,14 @@ packages:
   /lru.min@1.1.3:
     resolution: {integrity: sha512-Lkk/vx6ak3rYkRR0Nhu4lFUT2VDnQSxBe8Hbl7f36358p6ow8Bnvr8lrLt98H8J1aGxfhbX4Fs5tYg2+FTwr5Q==}
     engines: {bun: '>=1.0.0', deno: '>=1.30.0', node: '>=8.0.0'}
+    dev: false
+
+  /lucide-vue-next@0.563.0(vue@3.2.31):
+    resolution: {integrity: sha512-zsE/lCKtmaa7bGfhSpN84br1K9YoQ5pCN+2oKWjQQG3Lo6ufUUKBuHSjNFI6RvUevxaajNXb8XwFUKeTXG3sIA==}
+    peerDependencies:
+      vue: '>=3.0.1'
+    dependencies:
+      vue: 3.2.31
     dev: false
 
   /magic-string@0.25.9:

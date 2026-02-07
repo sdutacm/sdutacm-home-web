@@ -6,26 +6,26 @@ import { AdminToolSectionEnum } from '@common/enums/admin-tool-section.enum';
 import localForge from 'localforage';
 
 import { ElRow, ElCol, ElMenu, ElMenuItem, ElMenuItemGroup, ElSubMenu, ElIcon, ElButton, ElAvatar } from 'element-plus';
-import {
-  Location,
-  Menu as IconMenu,
-  Document,
-  Setting,
-  Box,
-  Microphone,
-  VideoCamera,
-  PictureFilled,
-  PictureRounded,
-  HomeFilled,
-  PieChart,
-  House,
-  Picture
-} from '@element-plus/icons-vue';
+// import {
+//   Location,
+//   Menu as IconMenu,
+//   Document,
+//   Setting,
+//   Box,
+//   Microphone,
+//   VideoCamera,
+//   PictureFilled,
+//   PictureRounded,
+//   HomeFilled,
+//   PieChart,
+//   Picture
+// } from '@element-plus/icons-vue';
+
+import { Smile, House, Tv, Newspaper, Package, Image, Activity, Video, ChartColumnIncreasing } from 'lucide-vue-next';
 
 @Options({
   components: {
     ElAvatar,
-    PieChart,
     ElButton,
     ElRow,
     ElCol,
@@ -34,16 +34,14 @@ import {
     ElMenuItemGroup,
     ElSubMenu,
     ElIcon,
-    Location,
-    IconMenu,
-    Document,
-    Setting,
-    Box,
-    Picture,
-    PictureFilled,
-    PictureRounded,
-    Microphone,
-    VideoCamera,
+    Smile,
+    Tv,
+    Newspaper,
+    Package,
+    Image,
+    Activity,
+    Video,
+    ChartColumnIncreasing,
     House,
   },
   emits: ['menu-select'],
@@ -105,45 +103,45 @@ export default class AdminTools extends Vue {
         </div>
         <el-menu @select="handleSelect" mode="vertical">
           <el-menu-item :index="adminToolSectionEnum.OVERVIEW">
-            <el-icon><pie-chart /></el-icon>
-            <span>总揽</span>
+            <el-icon><chart-column-increasing /></el-icon>
+            <span>Overview</span>
           </el-menu-item>
           <el-menu-item :index="adminToolSectionEnum.GLOBAL_CONFIG">
             <el-icon><house /></el-icon>
-            <span>首页配置</span>
+            <span>HomePage</span>
           </el-menu-item>
           <el-sub-menu :index="adminToolSectionEnum.MEDIA_MANAGEMENT">
             <template #title>
-              <el-icon><location /></el-icon>
-              <span>线上资产管理</span>
+              <el-icon><Tv /></el-icon>
+              <span>Media</span>
             </template>
             <el-menu-item-group>
               <el-menu-item :index="adminToolSectionEnum.MEDIA_LOGO">
-                <el-icon><picture-rounded /></el-icon>
-                <span>Logo 管理</span>
+                <el-icon><Smile /></el-icon>
+                <span>Logo</span>
               </el-menu-item>
               <el-menu-item :index="adminToolSectionEnum.MEDIA_IMAGE">
-                <el-icon><Picture /></el-icon>
-                <span>图片管理</span>
+                <el-icon><Image /></el-icon>
+                <span>Image</span>
               </el-menu-item>
               <el-menu-item :index="adminToolSectionEnum.MEDIA_AUDIO">
-                <el-icon><microphone /></el-icon>
-                <span>音频管理</span>
+                <el-icon><Activity /></el-icon>
+                <span>Audio</span>
               </el-menu-item>
               <el-menu-item :index="adminToolSectionEnum.MEDIA_VIDEO">
-                <el-icon><video-camera /></el-icon>
-                <span>视频管理</span>
+                <el-icon><Video /></el-icon>
+                <span>Video</span>
               </el-menu-item>
             </el-menu-item-group>
           </el-sub-menu>
 
           <el-menu-item :index="adminToolSectionEnum.NEWS_MANAGEMENT">
-            <el-icon><document /></el-icon>
-            <span>新闻管理</span>
+            <el-icon><Newspaper /></el-icon>
+            <span>News</span>
           </el-menu-item>
           <el-menu-item :index="adminToolSectionEnum.PROJECT_MANAGEMENT">
-            <el-icon><box /></el-icon>
-            <span>项目管理</span>
+            <el-icon><Package /></el-icon>
+            <span>Projects</span>
           </el-menu-item>
         </el-menu>
       </el-col>

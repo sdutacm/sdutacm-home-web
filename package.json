@@ -59,6 +59,7 @@
     "koa-session": "^7.0.2",
     "koa-static": "^5.0.0",
     "localforage": "^1.10.0",
+    "lucide-vue-next": "^0.563.0",
     "module-alias": "^2.2.2",
     "mysql2": "^3.16.0",
     "node-fetch": "^2.7.0",

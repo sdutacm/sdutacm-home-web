@@ -96,8 +96,8 @@ export default class UploadMediaDialog extends Vue {
       const newMediaList = await this.$api.getMediaList({ type: this.mediaType });
       this.updateMediaList(newMediaList);
     } catch (error) {
-      console.error('上传失败:', error);
-      ElMessage.error(error.message || '上传失败，请重试');
+      console.error('Upload failed:', error);
+      ElMessage.error(error.message || 'Upload failed, please try again');
     } finally {
       this.uploading = false;
     }
@@ -106,11 +106,11 @@ export default class UploadMediaDialog extends Vue {
   beforeUpload(rawFile: File) {
     const isValidType = this.acceptTypes.includes(rawFile.type);
     if (!isValidType) {
-      ElMessage.error(`请选择${this.mediaTypeLabel}文件`);
+      ElMessage.error(`Please select a ${this.mediaTypeLabel} file`);
       return false;
     }
     if (rawFile.size > 10 * 1024 * 1024) {
-      ElMessage.error('文件大小不能超过10MB');
+      ElMessage.error('File size cannot exceed 10MB');
       return false;
     }
     return true;
@@ -145,9 +145,9 @@ export default class UploadMediaDialog extends Vue {
 </script>
 
 <template>
-  <el-dialog :model-value="visible" :title="`上传${mediaTypeLabel}`" width="500px" @close="handleClose">
+  <el-dialog :model-value="visible" :title="`Upload ${mediaTypeLabel}`" width="500px" @close="handleClose">
     <el-form :model="formData" label-width="80px">
-      <el-form-item label="文件">
+      <el-form-item label="Files">
         <el-upload
           v-model:file-list="formData.files"
           :accept="acceptTypes"
@@ -159,23 +159,23 @@ export default class UploadMediaDialog extends Vue {
           drag
         >
           <el-icon class="el-icon--upload"><upload /></el-icon>
-          <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+          <div class="el-upload__text">Drag files here, or <em>click to upload</em></div>
           <template #tip>
             <div class="el-upload__tip">jpg/png files with a size less than 10MB.</div>
           </template>
         </el-upload>
       </el-form-item>
 
-      <el-form-item label="描述">
-        <el-input v-model="formData.alt" type="textarea" :rows="3" placeholder="请输入描述信息（可选）" />
+      <el-form-item label="Description">
+        <el-input v-model="formData.alt" :rows="3" clearable placeholder="Please enter a description (optional)" />
       </el-form-item>
     </el-form>
 
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="handleClose">取消</el-button>
+        <el-button @click="handleClose">Cancel</el-button>
         <el-button type="primary" :loading="uploading" :disabled="!formData.files.length" @click="handleUpload">
-          {{ uploading ? '上传中...' : '确认上传' }}
+          {{ uploading ? 'Uploading...' : 'Confirm Upload' }}
         </el-button>
       </span>
     </template>

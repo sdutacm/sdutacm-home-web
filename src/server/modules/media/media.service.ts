@@ -1,7 +1,7 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
 import { Inject } from 'bwcx-core';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
-import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO } from '@common/modules/media/media.dto';
+import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO, MediaDetailResDTO } from '@common/modules/media/media.dto';
 import appDataSource from '@server/db';
 import { Media } from '@server/db/entity/media';
 import * as fs from 'fs';
@@ -21,13 +21,33 @@ export default class MediaService {
         where: {
           type: type,
         },
+        relations: ['uploadedBy'], // 加载关联的管理员信息
         skip: (page - 1) * pageSize,
         take: pageSize,
         order: {
           createdAt: 'DESC',
         },
       });
-      return { rows: list, total };
+
+      // 映射数据，转换 uploadedBy 为前端需要的格式
+      const rows = list.map((media) => ({
+        id: media.id,
+        path: media.path,
+        type: media.type,
+        alt: media.alt,
+        active: media.active,
+        createdAt: media.createdAt,
+        updatedAt: media.updatedAt,
+        updatedBy: media.uploadedBy
+          ? {
+              id: media.uploadedBy.id,
+              username: media.uploadedBy.username,
+              avatar: media.uploadedBy.avatar,
+            }
+          : null,
+      }));
+
+      return { rows, total };
     } catch (error) {
       console.error('Error fetching media list:', error);
       throw error;
@@ -69,6 +89,50 @@ export default class MediaService {
     const relativePath = `/${type}/${fileName}`;
     media.path = relativePath;
     await mediaRepo.save(media);
+  }
+
+  async getMediaById(id: number): Promise<MediaDetailResDTO> {
+    const mediaRepo = appDataSource.getRepository(Media);
+    const media = await mediaRepo.findOne({
+      where: { id },
+      relations: ['uploadedBy'],
+    });
+
+    if (!media) {
+      throw new Error('Media not found');
+    }
+
+    return {
+      id: media.id,
+      path: media.path,
+      type: media.type,
+      alt: media.alt,
+      active: media.active,
+      size: media.size,
+      createdAt: media.createdAt,
+      updatedAt: media.updatedAt,
+      uploadedBy: media.uploadedBy
+        ? {
+            id: media.uploadedBy.id,
+            username: media.uploadedBy.username,
+            avatar: media.uploadedBy.avatar,
+          }
+        : undefined,
+    };
+  }
+
+  async updateMedia(id: number, alt?: string): Promise<void> {
+    const mediaRepo = appDataSource.getRepository(Media);
+    const media = await mediaRepo.findOne({ where: { id } });
+
+    if (!media) {
+      throw new Error('Media not found');
+    }
+
+    if (alt !== undefined) {
+      media.alt = alt;
+      await mediaRepo.save(media);
+    }
   }
 
   async deleteMedia(id: number): Promise<void> {

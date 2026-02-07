@@ -1,6 +1,18 @@
 import { FromBody } from "bwcx-common";
 import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from "class-validator";
 
+export interface NewsItemVO {
+  id: number;
+  title: string;
+  summary: string;
+  content: string;
+  coverImage: string;
+  isPublished: boolean;
+  publishedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export class GetNewsPreviewResDTO {
   title: string;
 
