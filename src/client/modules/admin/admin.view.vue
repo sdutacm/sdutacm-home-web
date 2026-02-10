@@ -42,12 +42,15 @@ export default class AdminView extends Vue {
   width: 100%;
   height: 100vh;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: stretch;
 
   & .admin-tools {
     width: 300px;
     height: 100%;
+    position: fixed;
+    left: 0;
+    z-index: 1000;
   }
 
   & .admin-preview {
@@ -56,6 +59,9 @@ export default class AdminView extends Vue {
     display: flex;
     flex-direction: column;
     padding: 20px;
+    margin-left: 300px;
+    overflow-x: auto;
+    min-width: 0;
 
     .preview-header {
       h2 {

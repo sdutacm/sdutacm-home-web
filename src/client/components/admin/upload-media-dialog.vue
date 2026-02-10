@@ -80,9 +80,9 @@ export default class UploadMediaDialog extends Vue {
     }
     this.uploading = true;
     try {
-      const uploadPromises = this.formData.files.map(async (file) => {
+      const uploadPromises = this.formData.files.map(async (file: UploadFile) => {
         return await this.$api.uploadMedia({
-          file: file,
+          file: file.raw,
           type: this.formData.type,
           alt: this.formData.alt,
         });

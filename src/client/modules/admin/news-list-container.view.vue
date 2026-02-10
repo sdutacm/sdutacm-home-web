@@ -173,7 +173,7 @@ export default class NewsListContainer extends Vue {
       </el-select>
     </div>
 
-    <el-table :data="filteredNewsList" style="width: 100%; margin-top: 16px" stripe>
+    <el-table :data="filteredNewsList" style="width: max-content; margin-top: 16px" stripe>
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
       <el-table-column prop="summary" label="摘要" min-width="150" show-overflow-tooltip />
@@ -199,7 +199,7 @@ export default class NewsListContainer extends Vue {
           {{ formatDate(row.updatedAt) }}
         </template>
       </el-table-column>
-      <el-table-column label="更新人" width="150">
+      <el-table-column label="更新人" width="100">
         <template #default="{ row }">
           <div v-if="row.updatedBy" class="editor-container">
             <user-avatar :avatarUrl="row.updatedBy.avatar" />
@@ -241,6 +241,10 @@ export default class NewsListContainer extends Vue {
 <style lang="less" scoped>
 .news-list-container {
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  overflow-x: auto;
 
   .toolbar {
     display: flex;
