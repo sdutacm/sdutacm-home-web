@@ -1,3 +1,4 @@
+import { UpdatedAdmin } from './../admin/admin.dto';
 import { FromBody } from "bwcx-common";
 import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from "class-validator";
 
@@ -11,6 +12,7 @@ export interface NewsItemVO {
   publishedAt: Date;
   createdAt: Date;
   updatedAt: Date;
+  updatedBy?: UpdatedAdmin;
 }
 
 export class GetNewsPreviewResDTO {
@@ -105,6 +107,7 @@ export class GetNewsDetailResDTO {
   publishedAt: Date;
   createdAt: Date;
   updatedAt: Date;
+  updatedBy?: UpdatedAdmin;
 }
 
 // 获取新闻列表

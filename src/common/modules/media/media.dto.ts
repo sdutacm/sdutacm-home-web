@@ -1,12 +1,7 @@
+import { UpdatedAdmin } from './../admin/admin.dto';
 import { FromBody, IsFile } from 'bwcx-common';
 import { MediaTypeEnum } from '../../enums/media-type.enum';
 import { IsString, IsEnum, IsOptional, IsNumber } from 'class-validator';
-
-export interface UpdatedAdmin {
-  id: number;
-  username: string;
-  avatar: string;
-}
 
 // Multer 文件类型定义
 export interface UploadedFile {
@@ -23,7 +18,7 @@ export interface UploadedFile {
 export class UploadMediaReqDTO {
   @FromBody()
   @IsFile()
-  file: UploadedFile;
+  file: any;
 
   @FromBody()
   @IsEnum(MediaTypeEnum)
@@ -83,19 +78,10 @@ export class MediaDetailResDTO {
   size: number;
   createdAt: Date;
   updatedAt: Date;
-  uploadedBy?: UpdatedAdmin;
+  updatedBy?: UpdatedAdmin;
 }
 
-export class GetMediaResDTO {
-  rows: {
-    id: number;
-    path: string;
-    type: MediaTypeEnum;
-    alt?: string;
-    active: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    updatedBy: Object;
-  }[];
+export class GetMediaListResDTO {
+  rows: MediaDetailResDTO[];
   total: number;
 }

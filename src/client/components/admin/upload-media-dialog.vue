@@ -2,7 +2,7 @@
 import { Vue, Options } from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
-import { GetMediaResDTO } from '@common/modules/media/media.dto';
+import {  GetMediaListResDTO } from '@common/modules/media/media.dto';
 import { UploadFile } from 'element-plus';
 
 import { ElDialog, ElButton, ElUpload, ElInput, ElMessage, ElForm, ElFormItem, ElIcon } from 'element-plus';
@@ -28,7 +28,7 @@ export default class UploadMediaDialog extends Vue {
   mediaType!: MediaTypeEnum;
 
   @Prop({ required: true })
-  updateMediaList!: (newMediaList: GetMediaResDTO) => void;
+  updateMediaList!: (newMediaList: GetMediaListResDTO) => void;
 
   formData = {
     files: [],
@@ -64,12 +64,12 @@ export default class UploadMediaDialog extends Vue {
     this.resetForm();
   }
 
-  handleFileChange(file: UploadFile, fileList: UploadFile[]) {
+  handleFileChange(file: File, fileList: File[]) {
     this.formData.files = fileList;
     console.log('Selected files:', this.formData.files);
   }
 
-  handleRemove(file: UploadFile, fileList: UploadFile[]) {
+  handleRemove(file: File, fileList: File[]) {
     this.formData.files = fileList;
   }
 
@@ -80,10 +80,9 @@ export default class UploadMediaDialog extends Vue {
     }
     this.uploading = true;
     try {
-      // 使用 Promise.all 等待所有文件上传完成
       const uploadPromises = this.formData.files.map(async (file) => {
         return await this.$api.uploadMedia({
-          file: file.raw,
+          file: file,
           type: this.formData.type,
           alt: this.formData.alt,
         });

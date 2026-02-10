@@ -2,7 +2,7 @@
 import { Vue, Options } from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
-import { GetMediaResDTO } from '@common/modules/media/media.dto';
+import { GetMediaListResDTO } from '@common/modules/media/media.dto';
 import { View, RenderMethod, RenderMethodKind, ChildOf } from 'bwcx-client-vue3';
 
 import {
@@ -63,7 +63,7 @@ import UpdateMediaDialog from '@client/components/admin/update-media-dialog.vue'
 export default class MediaListContainer extends Vue {
   mediaType: MediaTypeEnum = MediaTypeEnum.IMAGE;
 
-  mediaList: GetMediaResDTO = {
+  mediaList: GetMediaListResDTO = {
     rows: [],
     total: 0,
   };
@@ -235,7 +235,7 @@ export default class MediaListContainer extends Vue {
     console.log('加载后 currentPage:', this.currentPage);
   }
 
-  async updateFileList(newMediaList: GetMediaResDTO) {
+  async updateFileList(newMediaList: GetMediaListResDTO) {
     await this.fetchMediaList();
   }
 

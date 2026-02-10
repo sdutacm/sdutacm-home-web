@@ -1,7 +1,7 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
 import { Inject } from 'bwcx-core';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
-import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO, MediaDetailResDTO } from '@common/modules/media/media.dto';
+import { GetMediaListReqDTO, GetMediaListResDTO, UploadMediaReqDTO, MediaDetailResDTO } from '@common/modules/media/media.dto';
 import appDataSource from '@server/db';
 import { Media } from '@server/db/entity/media';
 import * as fs from 'fs';
@@ -14,14 +14,14 @@ export default class MediaService {
     private readonly ctx: RequestContext,
   ) {}
 
-  async getMediaList(type: MediaTypeEnum, page: number = 1, pageSize: number = 20): Promise<GetMediaResDTO> {
+  async getMediaList(type: MediaTypeEnum, page: number = 1, pageSize: number = 20): Promise<GetMediaListResDTO> {
     try {
       const mediaRepo = appDataSource.getRepository(Media);
       const [list, total] = await mediaRepo.findAndCount({
         where: {
           type: type,
         },
-        relations: ['uploadedBy'], // 加载关联的管理员信息
+        relations: ['updatedBy'], // 加载关联的管理员信息
         skip: (page - 1) * pageSize,
         take: pageSize,
         order: {
@@ -29,22 +29,23 @@ export default class MediaService {
         },
       });
 
-      // 映射数据，转换 uploadedBy 为前端需要的格式
+      // 映射数据，转换 updatedBy 为前端需要的格式
       const rows = list.map((media) => ({
         id: media.id,
         path: media.path,
         type: media.type,
         alt: media.alt,
+        size: media.size,
         active: media.active,
         createdAt: media.createdAt,
         updatedAt: media.updatedAt,
-        updatedBy: media.uploadedBy
+        updatedBy: media.updatedBy
           ? {
-              id: media.uploadedBy.id,
-              username: media.uploadedBy.username,
-              avatar: media.uploadedBy.avatar,
+              id: media.updatedBy.id,
+              username: media.updatedBy.username,
+              avatar: media.updatedBy.avatar,
             }
-          : null,
+          : undefined,
       }));
 
       return { rows, total };
@@ -54,7 +55,7 @@ export default class MediaService {
     }
   }
 
-  async uploadMedia(data: UploadMediaReqDTO): Promise<void> {
+  async uploadMedia(data: UploadMediaReqDTO): Promise<MediaDetailResDTO> {
     const { file, type, alt } = data;
     console.log('Received file for upload:', file);
     const publicDir = path.join(process.cwd(), 'public');
@@ -77,7 +78,7 @@ export default class MediaService {
       alt: newAlt,
       path: '',
       size: file.size,
-      uploadedBy: this.ctx.session.admin,
+      updatedBy: this.ctx.session.admin,
     });
     await mediaRepo.save(media);
     const originalName = file.originalname;
@@ -89,13 +90,30 @@ export default class MediaService {
     const relativePath = `/${type}/${fileName}`;
     media.path = relativePath;
     await mediaRepo.save(media);
+    return {
+      id: media.id,
+      path: media.path,
+      type: media.type,
+      alt: media.alt,
+      active: media.active,
+      size: media.size,
+      createdAt: media.createdAt,
+      updatedAt: media.updatedAt,
+      updatedBy: media.updatedBy
+        ? {
+            id: media.updatedBy.id,
+            username: media.updatedBy.username,
+            avatar: media.updatedBy.avatar,
+          }
+        : undefined,
+    };
   }
 
   async getMediaById(id: number): Promise<MediaDetailResDTO> {
     const mediaRepo = appDataSource.getRepository(Media);
     const media = await mediaRepo.findOne({
       where: { id },
-      relations: ['uploadedBy'],
+      relations: ['updatedBy'],
     });
 
     if (!media) {
@@ -111,11 +129,11 @@ export default class MediaService {
       size: media.size,
       createdAt: media.createdAt,
       updatedAt: media.updatedAt,
-      uploadedBy: media.uploadedBy
+      updatedBy: media.updatedBy
         ? {
-            id: media.uploadedBy.id,
-            username: media.uploadedBy.username,
-            avatar: media.uploadedBy.avatar,
+            id: media.updatedBy.id,
+            username: media.updatedBy.username,
+            avatar: media.updatedBy.avatar,
           }
         : undefined,
     };
@@ -131,6 +149,7 @@ export default class MediaService {
 
     if (alt !== undefined) {
       media.alt = alt;
+      media.updatedBy = this.ctx.session.admin;
       await mediaRepo.save(media);
     }
   }

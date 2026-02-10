@@ -44,39 +44,31 @@ import { Smile, House, Tv, Newspaper, Package, Image, Activity, Video, ChartColu
     ChartColumnIncreasing,
     House,
   },
-  emits: ['menu-select'],
 })
 export default class AdminTools extends Vue {
   @Prop({ required: true })
   userInfo!: GetSessionResDTO;
 
+  currentPath: string = '';
+
+  defaultAvatarUrl = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+
   adminToolSectionEnum = AdminToolSectionEnum;
   adminToolSectionToRouterMap: Record<string, string> = {
-    [this.adminToolSectionEnum.OVERVIEW]: 'OverviewView',
+    [this.adminToolSectionEnum.OVERVIEW]: '/admin/overview',
     [this.adminToolSectionEnum.MEDIA_LOGO]: '/admin/media-list/logo',
     [this.adminToolSectionEnum.MEDIA_IMAGE]: '/admin/media-list/image',
     [this.adminToolSectionEnum.MEDIA_AUDIO]: '/admin/media-list/audio',
     [this.adminToolSectionEnum.MEDIA_VIDEO]: '/admin/media-list/video',
-    [this.adminToolSectionEnum.GLOBAL_CONFIG]: 'GlobalConfigView',
-    [this.adminToolSectionEnum.NEWS_MANAGEMENT]: 'NewsListContainer',
-    [this.adminToolSectionEnum.PROJECT_MANAGEMENT]: 'ProjectListContainer',
-    [this.adminToolSectionEnum.USERS]: 'UsersAdminView',
+    [this.adminToolSectionEnum.GLOBAL_CONFIG]: '/admin/global-config',
+    [this.adminToolSectionEnum.NEWS_MANAGEMENT]: '/admin/news-list',
+    [this.adminToolSectionEnum.MEDIA_MANAGEMENT]: '/admin/media-list/logo',
+    [this.adminToolSectionEnum.PROJECT_MANAGEMENT]: '/admin/project-list',
+    [this.adminToolSectionEnum.USERS]: '/admin/users',
   };
-  defaultAvatarUrl = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
   handleSelect(index: string) {
-    if (index === 'logo' || index === 'video' || index === 'audio' || index === 'image') {
-      this.$router.push({ name: 'MediaListContainer', params: { id: index } });
-      localForge.setItem('admin-last-page', {
-        page: 'MediaListContainer',
-        param: { id: index },
-      });
-      return;
-    }
-    this.$router.push({ name: this.adminToolSectionToRouterMap[index] });
-    localForge.setItem('admin-last-page', {
-      page: this.adminToolSectionToRouterMap[index],
-    });
+    this.$router.push(this.adminToolSectionToRouterMap[index] );
   }
 
   goHome() {
@@ -84,7 +76,8 @@ export default class AdminTools extends Vue {
   }
 
   mounted() {
-    console.log('用户信息:', this.userInfo);
+    this.currentPath = this.$route.path;
+    console.log(this.currentPath)
   }
 
   get userAvatar() {
@@ -101,45 +94,50 @@ export default class AdminTools extends Vue {
           <span class="title">Tars</span>
           <el-button size="small" @click="goHome">Go Home</el-button>
         </div>
-        <el-menu @select="handleSelect" mode="vertical">
-          <el-menu-item :index="adminToolSectionEnum.OVERVIEW">
+        <el-menu
+          mode="vertical"
+          router
+          :default-active="currentPath"
+          :default-openeds="[adminToolSectionToRouterMap[adminToolSectionEnum.MEDIA_MANAGEMENT]]"
+        >
+          <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.OVERVIEW]">
             <el-icon><chart-column-increasing /></el-icon>
             <span>Overview</span>
           </el-menu-item>
-          <el-menu-item :index="adminToolSectionEnum.GLOBAL_CONFIG">
+          <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.GLOBAL_CONFIG]">
             <el-icon><house /></el-icon>
             <span>HomePage</span>
           </el-menu-item>
-          <el-sub-menu :index="adminToolSectionEnum.MEDIA_MANAGEMENT">
+          <el-sub-menu :index="adminToolSectionToRouterMap[adminToolSectionEnum.MEDIA_MANAGEMENT]">
             <template #title>
               <el-icon><Tv /></el-icon>
               <span>Media</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item :index="adminToolSectionEnum.MEDIA_LOGO">
+              <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.MEDIA_LOGO]">
                 <el-icon><Smile /></el-icon>
                 <span>Logo</span>
               </el-menu-item>
-              <el-menu-item :index="adminToolSectionEnum.MEDIA_IMAGE">
+              <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.MEDIA_IMAGE]">
                 <el-icon><Image /></el-icon>
                 <span>Image</span>
               </el-menu-item>
-              <el-menu-item :index="adminToolSectionEnum.MEDIA_AUDIO">
+              <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.MEDIA_AUDIO]">
                 <el-icon><Activity /></el-icon>
                 <span>Audio</span>
               </el-menu-item>
-              <el-menu-item :index="adminToolSectionEnum.MEDIA_VIDEO">
+              <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.MEDIA_VIDEO]">
                 <el-icon><Video /></el-icon>
                 <span>Video</span>
               </el-menu-item>
             </el-menu-item-group>
           </el-sub-menu>
 
-          <el-menu-item :index="adminToolSectionEnum.NEWS_MANAGEMENT">
+          <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.NEWS_MANAGEMENT]">
             <el-icon><Newspaper /></el-icon>
             <span>News</span>
           </el-menu-item>
-          <el-menu-item :index="adminToolSectionEnum.PROJECT_MANAGEMENT">
+          <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.PROJECT_MANAGEMENT]">
             <el-icon><Package /></el-icon>
             <span>Projects</span>
           </el-menu-item>

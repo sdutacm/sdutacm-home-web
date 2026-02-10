@@ -15,12 +15,16 @@ declare module '@vue/runtime-core' {
       to(target: 'GlobalConfigView'): BwcxVueRouterActions;
       to(target: 'MediaListContainer'): BwcxVueRouterActions;
       to(target: 'NewsListContainer'): BwcxVueRouterActions;
+      to(target: 'NewsPreviewView'): BwcxVueRouterActions;
       to(target: 'OverviewView'): BwcxVueRouterActions;
       to(target: 'ProjectListContainer'): BwcxVueRouterActions;
       to(target: 'UsersAdminView'): BwcxVueRouterActions;
       to(target: 'DemoDetail'): BwcxVueRouterActions<R.DemoDetailRPO>;
       to(target: 'HomeView'): BwcxVueRouterActions;
       to(target: 'LoginView'): BwcxVueRouterActions;
+      to(target: 'NewsDetailView'): BwcxVueRouterActions;
+      to(target: 'NewsListView'): BwcxVueRouterActions;
+      to(target: 'NewsView'): BwcxVueRouterActions;
     };
   }
 }

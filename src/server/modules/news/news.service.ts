@@ -20,13 +20,15 @@ export default class NewsService {
   // 创建新闻
   public async createNews(data: CreateNewsReqDTO): Promise<void> {
     const newsRepo = appDataSource.getRepository(News);
+
     const news = newsRepo.create({
       title: data.title,
       summary: data.summary,
       content: data.content,
-      coverImage: data.coverImage,
+      coverImage: data.coverImage || '',
       isPublished: data.isPublished || false,
       publishedAt: data.isPublished ? new Date() : null,
+      updatedBy: this.ctx.session.admin,
     });
 
     await newsRepo.save(news);
@@ -44,6 +46,9 @@ export default class NewsService {
     if (data.summary !== undefined) news.summary = data.summary;
     if (data.content !== undefined) news.content = data.content;
     if (data.coverImage !== undefined) news.coverImage = data.coverImage;
+
+    // 设置更新人
+    news.updatedBy = this.ctx.session.admin;
 
     // 如果从未发布变为发布，设置发布时间
     if (data.isPublished !== undefined) {
@@ -70,7 +75,10 @@ export default class NewsService {
   // 获取新闻详情
   public async getNews(data: GetNewsReqDTO): Promise<GetNewsDetailResDTO> {
     const newsRepo = appDataSource.getRepository(News);
-    const news = await newsRepo.findOne({ where: { id: data.id } });
+    const news = await newsRepo.findOne({ 
+      where: { id: data.id },
+      relations: ['updatedBy'],
+    });
     if (!news) {
       throw new Error('新闻不存在');
     }
@@ -85,6 +93,13 @@ export default class NewsService {
       publishedAt: news.publishedAt,
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,
+      updatedBy: news.updatedBy
+        ? {
+            id: news.updatedBy.id,
+            username: news.updatedBy.username,
+            avatar: news.updatedBy.avatar,
+          }
+        : undefined,
     };
   }
 
@@ -92,6 +107,7 @@ export default class NewsService {
   public async getAllNews(): Promise<GetNewsListResDTO> {
     const newsRepo = appDataSource.getRepository(News);
     const newsList = await newsRepo.find({
+      relations: ['updatedBy'],
       order: { createdAt: 'DESC' },
     });
 
@@ -106,6 +122,13 @@ export default class NewsService {
         publishedAt: news.publishedAt,
         createdAt: news.createdAt,
         updatedAt: news.updatedAt,
+        updatedBy: news.updatedBy
+          ? {
+              id: news.updatedBy.id,
+              username: news.updatedBy.username,
+              avatar: news.updatedBy.avatar,
+            }
+          : undefined,
       })),
     };
   }

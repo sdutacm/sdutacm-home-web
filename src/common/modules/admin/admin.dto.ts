@@ -2,6 +2,14 @@ import { FromBody } from "bwcx-common";
 import { IsEmail, IsNotEmpty } from "class-validator";
 import { AdminRoleEnum } from "../../enums/admin-role";
 
+
+export interface UpdatedAdmin {
+  id: number;
+  username: string;
+  avatar: string;
+}
+
+
 export class RegisterAdminReqDTO {
   @FromBody()
   @IsNotEmpty()

@@ -68,6 +68,17 @@ export function mainEntry({
     }
   };
 
+  // 访问 /admin 或 /news 时自动跳转到对应的 overview 页面
+  router.beforeEach((to, from, next) => {
+    if (to.path === '/admin' || to.path === '/admin/') {
+      return next('/admin/overview');
+    }
+    if (to.path === '/news' || to.path === '/news/') {
+      return next('/news/overview');
+    }
+    next();
+  });
+
   router.onError((err) => {
     console.error('Vue Router error:', err);
     if (isClient) {

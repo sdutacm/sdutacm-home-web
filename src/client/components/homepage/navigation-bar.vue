@@ -5,13 +5,11 @@ import { throttle } from '@client/utils';
 import { Prop } from 'vue-property-decorator';
 
 import IconMenu from './icon/icon-menu.vue';
-import { ElIcon } from 'element-plus';
 import { Right } from '@element-plus/icons-vue';
 
 @Options({
   components: {
     IconMenu,
-    ElIcon,
     Right,
   },
 })
@@ -32,7 +30,6 @@ export default class NavigationBar extends Vue {
   mounted() {
     console.log(this.logoPath);
   }
-
 }
 </script>
 
@@ -40,7 +37,7 @@ export default class NavigationBar extends Vue {
   <header>
     <!-- 菜单(仅在移动端居左显示) -->
     <div class="menu" @click="isFastLinkShow = !isFastLinkShow">
-      <IconMenu />
+        <IconMenu />
     </div>
 
     <!-- LOGO(PC端居左, 移动端居中) -->

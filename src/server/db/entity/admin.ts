@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { AdminRoleEnum } from '@common/enums/admin-role';
 import { Media } from './media';
+import { News } from './news';
 
 @Entity('admin')
 export class Admin {
@@ -22,8 +23,11 @@ export class Admin {
   @Column({ default: true })
   active: boolean;
 
-  @OneToMany(() => Media, (media) => media.uploadedBy)
+  @OneToMany(() => Media, (media) => media.updatedBy)
   medias: Media[];
+
+  @OneToMany(() => News, (news) => news.updatedBy)
+  news: News[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

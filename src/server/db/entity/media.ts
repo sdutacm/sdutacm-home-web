@@ -34,7 +34,7 @@ export class Media {
   news?: News;
 
   @ManyToOne(() => Admin, (admin) => admin.medias, { onDelete: 'SET NULL', nullable: true })
-  uploadedBy?: Admin;
+  updatedBy?: Admin;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

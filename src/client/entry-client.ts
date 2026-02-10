@@ -1,3 +1,4 @@
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import App from './App.vue';
 import routes from './routes';
 import viteSSR from 'vite-ssr/vue/entry-client';

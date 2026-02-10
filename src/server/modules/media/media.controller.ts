@@ -3,7 +3,7 @@ import { Inject } from 'bwcx-core';
 import { ApiController } from '@server/decorators';
 import { Api } from 'bwcx-api';
 import MediaService from './media.service';
-import { GetMediaListReqDTO, GetMediaResDTO, UploadMediaReqDTO, DeleteMediaReqDTO, GetMediaByIdReqDTO, MediaDetailResDTO, UpdateMediaReqDTO } from '@common/modules/media/media.dto';
+import { GetMediaListReqDTO, GetMediaListResDTO, UploadMediaReqDTO, DeleteMediaReqDTO, GetMediaByIdReqDTO, MediaDetailResDTO, UpdateMediaReqDTO } from '@common/modules/media/media.dto';
 
 @ApiController()
 export default class MediaController {
@@ -17,16 +17,16 @@ export default class MediaController {
   /** routes */
   @Api.Summary('获取媒体列表')
   @Post('/getMediaList')
-  @Contract(GetMediaListReqDTO, GetMediaResDTO)
-  public async getMediaList(@Data() data: GetMediaListReqDTO): Promise<GetMediaResDTO> {
+  @Contract(GetMediaListReqDTO, GetMediaListResDTO)
+  public async getMediaList(@Data() data: GetMediaListReqDTO): Promise<GetMediaListResDTO> {
     return await this.mediaService.getMediaList(data.type, data.page, data.pageSize);
   }
 
   @Api.Summary('上传媒体文件')
   @Post('/uploadMedia')
-  @Contract(UploadMediaReqDTO, null)
-  public async uploadMedia(@Data() data: UploadMediaReqDTO): Promise<void> {
-    await this.mediaService.uploadMedia(data);
+  @Contract(UploadMediaReqDTO, MediaDetailResDTO)
+  public async uploadMedia(@Data() data: UploadMediaReqDTO): Promise<MediaDetailResDTO> {
+    return await this.mediaService.uploadMedia(data);
   }
 
   @Api.Summary('获取媒体详情')

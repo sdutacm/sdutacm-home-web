@@ -23,3 +23,7 @@ export class GetHomeDataResDTO {
 
   projectsPreview: GetProjectPreviewResDTO[];
 }
+
+export class GetHomeNewsResDTO {
+  rows: GetNewsPreviewResDTO[];
+}

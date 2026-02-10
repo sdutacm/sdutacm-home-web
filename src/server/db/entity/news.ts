@@ -4,11 +4,13 @@ import {
   Column,
   OneToOne,
   OneToMany,
+  ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { HomeNewsPreview } from './home-news-preview';
 import { Media } from './media';
+import { Admin } from './admin';
 
 @Entity('news')
 export class News {
@@ -18,8 +20,8 @@ export class News {
   @Column({ length: 150 })
   title: string;
 
-  @Column({ type: 'text', nullable: true, comment: '新闻摘要' })
-  summary?: string;
+  @Column({ type: 'text', comment: '新闻摘要' })
+  summary: string;
 
   @Column({ length: 255, nullable: true, name: 'cover_image', comment: '封面图片路径' })
   coverImage?: string;
@@ -38,6 +40,9 @@ export class News {
 
   @OneToMany(() => Media, (media) => media.news)
   medias?: Media[];
+
+  @ManyToOne(() => Admin, (admin) => admin.news, { onDelete: 'SET NULL', nullable: true })
+  updatedBy?: Admin;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

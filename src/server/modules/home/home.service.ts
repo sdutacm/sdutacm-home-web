@@ -1,5 +1,5 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
-import { GetHomeDataResDTO } from '@common/modules/home/home.dto';
+import { GetHomeDataResDTO, GetHomeNewsResDTO } from '@common/modules/home/home.dto';
 import appDataSource from '@server/db';
 import { GlobalConfig } from '@server/db/entity/global-config';
 import { HomeNewsPreview } from '@server/db/entity/home-news-preview';
@@ -74,6 +74,33 @@ export default class HomeService  {
       return res;
     } catch (error) {
       console.error('Get home data failed:', error);
+      throw error;
+    }
+  }
+
+  async getHomeNews(): Promise<GetHomeNewsResDTO> {
+    try {
+      const newsPreviewRepo = appDataSource.getRepository(HomeNewsPreview);
+      const newsPreviews = await newsPreviewRepo.find({
+        where: { visible: true },
+        relations: ['news'],
+      });
+
+      // 过滤掉未发布的新闻
+      const publishedNewsPreviews = newsPreviews.filter(preview => preview.news.isPublished);
+
+      const res: GetHomeNewsResDTO = {
+        rows: publishedNewsPreviews.map((preview) => ({
+          title: preview.news.title,
+          summary: preview.news.summary,
+          coverImage: preview.news.coverImage,
+          publishedAt: preview.news.publishedAt,
+          content: preview.news.content,
+        })),
+      };
+      return res;
+    } catch (error) {
+      console.error('Get home news failed:', error);
       throw error;
     }
   }

@@ -2,11 +2,6 @@
 import { Vue, Options } from 'vue-class-component';
 import { View } from 'bwcx-client-vue3';
 import { RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
-import { AdminToolSectionEnum } from '@common/enums/admin-tool-section.enum';
-import { MediaTypeEnum } from '@common/enums/media-type.enum';
-import { GetMediaResDTO } from '@common/modules/media/media.dto';
-import localforage from 'localforage';
-
 import AdminTools from '@client/components/admin/admin-tools.vue';
 
 @View('/admin')
@@ -19,22 +14,12 @@ import AdminTools from '@client/components/admin/admin-tools.vue';
 export default class AdminView extends Vue {
   adminState = {
     userInfo: null,
+    currentPage: null,
   };
 
   async mounted() {
     const sess = await this.$api.getSession();
     this.adminState.userInfo = sess;
-    const lastPage = await localforage.getItem<any>('admin-last-page');
-    console.log('Last admin page:', lastPage);
-    if (lastPage) {
-      if (lastPage.param) {
-        this.$router.push({ name: lastPage.page, params: lastPage.param });
-      } else {
-        this.$router.push({ name: lastPage.page });
-      }
-    } else {
-      this.$router.push({ name: 'OverviewView' });
-    }
   }
 }
 </script>
@@ -42,13 +27,11 @@ export default class AdminView extends Vue {
 <template>
   <div class="admin-container">
     <div class="admin-tools">
-      <AdminTools :userInfo="adminState.userInfo" />
+      <AdminTools :userInfo="adminState.userInfo" :currentPage="adminState.currentPage" />
     </div>
     <div class="admin-preview">
       <router-view v-slot="{ Component }">
-        <Suspense>
           <component :is="Component" />
-        </Suspense>
       </router-view>
     </div>
   </div>
