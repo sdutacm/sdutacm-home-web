@@ -10,6 +10,8 @@ import {
   GetNewsDetailResDTO,
   GetNewsListResDTO,
   GetNewsReqDTO,
+  GetPublishedNewsListReqDTO,
+  GetPublishedNewsListResDTO,
 } from '@common/modules/news/news.dto';
 
 @ApiController()
@@ -54,5 +56,12 @@ export default class NewsController {
   @Contract(null, GetNewsListResDTO)
   public async getAllNews(): Promise<GetNewsListResDTO> {
     return await this.newsService.getAllNews();
+  }
+
+  @Api.Summary('分页获取已发布新闻列表')
+  @Post('/getPublishedNewsList')
+  @Contract(GetPublishedNewsListReqDTO, GetPublishedNewsListResDTO)
+  public async getPublishedNewsList(@Data() data: GetPublishedNewsListReqDTO): Promise<GetPublishedNewsListResDTO> {
+    return await this.newsService.getPublishedNewsList(data);
   }
 }

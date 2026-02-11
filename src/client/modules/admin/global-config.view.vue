@@ -4,7 +4,7 @@ import { GetGlobalConfigResDTO } from '@common/modules/global-config/global-conf
 import { Prop } from 'vue-property-decorator';
 import { ElForm, ElInput, ElFormItem, ElImage, ElButton, ElMessage, ElLoading, ElTransfer } from 'element-plus';
 import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
-
+import { Head } from '@vueuse/head';
 import SelectLogoDialog from '@client/components/admin/select-logo-dialog.vue';
 
 interface NewsItem {
@@ -30,6 +30,7 @@ interface TransferItem {
 @RenderMethod(RenderMethodKind.CSR)
 @Options({
   components: {
+    Head,
     ElForm,
     ElInput,
     ElFormItem,
@@ -152,6 +153,10 @@ export default class GlobalConfigView extends Vue {
 </script>
 
 <template>
+  <Head>
+    <title>SDUTACM Admin | Homepage Config</title>
+    <meta name="description" content="SDUTACM 管理后台首页配置">
+  </Head>
   <div class="global-config-container">
     <el-form :model="globalConfigState" label-width="140px">
       <el-form-item label="logo">

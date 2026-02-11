@@ -6,6 +6,7 @@ import { Prop } from 'vue-property-decorator';
 
 import IconMenu from './icon/icon-menu.vue';
 import { Right } from '@element-plus/icons-vue';
+import { link } from 'fs';
 
 @Options({
   components: {
@@ -18,6 +19,12 @@ export default class NavigationBar extends Vue {
   isFastLinkHover = false;
   isDropDownHover = false;
   fastlinkShowIndex = 1;
+
+  sdutacmLinks = [
+    { title: '最新动态', link: '/news/overview' },
+    { title: '项目展柜', link: '/projects/overview' },
+    { title: 'SDUT OJ', link: 'https://oj.sdutacm.cn/' },
+  ];
 
   @Prop()
   logoPath!: string;
@@ -47,11 +54,11 @@ export default class NavigationBar extends Vue {
     </a>
     <!-- 导航条(仅在PC端居中显示) -->
     <div class="nav">
-      <!-- <div v-for="link in sdutlinks" :key="link.title" class="nav-item">
+      <div v-for="link in sdutacmLinks" :key="link.title" class="nav-item">
         <a target="_blank" rel="noopener noreferrer" :href="link.link">
           <span>{{ link.title }}</span>
         </a>
-      </div> -->
+      </div>
       <!-- <div
         class="nav-item"
         :class="{ 'is-show': isFastLinkShow }"

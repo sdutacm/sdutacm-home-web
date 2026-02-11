@@ -3,6 +3,7 @@ import { Vue, Options } from 'vue-class-component';
 import { View } from 'bwcx-client-vue3';
 import { RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import AdminTools from '@client/components/admin/admin-tools.vue';
+import { Head } from '@vueuse/head';
 
 @View('/admin')
 @RenderMethod(RenderMethodKind.CSR)
@@ -25,6 +26,10 @@ export default class AdminView extends Vue {
 </script>
 
 <template>
+  <Head>
+    <title>SDUTACM Admin</title>
+    <meta name="description" content="SDUTACM 管理后台">
+  </Head>
   <div class="admin-container">
     <div class="admin-tools">
       <AdminTools :userInfo="adminState.userInfo" :currentPage="adminState.currentPage" />

@@ -21,6 +21,7 @@ import { Delete, Edit, Plus } from '@element-plus/icons-vue';
 import { Copy, Download, Trash, FilePenLine, CirclePlus } from 'lucide-vue-next';
 import UploadMediaDialog from '@client/components/admin/upload-media-dialog.vue';
 import UpdateMediaDialog from '@client/components/admin/update-media-dialog.vue';
+import { Head } from '@vueuse/head';
 
 @View('/admin/media-list/:id')
 @ChildOf('AdminView')
@@ -32,6 +33,7 @@ import UpdateMediaDialog from '@client/components/admin/update-media-dialog.vue'
     ElUpload,
     ElCard,
     ElIcon,
+    Head,
     ElEmpty,
     ElPagination,
     Trash,
@@ -306,6 +308,10 @@ export default class MediaListContainer extends Vue {
 </script>
 
 <template>
+  <Head>
+    <title>SDUTACM Admin | {{ mediaType }} Management</title>
+    <meta name="description" content="SDUTACM 管理后台媒体资源管理">
+  </Head>
   <div class="media-list-container">
     <header class="media-list-header">
       <el-button type="primary" @click="showUploadDialog">

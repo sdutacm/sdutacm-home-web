@@ -2,12 +2,14 @@
 import { Vue, Options } from 'vue-class-component';
 import { View, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import NewsNav from '@client/components/news/news-nav.vue';
+import HomeFooter from '@client/components/home-footer.vue';
 
 @View('/news')
 @RenderMethod(RenderMethodKind.SSR)
 @Options({
   components: {
     NewsNav,
+    HomeFooter,
   },
 })
 export default class NewsView extends Vue {}
@@ -18,4 +20,5 @@ export default class NewsView extends Vue {}
   <router-view v-slot="{ Component }">
     <component :is="Component" />
   </router-view>
+  <HomeFooter />
 </template>

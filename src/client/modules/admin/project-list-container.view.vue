@@ -21,6 +21,7 @@ import {
   ElImage,
   vLoading,
 } from 'element-plus';
+import { Head } from '@vueuse/head';
 import { Plus, Edit, Delete, Upload, Link } from '@element-plus/icons-vue';
 
 interface ProjectItem {
@@ -60,6 +61,7 @@ interface ProjectItem {
     Delete,
     Upload,
     Link,
+    Head,
   },
 })
 export default class ProjectListContainer extends Vue {
@@ -228,6 +230,10 @@ export default class ProjectListContainer extends Vue {
 </script>
 
 <template>
+  <Head>
+    <title>SDUTACM Admin | Project Management</title>
+    <meta name="description" content="SDUTACM 管理后台项目管理">
+  </Head>
   <div class="project-list-container">
     <div class="toolbar">
       <el-button type="primary" @click="handleCreate">

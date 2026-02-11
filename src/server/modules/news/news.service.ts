@@ -6,6 +6,8 @@ import {
   GetNewsDetailResDTO,
   GetNewsListResDTO,
   GetNewsReqDTO,
+  GetPublishedNewsListReqDTO,
+  GetPublishedNewsListResDTO,
 } from '@common/modules/news/news.dto';
 import appDataSource from '@server/db';
 import { News } from '@server/db/entity/news';
@@ -75,7 +77,7 @@ export default class NewsService {
   // 获取新闻详情
   public async getNews(data: GetNewsReqDTO): Promise<GetNewsDetailResDTO> {
     const newsRepo = appDataSource.getRepository(News);
-    const news = await newsRepo.findOne({ 
+    const news = await newsRepo.findOne({
       where: { id: data.id },
       relations: ['updatedBy'],
     });
@@ -93,6 +95,7 @@ export default class NewsService {
       publishedAt: news.publishedAt,
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,
+      viewCount: news.viewCount,
       updatedBy: news.updatedBy
         ? {
             id: news.updatedBy.id,
@@ -122,6 +125,7 @@ export default class NewsService {
         publishedAt: news.publishedAt,
         createdAt: news.createdAt,
         updatedAt: news.updatedAt,
+        viewCount: news.viewCount,
         updatedBy: news.updatedBy
           ? {
               id: news.updatedBy.id,
@@ -131,5 +135,59 @@ export default class NewsService {
           : undefined,
       })),
     };
+  }
+
+  // 分页获取已发布的新闻列表
+  public async getPublishedNewsList(data: GetPublishedNewsListReqDTO): Promise<GetPublishedNewsListResDTO> {
+    const newsRepo = appDataSource.getRepository(News);
+    const { page, pageSize } = data;
+    const skip = (page - 1) * pageSize;
+
+    const [newsList, total] = await newsRepo.findAndCount({
+      where: { isPublished: true },
+      relations: ['updatedBy'],
+      order: { publishedAt: 'DESC' },
+      skip,
+      take: pageSize,
+    });
+
+    return {
+      rows: newsList.map(news => ({
+        id: news.id,
+        title: news.title,
+        summary: news.summary,
+        content: news.content,
+        coverImage: news.coverImage,
+        isPublished: news.isPublished,
+        publishedAt: news.publishedAt,
+        createdAt: news.createdAt,
+        updatedAt: news.updatedAt,
+        viewCount: news.viewCount,
+        updatedBy: news.updatedBy
+          ? {
+              id: news.updatedBy.id,
+              username: news.updatedBy.username,
+              avatar: news.updatedBy.avatar,
+            }
+          : undefined,
+      })),
+      total,
+      page,
+      pageSize,
+      hasMore: skip + newsList.length < total,
+    };
+  }
+
+  // 增加新闻浏览次数
+  public async incrementViewCount(newsId: number): Promise<void> {
+    const newsRepo = appDataSource.getRepository(News);
+    await newsRepo.increment({ id: newsId }, 'viewCount', 1);
+  }
+
+  // 获取新闻浏览次数
+  public async getViewCount(newsId: number): Promise<number> {
+    const newsRepo = appDataSource.getRepository(News);
+    const news = await newsRepo.findOne({ where: { id: newsId }, select: ['viewCount'] });
+    return news?.viewCount || 0;
   }
 }

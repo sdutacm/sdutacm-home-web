@@ -4,7 +4,7 @@ import viteSSR from 'vite-ssr/vue/entry-server';
 import { ApiFactory } from './api/api-factory.server';
 import { ApiClientFactory, API_REQUEST_TOKEN, API_CLIENT_TOKEN } from './api';
 import { mainEntry } from './main';
-import { ID_INJECTION_KEY } from 'element-plus';
+import { ID_INJECTION_KEY, ZINDEX_INJECTION_KEY } from 'element-plus';
 
 export default viteSSR(App, { routes }, (hookParams) => {
   const { app, request } = hookParams;
@@ -12,6 +12,11 @@ export default viteSSR(App, { routes }, (hookParams) => {
   // Element Plus SSR ID injection
   app.provide(ID_INJECTION_KEY, {
     prefix: Math.floor(Math.random() * 10000),
+    current: 0,
+  });
+
+  // Element Plus SSR Z-Index injection
+  app.provide(ZINDEX_INJECTION_KEY, {
     current: 0,
   });
 

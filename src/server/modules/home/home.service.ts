@@ -57,6 +57,7 @@ export default class HomeService  {
           createdAt: globalConfig.logo.createdAt,
         } : null,
         newsPreview: publishedNewsPreviews.map((preview) => ({
+          id: preview.news.id,
           title: preview.news.title,
           summary: preview.news.summary,
           coverImage: preview.news.coverImage,
@@ -91,6 +92,7 @@ export default class HomeService  {
 
       const res: GetHomeNewsResDTO = {
         rows: publishedNewsPreviews.map((preview) => ({
+          id: preview.news.id,
           title: preview.news.title,
           summary: preview.news.summary,
           coverImage: preview.news.coverImage,

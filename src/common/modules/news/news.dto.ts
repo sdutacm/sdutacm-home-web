@@ -13,9 +13,12 @@ export interface NewsItemVO {
   createdAt: Date;
   updatedAt: Date;
   updatedBy?: UpdatedAdmin;
+  viewCount?: number;
 }
 
 export class GetNewsPreviewResDTO {
+  id: number;
+
   title: string;
 
   summary: string;
@@ -108,6 +111,7 @@ export class GetNewsDetailResDTO {
   createdAt: Date;
   updatedAt: Date;
   updatedBy?: UpdatedAdmin;
+  viewCount?: number;
 }
 
 // 获取新闻列表
@@ -121,4 +125,26 @@ export class GetNewsReqDTO {
   @IsNotEmpty()
   @IsNumber()
   id: number;
+}
+
+// 分页获取已发布新闻请求
+export class GetPublishedNewsListReqDTO {
+  @FromBody()
+  @IsNotEmpty()
+  @IsNumber()
+  page: number;
+
+  @FromBody()
+  @IsNotEmpty()
+  @IsNumber()
+  pageSize: number;
+}
+
+// 分页获取已发布新闻响应
+export class GetPublishedNewsListResDTO {
+  rows: GetNewsDetailResDTO[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
 }

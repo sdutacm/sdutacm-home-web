@@ -9,6 +9,14 @@ import { parse } from 'path';
 export default class SectionNews extends Vue {
   @Prop({ required: true })
   newsItems!: GetNewsPreviewResDTO[];
+
+  toNews() {
+    this.$router.push('/news/overview');
+  }
+
+  goToNewsDetail(id: number) {
+    window.open(`/news/${id}`, '_blank');
+  }
 }
 </script>
 
@@ -18,6 +26,7 @@ export default class SectionNews extends Vue {
       v-for="(item, index) in newsItems"
       :key="index"
       :class="'news-item news-item' + (index + 1)"
+      @click="goToNewsDetail(item.id)"
     >
       <div
         class="n-link"
@@ -43,6 +52,7 @@ export default class SectionNews extends Vue {
         </div>
       </div> -->
     </div>
+    <div class="more" @click="toNews">探索更多</div>
   </div>
 </template>
 
@@ -60,6 +70,23 @@ export default class SectionNews extends Vue {
     'no1 no1 no3'
     'no4 no5 no5' / 147fr 57fr 84fr;
   gap: 0.52rem 0.48rem;
+  position: relative;
+
+  & .more {
+    position: absolute;
+    right: 0.2rem;
+    bottom: 0rem;
+    transform: translateY(200%);
+    font-size: 0.32rem;
+    color: var(--ah-c-text3);
+    font-weight: 500;
+    user-select: none;
+
+    &:hover {
+      color: var(--ah-c-text2);
+      cursor: pointer;
+    }
+  }
 
   .news-item {
     display: flex;
@@ -68,6 +95,7 @@ export default class SectionNews extends Vue {
     overflow: hidden;
     border-radius: 0.2rem;
     transition: box-shadow var(--ah-t-long);
+    cursor: pointer;
 
     .n-link {
       display: flex;

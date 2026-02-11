@@ -35,6 +35,9 @@ export class News {
   @Column({ type: 'datetime', nullable: true, name: 'published_at' })
   publishedAt?: Date;
 
+  @Column({ default: 0, name: 'view_count', comment: '浏览次数' })
+  viewCount: number;
+
   @OneToOne(() => HomeNewsPreview, (preview) => preview.news)
   homePreview?: HomeNewsPreview;
 

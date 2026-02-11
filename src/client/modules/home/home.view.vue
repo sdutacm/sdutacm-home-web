@@ -9,6 +9,8 @@ import { AsyncDataOptions } from '@client/typings';
 import NavigationBar from '@client/components/homepage/navigation-bar.vue';
 import SectionNews from '@client/components/homepage/section-news.vue';
 import SectionProject from '@client/components/homepage/section-project.vue';
+import HomeFooter from '@client/components/home-footer.vue';
+import { Head } from '@vueuse/head';
 
 @View('/')
 @RenderMethod(RenderMethodKind.SSR)
@@ -17,6 +19,8 @@ import SectionProject from '@client/components/homepage/section-project.vue';
     NavigationBar,
     SectionNews,
     SectionProject,
+    HomeFooter,
+    Head
   },
 })
 export default class HomeView extends Vue {
@@ -59,6 +63,10 @@ export default class HomeView extends Vue {
 </script>
 
 <template>
+  <Head>
+    <title>SDUTACM 官网</title>
+    <meta name="description" content="山东理工大学 ACM 实验室官方网站">
+  </Head>
   <!-- 顶部导航栏及其下拉列表 -->
   <NavigationBar :logoPath="homeState.logo.path"/>
 
@@ -86,9 +94,7 @@ export default class HomeView extends Vue {
     <SectionProject :projectItems="homeState.projectsPreview" />
   </main>
 
-  <footer>
-    <span> © 2008-2024 SDUTACM. All Rights Reserved. </span>
-  </footer>
+  <HomeFooter />
 </template>
 
 <style scoped lang="less">

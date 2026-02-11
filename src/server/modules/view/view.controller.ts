@@ -1,10 +1,12 @@
-import { Controller, Get, UseGuards } from 'bwcx-ljsm';
+import { Controller, Get, UseGuards, Param } from 'bwcx-ljsm';
 import { Inject } from 'bwcx-core';
 import { UseClientRoutes, PrimaryRenderMethod, OverrideView } from 'bwcx-client-vue/server';
 import { RenderMethodKind } from 'bwcx-client-vue';
 import ViewService from './view.service';
 import { HtmlResponse } from '@server/response-handlers/html.response-handler';
 import LoginGuard from '@server/guards/login';
+import NewsService from '@server/modules/news/news.service';
+import StatsService from '@server/modules/stats/stats.service';
 
 @Controller('', { priority: -100 })
 @HtmlResponse()
@@ -12,6 +14,10 @@ export default class ViewController {
   public constructor(
     @Inject()
     private readonly service: ViewService,
+    @Inject()
+    private readonly newsService: NewsService,
+    @Inject()
+    private readonly statsService: StatsService,
   ) {}
 
   // 可选重写指定某个前端路由的逻辑
@@ -26,6 +32,30 @@ export default class ViewController {
   public adminView(@PrimaryRenderMethod() renderMethod: RenderMethodKind) {
     console.log('AdminView has been overridden. The original render method is:', renderMethod);
     return this.service.render(renderMethod || RenderMethodKind.CSR);
+  }
+
+  @OverrideView('HomeView')
+  public async homeView(@PrimaryRenderMethod() renderMethod: RenderMethodKind) {
+    // 异步增加首页浏览次数（不阻塞渲染）
+    this.statsService.incrementPageViewCount('home').catch(err => {
+      console.error('Failed to increment home page view count:', err);
+    });
+    return this.service.render(renderMethod || RenderMethodKind.SSR);
+  }
+
+  @OverrideView('NewsDetailView')
+  public async newsDetailView(
+    @PrimaryRenderMethod() renderMethod: RenderMethodKind,
+    @Param('id') id: string,
+  ) {
+    const newsId = parseInt(id, 10);
+    if (!isNaN(newsId)) {
+      // 异步增加新闻浏览次数（不阻塞渲染）
+      this.newsService.incrementViewCount(newsId).catch(err => {
+        console.error('Failed to increment news view count:', err);
+      });
+    }
+    return this.service.render(renderMethod || RenderMethodKind.SSR);
   }
 
   @UseClientRoutes()

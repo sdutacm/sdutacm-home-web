@@ -23,6 +23,7 @@ import {
   ElOption,
   vLoading,
 } from 'element-plus';
+import { Head } from '@vueuse/head';
 import { Plus, Edit, Delete, View as ViewIcon, Upload } from '@element-plus/icons-vue';
 import NewsEditDialog from '@client/components/admin/news-edit-dialog.vue';
 import UserAvatar from '@client/components/user-avatar.vue';
@@ -47,6 +48,7 @@ import UserAvatar from '@client/components/user-avatar.vue';
     ElSwitch,
     ElUpload,
     ElImage,
+    Head,
     ElSelect,
     ElOption,
     Plus,
@@ -160,6 +162,11 @@ export default class NewsListContainer extends Vue {
 </script>
 
 <template>
+  <Head>
+    <title>SDUTACM Admin | News Management</title>
+    <meta name="description" content="SDUTACM 管理后台新闻管理">
+  </Head>
+
   <div class="news-list-container">
     <div class="toolbar">
       <el-button type="primary" @click="showCreateDialog">
@@ -173,7 +180,7 @@ export default class NewsListContainer extends Vue {
       </el-select>
     </div>
 
-    <el-table :data="filteredNewsList" style="width: max-content; margin-top: 16px" stripe>
+    <el-table :data="filteredNewsList" style="width: 100%; margin-top: 16px" stripe>
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
       <el-table-column prop="summary" label="摘要" min-width="150" show-overflow-tooltip />

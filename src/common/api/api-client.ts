@@ -11,7 +11,7 @@ import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, Up
 import { DemoGetReqDTO, DemoGetRespDTO } from '../modules/demo/demo.dto';
 import { GetHomeDataResDTO, GetHomeNewsResDTO } from '../modules/home/home.dto';
 import { GetMediaListReqDTO, GetMediaListResDTO, UploadMediaReqDTO, MediaDetailResDTO, GetMediaByIdReqDTO, UpdateMediaReqDTO, DeleteMediaReqDTO } from '../modules/media/media.dto';
-import { CreateNewsReqDTO, UpdateNewsReqDTO, DeleteNewsReqDTO, GetNewsReqDTO, GetNewsDetailResDTO, GetNewsListResDTO } from '../modules/news/news.dto';
+import { CreateNewsReqDTO, UpdateNewsReqDTO, DeleteNewsReqDTO, GetNewsReqDTO, GetNewsDetailResDTO, GetNewsListResDTO, GetPublishedNewsListReqDTO, GetPublishedNewsListResDTO } from '../modules/news/news.dto';
 import { CreateProjectReqDTO, UpdateProjectReqDTO, DeleteProjectReqDTO, GetProjectReqDTO, GetProjectDetailResDTO, GetProjectListResDTO } from '../modules/project/project.dto';
 
 const urlcat = configureUrlcat({ arrayFormat: 'repeat' });
@@ -271,6 +271,17 @@ export class ApiClient<T = undefined> {
   }
 
   /**
+   * 分页获取已发布新闻列表
+   *
+   * @param {GetPublishedNewsListReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetPublishedNewsListResDTO} The response data (RespDTO).
+   */
+  public async getPublishedNewsList(req: GetPublishedNewsListReqDTO, opts?: T): Promise<GetPublishedNewsListResDTO> {
+    return this._r(this._rArgs.w(req, opts)).then((resp) => this._rp.pat(GetPublishedNewsListResDTO, resp));
+  }
+
+  /**
    * 创建项目
    *
    * @param {CreateProjectReqDTO} req The request data (compatible with ReqDTO).
@@ -278,7 +289,7 @@ export class ApiClient<T = undefined> {
    * @returns {null} The response data (RespDTO).
    */
   public async createProject(req: CreateProjectReqDTO, opts?: T): Promise<null> {
-    return this._r(this._rArgs.w(req, opts)).then((resp) => this._rp.pat(null, resp));
+    return this._r(this._rArgs.x(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   /**
@@ -289,7 +300,7 @@ export class ApiClient<T = undefined> {
    * @returns {null} The response data (RespDTO).
    */
   public async updateProject(req: UpdateProjectReqDTO, opts?: T): Promise<null> {
-    return this._r(this._rArgs.x(req, opts)).then((resp) => this._rp.pat(null, resp));
+    return this._r(this._rArgs.y(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   /**
@@ -300,7 +311,7 @@ export class ApiClient<T = undefined> {
    * @returns {null} The response data (RespDTO).
    */
   public async deleteProject(req: DeleteProjectReqDTO, opts?: T): Promise<null> {
-    return this._r(this._rArgs.y(req, opts)).then((resp) => this._rp.pat(null, resp));
+    return this._r(this._rArgs.z(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   /**
@@ -311,7 +322,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetProjectDetailResDTO} The response data (RespDTO).
    */
   public async getProject(req: GetProjectReqDTO, opts?: T): Promise<GetProjectDetailResDTO> {
-    return this._r(this._rArgs.z(req, opts)).then((resp) => this._rp.pat(GetProjectDetailResDTO, resp));
+    return this._r(this._rArgs.aa(req, opts)).then((resp) => this._rp.pat(GetProjectDetailResDTO, resp));
   }
 
   /**
@@ -322,7 +333,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetProjectListResDTO} The response data (RespDTO).
    */
   public async getAllProjects(req?: null, opts?: T): Promise<GetProjectListResDTO> {
-    return this._r(this._rArgs.aa(req, opts)).then((resp) => this._rp.pat(GetProjectListResDTO, resp));
+    return this._r(this._rArgs.ab(req, opts)).then((resp) => this._rp.pat(GetProjectListResDTO, resp));
   }
 
   private _rArgs = {
@@ -779,7 +790,28 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    w: (req: CreateProjectReqDTO, opts?: any) => {
+    w: (req: GetPublishedNewsListReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getPublishedNewsList', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          page: req.page,
+          pageSize: req.pageSize,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'getPublishedNewsList',
+          method: 'POST',
+          path: '/api/getPublishedNewsList',
+          req: GetPublishedNewsListReqDTO,
+          resp: GetPublishedNewsListResDTO,
+        },
+      };
+    },
+    x: (req: CreateProjectReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/createProject', {
@@ -804,7 +836,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    x: (req: UpdateProjectReqDTO, opts?: any) => {
+    y: (req: UpdateProjectReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/updateProject', {
@@ -830,7 +862,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    y: (req: DeleteProjectReqDTO, opts?: any) => {
+    z: (req: DeleteProjectReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/deleteProject', {
@@ -850,7 +882,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    z: (req: GetProjectReqDTO, opts?: any) => {
+    aa: (req: GetProjectReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getProject', {
@@ -870,7 +902,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    aa: (req: null, opts?: any) => {
+    ab: (req: null, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getAllProjects', {
