@@ -52,7 +52,6 @@ export default class SectionNews extends Vue {
         </div>
       </div> -->
     </div>
-    <div class="more" @click="toNews">探索更多</div>
   </div>
 </template>
 

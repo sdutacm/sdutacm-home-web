@@ -1,6 +1,12 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
 import appDataSource from '@server/db';
 import { PageView } from '@server/db/entity/page-view';
+import { DailyPageView } from '@server/db/entity/daily-page-view';
+import { News } from '@server/db/entity/news';
+import { Project } from '@server/db/entity/project';
+import { Media } from '@server/db/entity/media';
+import { Admin } from '@server/db/entity/admin';
+import { GetOverviewStatsResDTO } from '@common/modules/stats/stats.dto';
 
 @Service()
 export default class StatsService {
@@ -9,14 +15,21 @@ export default class StatsService {
     private readonly ctx: RequestContext,
   ) {}
 
-  // 增加页面浏览次数
+  // 获取今日日期字符串 YYYY-MM-DD
+  private getTodayDateString(): string {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  }
+
+  // 增加页面浏览次数（同时更新总计和每日统计）
   public async incrementPageViewCount(pageKey: string): Promise<void> {
     const pageViewRepo = appDataSource.getRepository(PageView);
+    const dailyPageViewRepo = appDataSource.getRepository(DailyPageView);
+    const today = this.getTodayDateString();
 
-    // 尝试先更新已存在的记录
+    // 更新总计
     const result = await pageViewRepo.increment({ pageKey }, 'viewCount', 1);
 
-    // 如果没有更新任何记录，说明记录不存在，需要创建
     if (result.affected === 0) {
       const pageView = pageViewRepo.create({
         pageKey,
@@ -25,9 +38,28 @@ export default class StatsService {
       try {
         await pageViewRepo.save(pageView);
       } catch (error: any) {
-        // 如果是唯一键冲突，说明其他请求已经创建了记录，再次尝试更新
         if (error.code === 'ER_DUP_ENTRY') {
           await pageViewRepo.increment({ pageKey }, 'viewCount', 1);
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    // 更新每日统计
+    const dailyResult = await dailyPageViewRepo.increment({ pageKey, date: today }, 'viewCount', 1);
+
+    if (dailyResult.affected === 0) {
+      const dailyPageView = dailyPageViewRepo.create({
+        pageKey,
+        date: today,
+        viewCount: 1,
+      });
+      try {
+        await dailyPageViewRepo.save(dailyPageView);
+      } catch (error: any) {
+        if (error.code === 'ER_DUP_ENTRY') {
+          await dailyPageViewRepo.increment({ pageKey, date: today }, 'viewCount', 1);
         } else {
           throw error;
         }
@@ -46,6 +78,107 @@ export default class StatsService {
   public async getAllPageViewStats(): Promise<{ pageKey: string; viewCount: number }[]> {
     const pageViewRepo = appDataSource.getRepository(PageView);
     const stats = await pageViewRepo.find();
-    return stats.map(s => ({ pageKey: s.pageKey, viewCount: s.viewCount }));
+    return stats.map((s) => ({ pageKey: s.pageKey, viewCount: s.viewCount }));
+  }
+
+  // 获取每日页面浏览统计（最近N天）
+  public async getDailyPageViewStats(
+    pageKey: string,
+    days: number = 30,
+  ): Promise<{ date: string; viewCount: number }[]> {
+    const dailyPageViewRepo = appDataSource.getRepository(DailyPageView);
+
+    // 计算起始日期
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days + 1);
+
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    const stats = await dailyPageViewRepo
+      .createQueryBuilder('dpv')
+      .where('dpv.page_key = :pageKey', { pageKey })
+      .andWhere('dpv.date >= :startDate', { startDate: startDateStr })
+      .andWhere('dpv.date <= :endDate', { endDate: endDateStr })
+      .orderBy('dpv.date', 'ASC')
+      .getMany();
+
+    // 填充缺失的日期（访问量为0）
+    const result: { date: string; viewCount: number }[] = [];
+    const statsMap = new Map(stats.map((s) => [s.date, s.viewCount]));
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      result.push({
+        date: dateStr,
+        viewCount: statsMap.get(dateStr) || 0,
+      });
+    }
+
+    return result;
+  }
+
+  // 获取概览统计数据
+  public async getOverviewStats(): Promise<GetOverviewStatsResDTO> {
+    const pageViewRepo = appDataSource.getRepository(PageView);
+    const dailyPageViewRepo = appDataSource.getRepository(DailyPageView);
+    const newsRepo = appDataSource.getRepository(News);
+    const projectRepo = appDataSource.getRepository(Project);
+    const mediaRepo = appDataSource.getRepository(Media);
+    const adminRepo = appDataSource.getRepository(Admin);
+    const today = this.getTodayDateString();
+
+    // 获取首页总访问量
+    const homePageView = await pageViewRepo.findOne({ where: { pageKey: 'home' } });
+    const totalHomeViews = homePageView?.viewCount || 0;
+
+    // 获取今日首页访问量
+    const todayHomePageView = await dailyPageViewRepo.findOne({
+      where: { pageKey: 'home', date: today },
+    });
+    const todayHomeViews = todayHomePageView?.viewCount || 0;
+
+    // 获取新闻统计
+    const totalNewsCount = await newsRepo.count();
+    const publishedNewsCount = await newsRepo.count({ where: { isPublished: true } });
+    const draftNewsCount = totalNewsCount - publishedNewsCount;
+
+    // 获取新闻总浏览量
+    const newsViewsResult = await newsRepo
+      .createQueryBuilder('news')
+      .select('SUM(news.view_count)', 'total')
+      .getRawOne();
+    const totalNewsViews = parseInt(newsViewsResult?.total || '0', 10);
+
+    // 获取项目统计
+    const totalProjectCount = await projectRepo.count();
+    const featuredProjectCount = await projectRepo.count({ where: { isFeatured: true } });
+
+    // 获取媒体统计
+    const totalMediaCount = await mediaRepo.count();
+    const activeMediaCount = await mediaRepo.count({ where: { active: true } });
+    const mediaSizeResult = await mediaRepo.createQueryBuilder('media').select('SUM(media.size)', 'total').getRawOne();
+    const totalMediaSize = parseInt(mediaSizeResult?.total || '0', 10);
+
+    // 获取管理员统计
+    const totalAdminCount = await adminRepo.count();
+    const activeAdminCount = await adminRepo.count({ where: { active: true } });
+
+    return {
+      totalHomeViews,
+      todayHomeViews,
+      totalNewsCount,
+      publishedNewsCount,
+      draftNewsCount,
+      totalNewsViews,
+      totalProjectCount,
+      featuredProjectCount,
+      totalMediaCount,
+      activeMediaCount,
+      totalMediaSize,
+      totalAdminCount,
+      activeAdminCount,
+    };
   }
 }

@@ -1,12 +1,10 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
-import { sdutlinks, fastlinks } from '@client/data/fastlinks';
 import { throttle } from '@client/utils';
 import { Prop } from 'vue-property-decorator';
 
 import IconMenu from './icon/icon-menu.vue';
 import { Right } from '@element-plus/icons-vue';
-import { link } from 'fs';
 
 @Options({
   components: {
@@ -22,7 +20,7 @@ export default class NavigationBar extends Vue {
 
   sdutacmLinks = [
     { title: '最新动态', link: '/news/overview' },
-    { title: '项目展柜', link: '/projects/overview' },
+    { title: '项目展柜', link: '/projects' },
     { title: 'SDUT OJ', link: 'https://oj.sdutacm.cn/' },
   ];
 

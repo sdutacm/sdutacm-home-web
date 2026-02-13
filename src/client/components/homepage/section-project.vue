@@ -14,6 +14,11 @@ export default class SectionProject extends Vue {
   clickProject = (target) => {
     this.acitveProject = target === this.acitveProject ? 0 : target;
   };
+
+  splitDescription(description?: string): string[] {
+    if (!description) return [];
+    return description.split('\n').filter((line) => line.trim());
+  }
 }
 </script>
 
@@ -24,14 +29,37 @@ export default class SectionProject extends Vue {
       v-for="(project, index) in projectItems"
       :key="index"
       :class="{ active: acitveProject === index + 1 }"
-      :style="{ backgroundImage: `url(${project.coverImage})`, backgroundRepeat: 'no-repeat', backgroundPosition: '10% 50%', backgroundSize: '50%', backgroundColor: bgColorList[index % bgColorList.length] }"
+      :style="{
+        backgroundImage: `url(${project.coverImage})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: '10% 50%',
+        backgroundSize: '50%',
+        backgroundColor: bgColorList[index % bgColorList.length],
+      }"
       @click="() => this.clickProject(index + 1)"
     >
       <div class="project-bubble"></div>
       <span class="project-title">{{ project.name }}</span>
+      <div class="project-external-links">
+        <a v-if="project.repoUrl" class="external-link" :href="project.repoUrl" target="_blank" @click.stop>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+          <span>仓库</span>
+        </a>
+        <a v-if="project.websiteUrl" class="external-link" :href="project.websiteUrl" target="_blank" @click.stop>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
+            />
+          </svg>
+          <span>官网</span>
+        </a>
+      </div>
       <p class="project-summary">
-        <span>{{ project.description }}</span>
-        <span></span>
+        <span v-for="(line, lineIndex) in splitDescription(project.description)" :key="lineIndex">{{ line }}</span>
       </p>
     </div>
     <!-- <div class="project-item1 project-item" :class="{ active: acitveProject === 1 }" @click="() => this.clickProject(1)">
@@ -159,6 +187,53 @@ export default class SectionProject extends Vue {
       color: var(--ah-c-text2);
       transition: transform var(--ah-t-long);
       cursor: default;
+    }
+
+    .project-external-links {
+      position: absolute;
+      top: 3rem;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 0.24rem;
+      width: 40%;
+      opacity: 0;
+      transition: opacity var(--ah-t-short) 0s;
+
+      .external-link {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.12rem;
+        padding: 0.08rem 0;
+        font-size: 0.28rem;
+        font-weight: 500;
+        color: var(--ah-c-text2);
+        text-decoration: none;
+
+        svg {
+          width: 0.32rem;
+          height: 0.32rem;
+        }
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          width: 0;
+          height: 0.04rem;
+          background-color: var(--ah-c-text2);
+          transition: width var(--ah-t-short), left var(--ah-t-short);
+        }
+
+        &:hover::after {
+          left: 0;
+          width: 100%;
+        }
+      }
     }
 
     .project-summary {
@@ -354,6 +429,11 @@ export default class SectionProject extends Vue {
         transform: translateY(-1.6rem);
       }
 
+      .project-external-links {
+        opacity: 1;
+        transition: opacity var(--ah-t-long) var(--ah-t-short);
+      }
+
       .project-summary {
         opacity: 1;
         transition: opacity var(--ah-t-long) var(--ah-t-short);
@@ -407,6 +487,15 @@ export default class SectionProject extends Vue {
         top: 2rem; // 2.2rem
         width: 30%; // 40%
         font-size: 0.4rem; // 0.48rem
+      }
+
+      .project-external-links {
+        top: 2.7rem; // 3rem
+        width: 30%; // 40%
+
+        .external-link {
+          font-size: 0.24rem;
+        }
       }
 
       .project-summary {
@@ -480,6 +569,14 @@ export default class SectionProject extends Vue {
         transform: translate(50%, -20%);
       }
 
+      .project-external-links {
+        top: auto;
+        bottom: 0.8rem;
+        right: 50%;
+        z-index: 50;
+        transform: translateX(50%);
+      }
+
       .project-summary {
         z-index: 20;
         padding: 0 0.4rem;
@@ -510,6 +607,11 @@ export default class SectionProject extends Vue {
 
         .project-title {
           transform: translate(50%, -4rem);
+        }
+
+        .project-external-links {
+          opacity: 1;
+          transition: opacity var(--ah-t-long) var(--ah-t-short);
         }
 
         .project-summary {

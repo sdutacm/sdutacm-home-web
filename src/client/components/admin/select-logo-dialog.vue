@@ -83,10 +83,10 @@ export default class SelectLogoDialog extends Vue {
 </script>
 
 <template>
-  <el-dialog :model-value="visible" title="选择 Logo" width="800px" @close="handleClose">
+  <el-dialog :model-value="visible" title="Select Logo" width="800px" @close="handleClose">
     <div v-loading="loading" class="logo-list-container">
       <div v-if="logoList.length === 0 && !loading" class="empty-container">
-        <el-empty description="暂无 logo 资源，请先上传" />
+        <el-empty description="No logo resources available, please upload first" />
       </div>
       <div v-else class="logo-grid">
         <el-card
@@ -109,15 +109,15 @@ export default class SelectLogoDialog extends Vue {
             <div class="logo-id">ID: {{ logo.id }}</div>
             <div v-if="logo.alt" class="logo-alt">{{ logo.alt }}</div>
           </div>
-          <div v-if="isSelected(logo)" class="selected-badge">已选择</div>
+          <div v-if="isSelected(logo)" class="selected-badge">Selected</div>
         </el-card>
       </div>
     </div>
 
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" :disabled="!selectedLogo" @click="handleConfirm"> 确认选择 </el-button>
+        <el-button @click="handleClose">Cancel</el-button>
+        <el-button type="primary" :disabled="!selectedLogo" @click="handleConfirm"> Confirm </el-button>
       </span>
     </template>
   </el-dialog>

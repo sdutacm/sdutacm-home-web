@@ -42,7 +42,16 @@ interface TransferItem {
   },
 })
 export default class GlobalConfigView extends Vue {
-  globalConfigState: GetGlobalConfigResDTO | null = null;
+  globalConfigState: GetGlobalConfigResDTO = {
+    title: '',
+    slogan: '',
+    description: '',
+    logoUrl: '',
+    homeNewsPreviewIds: [],
+    homeProjectsPreviewIds: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   selectLogoDialogVisible = false;
   selectedLogoId: number | null = null;
@@ -58,14 +67,13 @@ export default class GlobalConfigView extends Vue {
   handleLogoSelect(logo: any) {
     this.selectedLogoId = logo.id;
     this.globalConfigState.logoUrl = logo.path;
-    ElMessage.success('Logo 已选择');
   }
 
   get newsTransferData(): TransferItem[] {
     // 只显示已发布的新闻
     return this.allNews
-      .filter(news => news.isPublished)
-      .map(news => ({
+      .filter((news) => news.isPublished)
+      .map((news) => ({
         key: news.id,
         label: news.title,
         disabled: false,
@@ -74,7 +82,7 @@ export default class GlobalConfigView extends Vue {
 
   get projectsTransferData(): TransferItem[] {
     // 显示所有项目
-    return this.allProjects.map(project => ({
+    return this.allProjects.map((project) => ({
       key: project.id,
       label: project.name,
       disabled: false,
@@ -144,6 +152,7 @@ export default class GlobalConfigView extends Vue {
 
   async mounted() {
     this.globalConfigState = await this.$api.getGlobalConfig();
+    console.log('当前全局配置:', { ...this.globalConfigState });
     await this.loadNewsList();
     await this.loadProjectsList();
     this.selectedNewsIds = this.globalConfigState?.homeNewsPreviewIds || [];
@@ -155,48 +164,54 @@ export default class GlobalConfigView extends Vue {
 <template>
   <Head>
     <title>SDUTACM Admin | Homepage Config</title>
-    <meta name="description" content="SDUTACM 管理后台首页配置">
+    <meta name="description" content="SDUTACM 管理后台首页配置" />
   </Head>
   <div class="global-config-container">
     <el-form :model="globalConfigState" label-width="140px">
-      <el-form-item label="logo">
+      <el-form-item label="Logo">
         <el-image style="width: 100px; height: 100px" :src="globalConfigState.logoUrl" fit="contain" />
-        <el-button size="small" style="margin-left: 10px" @click="showSelectLogoDialog">从资源库中选择 Logo</el-button>
+        <el-button size="small" style="margin-left: 10px" @click="showSelectLogoDialog">Select Logo from Library</el-button>
       </el-form-item>
-      <el-form-item label="title" required>
-        <el-input v-model="globalConfigState.title" placeholder="请输入网站标题" class="inp"></el-input>
+      <el-form-item label="Title" required>
+        <el-input v-model="globalConfigState.title" placeholder="Enter website title" class="inp"></el-input>
       </el-form-item>
-      <el-form-item label="slogan" required>
+      <el-form-item label="Slogan" required>
         <el-input v-model="globalConfigState.slogan" class="inp"></el-input>
       </el-form-item>
-      <el-form-item label="description" required>
-        <el-input class="inp" type="textarea" v-model="globalConfigState.description" placeholder="请输入网站描述"></el-input>
+      <el-form-item label="Description" required>
+        <el-input
+          class="inp"
+          type="textarea"
+          autosize
+          v-model="globalConfigState.description"
+          placeholder="Enter website description"
+        ></el-input>
       </el-form-item>
-      <el-form-item label="首页新闻预览">
+      <el-form-item label="News Preview">
         <div class="transfer-wrapper">
           <el-transfer
             v-model="selectedNewsIds"
             :data="newsTransferData"
-            :titles="['所有新闻', '首页展示 (必须5条)']"
+            :titles="['All News', 'Homepage Display']"
             filterable
-            filter-placeholder="搜索新闻"
+            filter-placeholder="Search News"
           />
-          <div class="transfer-tip">从左侧选择已发布的新闻，添加到右侧进行首页展示（必须恰好5条）</div>
+          <div class="transfer-tip">Select 5 published news articles to display on the homepage.</div>
         </div>
       </el-form-item>
-      <el-form-item label="首页项目预览">
+      <el-form-item label="Projects Preview">
         <div class="transfer-wrapper">
           <el-transfer
             v-model="selectedProjectIds"
             :data="projectsTransferData"
-            :titles="['所有项目', '首页展示 (必须3个)']"
+            :titles="['All Projects', 'Homepage Display']"
             filterable
-            filter-placeholder="搜索项目"
+            filter-placeholder="Search Projects"
           />
-          <div class="transfer-tip">从左侧选择项目，添加到右侧进行首页展示（必须恰好3个）</div>
+          <div class="transfer-tip">Select 3 projects to display on the homepage.</div>
         </div>
       </el-form-item>
-      <el-button type="primary" size="large" @click="saveConfig">保存配置</el-button>
+      <el-button type="primary" size="large" @click="saveConfig">Save</el-button>
     </el-form>
 
     <select-logo-dialog

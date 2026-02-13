@@ -11,6 +11,8 @@ import SectionNews from '@client/components/homepage/section-news.vue';
 import SectionProject from '@client/components/homepage/section-project.vue';
 import HomeFooter from '@client/components/home-footer.vue';
 import { Head } from '@vueuse/head';
+import { SquareArrowOutUpRightIcon } from 'lucide-vue-next';
+import { ElIcon } from 'element-plus';
 
 @View('/')
 @RenderMethod(RenderMethodKind.SSR)
@@ -20,7 +22,9 @@ import { Head } from '@vueuse/head';
     SectionNews,
     SectionProject,
     HomeFooter,
-    Head
+    Head,
+    ElIcon,
+    SquareArrowOutUpRightIcon,
   },
 })
 export default class HomeView extends Vue {
@@ -65,10 +69,10 @@ export default class HomeView extends Vue {
 <template>
   <Head>
     <title>SDUTACM 官网</title>
-    <meta name="description" content="山东理工大学 ACM 实验室官方网站">
+    <meta name="description" content="山东理工大学 ACM 实验室官方网站" />
   </Head>
   <!-- 顶部导航栏及其下拉列表 -->
-  <NavigationBar :logoPath="homeState.logo.path"/>
+  <NavigationBar :logoPath="homeState.logo.path" />
 
   <main>
     <!-- 页面位置指示器 -->
@@ -88,10 +92,18 @@ export default class HomeView extends Vue {
     <!-- 最新动态 -->
     <div class="section-title" ref="section2" id="2">最新动态</div>
     <SectionNews :newsItems="homeState.newsPreview" />
+    <a class="more" href="/news/overview" target="_blank">
+      <el-icon><square-arrow-out-up-right-icon /></el-icon>
+      <span>探索更多</span>
+    </a>
 
     <!-- 我们的项目 -->
     <div class="section-title" ref="section3" id="3">我们的项目</div>
     <SectionProject :projectItems="homeState.projectsPreview" />
+    <a class="more" href="/projects" target="_blank">
+      <el-icon><square-arrow-out-up-right-icon /></el-icon>
+      <span>探索更多</span>
+    </a>
   </main>
 
   <HomeFooter />
@@ -114,6 +126,36 @@ main {
 
   * {
     z-index: 10;
+  }
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.1rem;
+  width: fit-content;
+  height: fit-content;
+  font-size: 0.32rem;
+  color: var(--ah-c-text2);
+  cursor: pointer;
+  margin-bottom: 1rem;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 0.04rem;
+    background-color: var(--ah-c-text2);
+    transition: width var(--ah-t-short), left var(--ah-t-short);
+  }
+
+  &:hover::after {
+    left: 0;
+    width: 100%;
   }
 }
 

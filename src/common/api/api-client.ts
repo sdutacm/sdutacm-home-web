@@ -13,6 +13,7 @@ import { GetHomeDataResDTO, GetHomeNewsResDTO } from '../modules/home/home.dto';
 import { GetMediaListReqDTO, GetMediaListResDTO, UploadMediaReqDTO, MediaDetailResDTO, GetMediaByIdReqDTO, UpdateMediaReqDTO, DeleteMediaReqDTO } from '../modules/media/media.dto';
 import { CreateNewsReqDTO, UpdateNewsReqDTO, DeleteNewsReqDTO, GetNewsReqDTO, GetNewsDetailResDTO, GetNewsListResDTO, GetPublishedNewsListReqDTO, GetPublishedNewsListResDTO } from '../modules/news/news.dto';
 import { CreateProjectReqDTO, UpdateProjectReqDTO, DeleteProjectReqDTO, GetProjectReqDTO, GetProjectDetailResDTO, GetProjectListResDTO } from '../modules/project/project.dto';
+import { GetOverviewStatsResDTO, GetDailyViewStatsReqDTO, GetDailyViewStatsResDTO, GetAllPageViewStatsResDTO } from '../modules/stats/stats.dto';
 
 const urlcat = configureUrlcat({ arrayFormat: 'repeat' });
 
@@ -334,6 +335,39 @@ export class ApiClient<T = undefined> {
    */
   public async getAllProjects(req?: null, opts?: T): Promise<GetProjectListResDTO> {
     return this._r(this._rArgs.ab(req, opts)).then((resp) => this._rp.pat(GetProjectListResDTO, resp));
+  }
+
+  /**
+   * 获取概览统计数据
+   *
+   * @param {null} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetOverviewStatsResDTO} The response data (RespDTO).
+   */
+  public async getOverviewStats(req?: null, opts?: T): Promise<GetOverviewStatsResDTO> {
+    return this._r(this._rArgs.ac(req, opts)).then((resp) => this._rp.pat(GetOverviewStatsResDTO, resp));
+  }
+
+  /**
+   * 获取每日访问统计
+   *
+   * @param {GetDailyViewStatsReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetDailyViewStatsResDTO} The response data (RespDTO).
+   */
+  public async getDailyViewStats(req: GetDailyViewStatsReqDTO, opts?: T): Promise<GetDailyViewStatsResDTO> {
+    return this._r(this._rArgs.ad(req, opts)).then((resp) => this._rp.pat(GetDailyViewStatsResDTO, resp));
+  }
+
+  /**
+   * 获取所有页面访问统计
+   *
+   * @param {null} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {GetAllPageViewStatsResDTO} The response data (RespDTO).
+   */
+  public async getAllPageViewStats(req?: null, opts?: T): Promise<GetAllPageViewStatsResDTO> {
+    return this._r(this._rArgs.ae(req, opts)).then((resp) => this._rp.pat(GetAllPageViewStatsResDTO, resp));
   }
 
   private _rArgs = {
@@ -917,6 +951,63 @@ export class ApiClient<T = undefined> {
           path: '/api/getAllProjects',
           req: null as null,
           resp: GetProjectListResDTO,
+        },
+      };
+    },
+    ac: (req: null, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getOverviewStats', {
+          param: {},
+          query: {},
+        }),
+        data: {},
+        extraOpts: opts,
+        metadata: {
+          name: 'getOverviewStats',
+          method: 'POST',
+          path: '/api/getOverviewStats',
+          req: null as null,
+          resp: GetOverviewStatsResDTO,
+        },
+      };
+    },
+    ad: (req: GetDailyViewStatsReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getDailyViewStats', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          pageKey: req.pageKey,
+          days: req.days,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'getDailyViewStats',
+          method: 'POST',
+          path: '/api/getDailyViewStats',
+          req: GetDailyViewStatsReqDTO,
+          resp: GetDailyViewStatsResDTO,
+        },
+      };
+    },
+    ae: (req: null, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/getAllPageViewStats', {
+          param: {},
+          query: {},
+        }),
+        data: {},
+        extraOpts: opts,
+        metadata: {
+          name: 'getAllPageViewStats',
+          method: 'POST',
+          path: '/api/getAllPageViewStats',
+          req: null as null,
+          resp: GetAllPageViewStatsResDTO,
         },
       };
     },
