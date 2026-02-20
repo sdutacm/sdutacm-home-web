@@ -18,8 +18,7 @@ import {
   ElLoading,
 } from 'element-plus';
 import { Copy, Download, Trash, FilePenLine, CirclePlus } from 'lucide-vue-next';
-import UploadMediaDialog from '@client/components/admin/upload-media-dialog.vue';
-import UpdateMediaDialog from '@client/components/admin/update-media-dialog.vue';
+import MediaDialog, { MediaDialogMode } from '@client/components/admin/media-dialog.vue';
 import { Head } from '@vueuse/head';
 
 @View('/admin/media-list/:id')
@@ -36,8 +35,7 @@ import { Head } from '@vueuse/head';
     ElEmpty,
     ElPagination,
     Trash,
-    UploadMediaDialog,
-    UpdateMediaDialog,
+    MediaDialog,
     FilePenLine,
     CirclePlus,
     Copy,
@@ -68,8 +66,8 @@ export default class MediaListContainer extends Vue {
   currentPage = 1;
   pageSize = 10;
 
-  uploadDialogVisible = false;
-  updateDialogVisible = false;
+  mediaDialogVisible = false;
+  mediaDialogMode: MediaDialogMode = 'upload';
   selectedMediaId: number | null = null;
 
   resizeTimer: number | null = null;
@@ -79,12 +77,15 @@ export default class MediaListContainer extends Vue {
   loading = false;
 
   showUploadDialog() {
-    this.uploadDialogVisible = true;
+    this.mediaDialogMode = 'upload';
+    this.selectedMediaId = null;
+    this.mediaDialogVisible = true;
   }
 
   handleEdit(media: any) {
+    this.mediaDialogMode = 'edit';
     this.selectedMediaId = media.id;
-    this.updateDialogVisible = true;
+    this.mediaDialogVisible = true;
   }
 
   // 1. 计算容器最多能放下多少卡片
@@ -359,14 +360,10 @@ export default class MediaListContainer extends Vue {
       />
     </footer>
 
-    <upload-media-dialog
-      v-model:visible="uploadDialogVisible"
+    <media-dialog
+      v-model:visible="mediaDialogVisible"
+      :mode="mediaDialogMode"
       :media-type="mediaType"
-      :updateMediaList="updateFileList"
-    />
-
-    <update-media-dialog
-      v-model:visible="updateDialogVisible"
       :media-id="selectedMediaId"
       :updateMediaList="updateFileList"
     />
