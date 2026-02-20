@@ -326,7 +326,7 @@ export default class MediaListContainer extends Vue {
       <div v-else class="media-list-grid">
         <el-card v-for="media in mediaList.rows" :key="media.id" shadow="hover" class="media-list-card">
           <div class="media-list-image-container">
-            <el-image :src="media.path" class="media-list-card-image" fit="cover" />
+            <el-image :src="media.path" class="media-list-card-image" fit="contain" style="width: 100%; height: 100%;" />
           </div>
           <template #footer>
             <div class="media-list-card-alt">
@@ -404,11 +404,7 @@ export default class MediaListContainer extends Vue {
       justify-content: center;
       align-items: center;
       position: relative;
-
-      .media-list-card-image {
-        max-width: 100%;
-        max-height: 100%;
-      }
+      overflow: hidden;
     }
 
     .media-list-card-alt {
@@ -440,6 +436,24 @@ export default class MediaListContainer extends Vue {
     display: flex;
     justify-content: center;
     padding: 12px;
+  }
+
+  // 小屏幕适配
+  @media (max-width: 768px) {
+    .media-list-card {
+      .media-list-image-container {
+        height: 120px;
+      }
+    }
+  }
+
+  // 更小屏幕适配
+  @media (max-width: 480px) {
+    .media-list-card {
+      .media-list-image-container {
+        height: 100px;
+      }
+    }
   }
 }
 
