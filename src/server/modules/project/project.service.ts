@@ -26,7 +26,9 @@ export default class ProjectService {
       repoUrl: data.repoUrl,
       websiteUrl: data.websiteUrl,
       coverImage: data.coverImage,
+      bgColor: data.bgColor || '#f4f4f4',
       isFeatured: data.isFeatured || false,
+      updatedBy: this.ctx.session.admin,
     });
 
     await projectRepo.save(project);
@@ -45,7 +47,10 @@ export default class ProjectService {
     if (data.repoUrl !== undefined) project.repoUrl = data.repoUrl;
     if (data.websiteUrl !== undefined) project.websiteUrl = data.websiteUrl;
     if (data.coverImage !== undefined) project.coverImage = data.coverImage;
+    if (data.bgColor !== undefined) project.bgColor = data.bgColor;
     if (data.isFeatured !== undefined) project.isFeatured = data.isFeatured;
+
+    project.updatedBy = this.ctx.session.admin;
 
     await projectRepo.save(project);
   }
@@ -64,7 +69,10 @@ export default class ProjectService {
   // 获取项目详情
   public async getProject(data: GetProjectReqDTO): Promise<GetProjectDetailResDTO> {
     const projectRepo = appDataSource.getRepository(Project);
-    const project = await projectRepo.findOne({ where: { id: data.id } });
+    const project = await projectRepo.findOne({
+      where: { id: data.id },
+      relations: ['updatedBy'],
+    });
     if (!project) {
       throw new Error('项目不存在');
     }
@@ -76,9 +84,17 @@ export default class ProjectService {
       repoUrl: project.repoUrl,
       websiteUrl: project.websiteUrl,
       coverImage: project.coverImage,
+      bgColor: project.bgColor,
       isFeatured: project.isFeatured,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
+      updatedBy: project.updatedBy
+        ? {
+            id: project.updatedBy.id,
+            username: project.updatedBy.username,
+            avatar: project.updatedBy.avatar,
+          }
+        : undefined,
     };
   }
 
@@ -86,6 +102,7 @@ export default class ProjectService {
   public async getAllProjects(): Promise<GetProjectListResDTO> {
     const projectRepo = appDataSource.getRepository(Project);
     const projectList = await projectRepo.find({
+      relations: ['updatedBy'],
       order: { createdAt: 'DESC' },
     });
 
@@ -97,9 +114,17 @@ export default class ProjectService {
         repoUrl: project.repoUrl,
         websiteUrl: project.websiteUrl,
         coverImage: project.coverImage,
+        bgColor: project.bgColor,
         isFeatured: project.isFeatured,
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
+        updatedBy: project.updatedBy
+          ? {
+              id: project.updatedBy.id,
+              username: project.updatedBy.username,
+              avatar: project.updatedBy.avatar,
+            }
+          : undefined,
       })),
     };
   }

@@ -70,6 +70,7 @@ export default class HomeService  {
           repoUrl: preview.project.repoUrl,
           websiteUrl: preview.project.websiteUrl,
           coverImage: preview.project.coverImage,
+          bgColor: preview.project.bgColor,
         })),
       };
       return res;
@@ -87,7 +88,6 @@ export default class HomeService  {
         relations: ['news'],
       });
 
-      // 过滤掉未发布的新闻
       const publishedNewsPreviews = newsPreviews.filter(preview => preview.news.isPublished);
 
       const res: GetHomeNewsResDTO = {

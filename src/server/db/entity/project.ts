@@ -4,11 +4,13 @@ import {
   Column,
   OneToOne,
   OneToMany,
+  ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { HomeProjectsPreview } from './home-projects-preview';
 import { Media } from './media';
+import { Admin } from './admin';
 
 @Entity('project')
 export class Project {
@@ -30,6 +32,9 @@ export class Project {
   @Column({ length: 255, nullable: true, name: 'cover_image', comment: '项目封面图片' })
   coverImage?: string;
 
+  @Column({ length: 20, nullable: true, default: '#f4f4f4', name: 'bg_color', comment: '项目卡片背景色' })
+  bgColor?: string;
+
   @Column({ default: false, name: 'is_featured', comment: '是否在首页展示' })
   isFeatured: boolean;
 
@@ -38,6 +43,9 @@ export class Project {
 
   @OneToMany(() => Media, (media) => media.project)
   medias?: Media[];
+
+  @ManyToOne(() => Admin, (admin) => admin.projects, { onDelete: 'SET NULL', nullable: true })
+  updatedBy?: Admin;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

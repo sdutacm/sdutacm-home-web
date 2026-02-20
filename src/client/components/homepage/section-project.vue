@@ -8,7 +8,7 @@ export default class SectionProject extends Vue {
   @Prop({ required: true })
   projectItems!: GetProjectPreviewResDTO[];
 
-  bgColorList = ['#f4f4f4', '#fff2df', '#d6e6f2'];
+  defaultBgColor = '#f4f4f4';
 
   acitveProject = 0;
   clickProject = (target) => {
@@ -34,7 +34,7 @@ export default class SectionProject extends Vue {
         backgroundRepeat: 'no-repeat',
         backgroundPosition: '10% 50%',
         backgroundSize: '50%',
-        backgroundColor: bgColorList[index % bgColorList.length],
+        backgroundColor: project.bgColor || defaultBgColor,
       }"
       @click="() => this.clickProject(index + 1)"
     >

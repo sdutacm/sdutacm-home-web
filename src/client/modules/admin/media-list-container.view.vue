@@ -17,7 +17,6 @@ import {
   ElPagination,
   ElLoading,
 } from 'element-plus';
-import { Delete, Edit, Plus } from '@element-plus/icons-vue';
 import { Copy, Download, Trash, FilePenLine, CirclePlus } from 'lucide-vue-next';
 import UploadMediaDialog from '@client/components/admin/upload-media-dialog.vue';
 import UpdateMediaDialog from '@client/components/admin/update-media-dialog.vue';
@@ -50,12 +49,8 @@ import { Head } from '@vueuse/head';
   watch: {
     '$route.params.id': {
       handler(newType: MediaTypeEnum, oldType: MediaTypeEnum) {
-        console.log('watch 触发:', { newType, oldType, mediaType: this.mediaType });
         if (newType && newType !== oldType) {
-          console.log('路由参数变化，调用 handleMediaTypeChange');
           this.handleMediaTypeChange(newType);
-        } else {
-          console.log('路由参数未变化或为空，跳过');
         }
       },
       immediate: false,
@@ -107,7 +102,7 @@ export default class MediaListContainer extends Vue {
     const grid = container.querySelector('.media-list-grid') as HTMLElement;
     const cards = grid?.querySelectorAll('.media-list-card') as NodeListOf<HTMLElement>;
 
-    let cols, cardHeight;
+    let cols: number, cardHeight: number;
 
     if (cards && cards.length > 0) {
       // 使用实际渲染的列数：检查第一行有多少个卡片
@@ -399,7 +394,7 @@ export default class MediaListContainer extends Vue {
 
   .media-list-card {
     .media-list-image-container {
-      height: 180px;
+      height: 140px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -438,7 +433,6 @@ export default class MediaListContainer extends Vue {
     padding: 12px;
   }
 
-  // 小屏幕适配
   @media (max-width: 768px) {
     .media-list-card {
       .media-list-image-container {
@@ -447,7 +441,6 @@ export default class MediaListContainer extends Vue {
     }
   }
 
-  // 更小屏幕适配
   @media (max-width: 480px) {
     .media-list-card {
       .media-list-image-container {

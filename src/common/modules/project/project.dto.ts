@@ -1,3 +1,4 @@
+import { UpdatedAdmin } from './../admin/admin.dto';
 import { FromBody } from 'bwcx-common';
 import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
 
@@ -11,6 +12,8 @@ export class GetProjectPreviewResDTO {
   websiteUrl?: string;
 
   coverImage?: string;
+
+  bgColor?: string;
 }
 
 // 创建项目
@@ -39,6 +42,11 @@ export class CreateProjectReqDTO {
   @IsOptional()
   @IsString()
   coverImage?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  bgColor?: string;
 
   @FromBody()
   @IsOptional()
@@ -80,6 +88,11 @@ export class UpdateProjectReqDTO {
 
   @FromBody()
   @IsOptional()
+  @IsString()
+  bgColor?: string;
+
+  @FromBody()
+  @IsOptional()
   @IsBoolean()
   isFeatured?: boolean;
 }
@@ -100,9 +113,11 @@ export class GetProjectDetailResDTO {
   repoUrl?: string;
   websiteUrl?: string;
   coverImage?: string;
+  bgColor?: string;
   isFeatured: boolean;
   createdAt: Date;
   updatedAt: Date;
+  updatedBy?: UpdatedAdmin;
 }
 
 // 获取项目列表

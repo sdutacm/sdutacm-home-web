@@ -2,6 +2,8 @@
 import { Vue, Options } from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { GetSessionResDTO, GetAllAdminsResDTO } from '@common/modules/admin/admin.dto';
+import { GetNewsDetailResDTO } from '@common/modules/news/news.dto';
+import { GetProjectDetailResDTO } from '@common/modules/project/project.dto';
 import { AdminRoleEnum } from '@common/enums/admin-role';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
@@ -14,14 +16,16 @@ import {
   ElInput,
   ElSelect,
   ElOption,
-  ElUpload,
   ElMessage,
   ElIcon,
   ElCard,
   ElTag,
+  ElPagination,
+  ElEmpty,
+  ElImage,
   vLoading,
 } from 'element-plus';
-import { Upload, Plus, User } from '@element-plus/icons-vue';
+import { Upload, User } from '@element-plus/icons-vue';
 
 @View('/admin/users')
 @ChildOf('AdminView')
@@ -36,12 +40,13 @@ import { Upload, Plus, User } from '@element-plus/icons-vue';
     ElInput,
     ElSelect,
     ElOption,
-    ElUpload,
     ElIcon,
     ElCard,
     ElTag,
+    ElPagination,
+    ElEmpty,
+    ElImage,
     Upload,
-    Plus,
     User,
   },
   directives: {
@@ -53,10 +58,7 @@ export default class UsersAdminView extends Vue {
 
   defaultAvatarUrl = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
-  // 编辑头像对话框
-  editAvatarDialogVisible = false;
-  avatarFile: any = null;
-  avatarFileList: any[] = [];
+  // 头像上传
   uploadingAvatar = false;
 
   // 创建用户对话框
@@ -84,6 +86,18 @@ export default class UsersAdminView extends Vue {
     { label: '超级管理员', value: AdminRoleEnum.SUPER_ADMIN },
   ];
 
+  // 管理员编辑的新闻列表
+  myNewsList: GetNewsDetailResDTO[] = [];
+  loadingNews = false;
+  newsPage = 1;
+  newsPageSize = 6;
+
+  // 管理员编辑的项目列表
+  myProjectsList: GetProjectDetailResDTO[] = [];
+  loadingProjects = false;
+  projectsPage = 1;
+  projectsPageSize = 6;
+
   get userAvatar() {
     return this.userInfo?.avatar || this.defaultAvatarUrl;
   }
@@ -92,59 +106,41 @@ export default class UsersAdminView extends Vue {
     return this.userInfo?.role === AdminRoleEnum.SUPER_ADMIN;
   }
 
-  // 打开编辑头像对话框
-  openEditAvatarDialog() {
-    this.editAvatarDialogVisible = true;
-    this.avatarFile = null;
-    this.avatarFileList = [];
+  // 触发文件选择
+  triggerAvatarUpload() {
+    if (this.uploadingAvatar) return;
+    const input = this.$refs.avatarInput as HTMLInputElement;
+    input?.click();
   }
 
-  // 头像文件变化
-  handleAvatarChange(file: any) {
-    this.avatarFile = file.raw;
-    return false; // 阻止自动上传
-  }
+  // 处理文件选择并上传
+  async handleAvatarFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
 
-  // 移除头像文件
-  handleAvatarRemove() {
-    this.avatarFile = null;
-    this.avatarFileList = [];
-  }
-
-  // 上传头像
-  async handleUploadAvatar() {
-    if (!this.avatarFile) {
-      ElMessage.warning('请选择头像图片');
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      ElMessage.warning('请选择图片文件');
       return;
     }
 
     this.uploadingAvatar = true;
     try {
-      const formData = new FormData();
-      formData.append('file', this.avatarFile);
-      formData.append('type', MediaTypeEnum.ADMIN_AVATAR);
-      formData.append('alt', `${this.userInfo.username}-avatar`);
-
-      const response = await fetch('/api/uploadMedia', {
-        method: 'POST',
-        body: formData,
+      const uploadResult = await this.$api.uploadMedia({
+        file,
+        type: MediaTypeEnum.ADMIN_AVATAR,
+        alt: `${this.userInfo.username}-avatar`,
       });
 
-      if (!response.ok) {
-        throw new Error('上传失败');
-      }
-
-      const result = await response.json();
-
-      // 更新用户头像 - 注意响应被包装了两层
-      const avatarPath = result.data.data.path;
+      // 更新用户头像
+      const avatarPath = uploadResult.path;
       await this.$api.updateAdminAvatar({ avatar: avatarPath });
 
       // 更新本地头像显示
       this.userInfo.avatar = avatarPath;
 
       ElMessage.success('头像更新成功');
-      this.editAvatarDialogVisible = false;
 
       // 刷新用户信息
       this.$emit('refresh-user');
@@ -153,6 +149,8 @@ export default class UsersAdminView extends Vue {
       ElMessage.error('上传头像失败');
     } finally {
       this.uploadingAvatar = false;
+      // 清空 input 以便重复选择相同文件
+      input.value = '';
     }
   }
 
@@ -258,11 +256,75 @@ export default class UsersAdminView extends Vue {
     return role === AdminRoleEnum.SUPER_ADMIN ? '超级管理员' : '管理员';
   }
 
+  // 获取当前管理员编辑的新闻列表
+  get filteredNewsList() {
+    return this.myNewsList.filter(news => news.updatedBy?.id === this.userInfo?.id);
+  }
+
+  get paginatedNewsList() {
+    const start = (this.newsPage - 1) * this.newsPageSize;
+    return this.filteredNewsList.slice(start, start + this.newsPageSize);
+  }
+
+  // 获取当前管理员编辑的项目列表
+  get filteredProjectsList() {
+    return this.myProjectsList.filter(project => project.updatedBy?.id === this.userInfo?.id);
+  }
+
+  get paginatedProjectsList() {
+    const start = (this.projectsPage - 1) * this.projectsPageSize;
+    return this.filteredProjectsList.slice(start, start + this.projectsPageSize);
+  }
+
+  // 加载新闻列表
+  async loadMyNews() {
+    this.loadingNews = true;
+    try {
+      const result = await this.$api.getAllNews();
+      this.myNewsList = result.rows;
+    } catch (error) {
+      console.error('加载新闻列表失败:', error);
+    } finally {
+      this.loadingNews = false;
+    }
+  }
+
+  // 加载项目列表
+  async loadMyProjects() {
+    this.loadingProjects = true;
+    try {
+      const result = await this.$api.getAllProjects();
+      this.myProjectsList = result.rows;
+    } catch (error) {
+      console.error('加载项目列表失败:', error);
+    } finally {
+      this.loadingProjects = false;
+    }
+  }
+
+  // 格式化日期
+  formatDate(date: Date) {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('zh-CN');
+  }
+
+  // 新闻分页变化
+  handleNewsPageChange(page: number) {
+    this.newsPage = page;
+  }
+
+  // 项目分页变化
+  handleProjectsPageChange(page: number) {
+    this.projectsPage = page;
+  }
+
   async mounted() {
     this.userInfo = await this.$api.getSession();
     if (this.isSuperAdmin) {
       await this.loadAdminList();
     }
+    // 加载当前管理员编辑的新闻和项目
+    await Promise.all([this.loadMyNews(), this.loadMyProjects()]);
   }
 }
 </script>
@@ -270,31 +332,40 @@ export default class UsersAdminView extends Vue {
 <template>
   <div class="admin-operate-container">
     <el-form label-width="100px">
-      <el-form-item label="用户信息">
+      <el-form-item label="Admin Info">
         <div class="user-info-section">
-          <div class="avatar-wrapper" @click="openEditAvatarDialog">
+          <div class="avatar-wrapper" @click="triggerAvatarUpload" :class="{ uploading: uploadingAvatar }">
             <el-avatar :src="userAvatar" :size="80" />
             <div class="avatar-overlay">
-              <el-icon :size="24"><Upload /></el-icon>
+              <el-icon v-if="!uploadingAvatar" :size="24"><Upload /></el-icon>
+              <span v-else class="uploading-text">Uploading...</span>
             </div>
           </div>
+          <input
+            ref="avatarInput"
+            type="file"
+            accept="image/*"
+            style="display: none"
+            @change="handleAvatarFileChange"
+          />
           <div class="user-details">
             <div class="user-item">
-              <span class="label">用户名：</span>
+              <span class="label">Username：</span>
               <span class="value">{{ userInfo?.username }}</span>
             </div>
             <div class="user-item">
-              <span class="label">角色：</span>
-              <span class="value">{{ userInfo?.role === 'SUPER_ADMIN' ? '超级管理员' : '管理员' }}</span>
+              <span class="label">Role：</span>
+              <span class="value">{{ userInfo?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin' }}</span>
             </div>
           </div>
+          <el-button type="danger" size="small" @click="logout" class="logout-btn">Logout</el-button>
         </div>
       </el-form-item>
 
-      <el-form-item label="用户管理" v-if="isSuperAdmin">
+      <el-form-item label="Admin List" v-if="isSuperAdmin">
         <div class="user-management-content">
           <el-button type="primary" @click="openCreateUserDialog">
-            创建新用户
+            + Create
           </el-button>
 
           <!-- 所有用户列表 -->
@@ -337,38 +408,98 @@ export default class UsersAdminView extends Vue {
         </div>
       </el-form-item>
 
-      <el-form-item label="登出">
-        <el-button type="danger" @click="logout">登出当前账号</el-button>
+      <el-form-item label="My News">
+        <div v-loading="loadingNews" class="content-cards-container">
+        <el-empty v-if="!loadingNews && filteredNewsList.length === 0" description="暂无编辑过的新闻" />
+        <template v-else>
+          <div class="preview-cards-grid">
+            <el-card
+              v-for="news in paginatedNewsList"
+              :key="news.id"
+              class="preview-card"
+              shadow="hover"
+            >
+              <div class="card-cover">
+                <el-image
+                  v-if="news.coverImage"
+                  :src="news.coverImage"
+                  fit="cover"
+                  class="cover-image"
+                />
+                <div v-else class="no-cover">
+                  <span>No Cover</span>
+                </div>
+              </div>
+              <div class="card-content">
+                <div class="card-title">{{ news.title }}</div>
+                <div class="card-meta">
+                  <el-tag :type="news.isPublished ? 'success' : 'info'" size="small">
+                    {{ news.isPublished ? 'Published' : 'Draft' }}
+                  </el-tag>
+                  <span class="card-date">{{ formatDate(news.updatedAt) }}</span>
+                </div>
+              </div>
+            </el-card>
+          </div>
+          <el-pagination
+            v-if="filteredNewsList.length > newsPageSize"
+            class="pagination"
+            :current-page="newsPage"
+            :page-size="newsPageSize"
+            :total="filteredNewsList.length"
+            layout="prev, pager, next"
+            @current-change="handleNewsPageChange"
+          />
+        </template>
+        </div>
+      </el-form-item>
+
+      <el-form-item label="My Projects">
+        <div v-loading="loadingProjects" class="content-cards-container">
+        <el-empty v-if="!loadingProjects && filteredProjectsList.length === 0" description="暂无编辑过的项目" />
+        <template v-else>
+          <div class="preview-cards-grid">
+            <el-card
+              v-for="project in paginatedProjectsList"
+              :key="project.id"
+              class="preview-card"
+              shadow="hover"
+            >
+              <div class="card-cover">
+                <el-image
+                  v-if="project.coverImage"
+                  :src="project.coverImage"
+                  fit="cover"
+                  class="cover-image"
+                />
+                <div v-else class="no-cover">
+                  <span>No Cover</span>
+                </div>
+              </div>
+              <div class="card-content">
+                <div class="card-title">{{ project.name }}</div>
+                <div class="card-meta">
+                  <el-tag :type="project.isFeatured ? 'warning' : 'info'" size="small">
+                    {{ project.isFeatured ? 'Featured' : 'Normal' }}
+                  </el-tag>
+                  <span class="card-date">{{ formatDate(project.updatedAt) }}</span>
+                </div>
+              </div>
+            </el-card>
+          </div>
+          <el-pagination
+            v-if="filteredProjectsList.length > projectsPageSize"
+            class="pagination"
+            :current-page="projectsPage"
+            :page-size="projectsPageSize"
+            :total="filteredProjectsList.length"
+            layout="prev, pager, next"
+            @current-change="handleProjectsPageChange"
+          />
+        </template>
+        </div>
       </el-form-item>
     </el-form>
-
-    <!-- 编辑头像对话框 -->
-    <el-dialog
-      v-model="editAvatarDialogVisible"
-      title="编辑头像"
-      width="500px"
-      :close-on-click-modal="false"
-    >
-      <el-upload
-        class="avatar-uploader"
-        :auto-upload="false"
-        :on-change="handleAvatarChange"
-        :on-remove="handleAvatarRemove"
-        :file-list="avatarFileList"
-        list-type="picture-card"
-        :limit="1"
-        accept="image/*"
-      >
-        <el-icon><Plus /></el-icon>
-      </el-upload>
-
-      <template #footer>
-        <el-button @click="editAvatarDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="uploadingAvatar" @click="handleUploadAvatar">
-          上传
-        </el-button>
-      </template>
-    </el-dialog>
 
     <!-- 创建用户对话框 -->
     <el-dialog
@@ -443,6 +574,13 @@ export default class UsersAdminView extends Vue {
       &:hover .avatar-overlay {
         opacity: 1;
       }
+
+      &.uploading {
+        cursor: wait;
+        .avatar-overlay {
+          opacity: 1;
+        }
+      }
     }
 
     .avatar-overlay {
@@ -458,6 +596,10 @@ export default class UsersAdminView extends Vue {
       opacity: 0;
       transition: opacity 0.3s;
       color: white;
+
+      .uploading-text {
+        font-size: 12px;
+      }
     }
 
     .user-details {
@@ -481,11 +623,10 @@ export default class UsersAdminView extends Vue {
         }
       }
     }
-  }
 
-  .avatar-uploader {
-    display: flex;
-    justify-content: center;
+    .logout-btn {
+      margin-left: auto;
+    }
   }
 
   .user-management-content {
@@ -536,6 +677,75 @@ export default class UsersAdminView extends Vue {
         }
       }
     }
+  }
+
+  .content-cards-container {
+    min-height: 150px;
+    width: 100%;
+  }
+
+  .preview-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .preview-card {
+    :deep(.el-card__body) {
+      padding: 0;
+    }
+
+    .card-cover {
+      height: 120px;
+      overflow: hidden;
+      background: var(--el-fill-color-light);
+
+      .cover-image {
+        width: 100%;
+        height: 100%;
+      }
+
+      .no-cover {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--el-text-color-placeholder);
+        font-size: 12px;
+      }
+    }
+
+    .card-content {
+      padding: 12px;
+
+      .card-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--el-text-color-primary);
+        margin-bottom: 8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .card-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+
+        .card-date {
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
+        }
+      }
+    }
+  }
+
+  .pagination {
+    margin-top: 16px;
+    justify-content: center;
   }
 }
 </style>

@@ -19,10 +19,18 @@ import {
   ElSwitch,
   ElUpload,
   ElImage,
+  ElColorPicker,
   vLoading,
 } from 'element-plus';
 import { Head } from '@vueuse/head';
 import { Plus, Edit, Delete, Upload, Link } from '@element-plus/icons-vue';
+import UserAvatar from '@client/components/user-avatar.vue';
+
+interface UpdatedAdmin {
+  id: number;
+  username: string;
+  avatar?: string;
+}
 
 interface ProjectItem {
   id: number;
@@ -31,9 +39,10 @@ interface ProjectItem {
   repoUrl?: string;
   websiteUrl?: string;
   coverImage?: string;
-  isFeatured: boolean;
+  bgColor?: string;
   createdAt: Date;
   updatedAt: Date;
+  updatedBy?: UpdatedAdmin;
 }
 
 @View('/admin/project-list')
@@ -56,12 +65,14 @@ interface ProjectItem {
     ElSwitch,
     ElUpload,
     ElImage,
+    ElColorPicker,
     Plus,
     Edit,
     Delete,
     Upload,
     Link,
     Head,
+    UserAvatar,
   },
 })
 export default class ProjectListContainer extends Vue {
@@ -77,7 +88,7 @@ export default class ProjectListContainer extends Vue {
     repoUrl: '',
     websiteUrl: '',
     coverImage: '',
-    isFeatured: false,
+    bgColor: '#f4f4f4',
   };
 
   coverImageFile: any = null;
@@ -107,7 +118,7 @@ export default class ProjectListContainer extends Vue {
       repoUrl: '',
       websiteUrl: '',
       coverImage: '',
-      isFeatured: false,
+      bgColor: '#f4f4f4',
     };
     this.coverImageFile = null;
     this.dialogVisible = true;
@@ -123,7 +134,7 @@ export default class ProjectListContainer extends Vue {
       repoUrl: project.repoUrl || '',
       websiteUrl: project.websiteUrl || '',
       coverImage: project.coverImage || '',
-      isFeatured: project.isFeatured,
+      bgColor: project.bgColor || '#f4f4f4',
     };
     this.coverImageFile = null;
     this.dialogVisible = true;
@@ -270,16 +281,23 @@ export default class ProjectListContainer extends Vue {
           <span v-else style="color: #999">-</span>
         </template>
       </el-table-column>
-      <el-table-column label="首页展示" width="100">
-        <template #default="{ row }">
-          <el-tag :type="row.isFeatured ? 'success' : 'info'">
-            {{ row.isFeatured ? '是' : '否' }}
-          </el-tag>
-        </template>
-      </el-table-column>
       <el-table-column label="创建时间" width="180">
         <template #default="{ row }">
           {{ formatDate(row.createdAt) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="更新时间" width="180">
+        <template #default="{ row }">
+          {{ formatDate(row.updatedAt) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="更新人" width="100">
+        <template #default="{ row }">
+          <div v-if="row.updatedBy" class="editor-container">
+            <user-avatar :avatarUrl="row.updatedBy.avatar" />
+            <span>{{ row.updatedBy.username }}</span>
+          </div>
+          <div v-else>-</div>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="150" fixed="right">
@@ -335,8 +353,12 @@ export default class ProjectListContainer extends Vue {
             <div class="upload-tip">支持 jpg/png 格式，大小不超过 10MB</div>
           </div>
         </el-form-item>
-        <el-form-item label="首页展示">
-          <el-switch v-model="projectForm.isFeatured" active-text="是" inactive-text="否" />
+        <el-form-item label="卡片背景色">
+          <div class="color-picker-wrapper">
+            <el-color-picker v-model="projectForm.bgColor" show-alpha />
+            <span class="color-value">{{ projectForm.bgColor }}</span>
+            <div class="color-preview" :style="{ backgroundColor: projectForm.bgColor }"></div>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -391,6 +413,31 @@ export default class ProjectListContainer extends Vue {
       font-size: 12px;
       color: #999;
     }
+  }
+
+  .color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .color-value {
+      font-family: monospace;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .color-preview {
+      width: 80px;
+      height: 32px;
+      border-radius: 4px;
+      border: 1px solid #dcdfe6;
+    }
+  }
+
+  .editor-container {
+    display: flex;
+    align-items: center;
+    gap: .1rem;
   }
 }
 </style>
