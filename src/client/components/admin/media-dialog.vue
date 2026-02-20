@@ -3,6 +3,7 @@ import { Vue, Options } from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import { GetMediaListResDTO, MediaDetailResDTO } from '@common/modules/media/media.dto';
+import { getAcceptTypes, getMediaTypeLabel, isAllowedMimeType, MEDIA_TYPE_CONFIG } from '@common/config/media-type-config';
 import { UploadFile } from 'element-plus';
 
 import {
@@ -154,9 +155,8 @@ export default class MediaDialog extends Vue {
   }
 
   beforeUpload(rawFile: File) {
-    const isValidType = this.acceptTypes.includes(rawFile.type);
-    if (!isValidType) {
-      ElMessage.error(`Please select a ${this.mediaTypeLabel} file`);
+    if (!isAllowedMimeType(this.mediaType, rawFile.type)) {
+      ElMessage.error(`不支持的文件类型: ${rawFile.type}。请选择正确的${this.mediaTypeLabel}文件`);
       return false;
     }
     if (rawFile.size > 10 * 1024 * 1024) {
@@ -213,29 +213,17 @@ export default class MediaDialog extends Vue {
   }
 
   get acceptTypes() {
-    const typeMap: Record<MediaTypeEnum, string> = {
-      [MediaTypeEnum.IMAGE]: 'image/*',
-      [MediaTypeEnum.LOGO]: 'image/*',
-      [MediaTypeEnum.AUDIO]: 'audio/*',
-      [MediaTypeEnum.VIDEO]: 'video/*',
-      [MediaTypeEnum.ADMIN_AVATAR]: 'image/*',
-      [MediaTypeEnum.NEWS_COVER]: 'image/*',
-      [MediaTypeEnum.PROJECT_COVER]: 'image/*',
-    };
-    return typeMap[this.mediaType] || '*';
+    return getAcceptTypes(this.mediaType);
   }
 
   get mediaTypeLabel() {
-    const labelMap: Record<MediaTypeEnum, string> = {
-      [MediaTypeEnum.IMAGE]: '图片',
-      [MediaTypeEnum.LOGO]: 'Logo',
-      [MediaTypeEnum.AUDIO]: '音频',
-      [MediaTypeEnum.VIDEO]: '视频',
-      [MediaTypeEnum.ADMIN_AVATAR]: '管理员头像',
-      [MediaTypeEnum.NEWS_COVER]: '新闻封面',
-      [MediaTypeEnum.PROJECT_COVER]: '项目封面',
-    };
-    return labelMap[this.mediaType] || '媒体';
+    return getMediaTypeLabel(this.mediaType);
+  }
+
+  get allowedExtensions(): string {
+    const config = MEDIA_TYPE_CONFIG[this.mediaType];
+    if (!config) return '';
+    return config.extensions.map(ext => `.${ext}`).join(', ');
   }
 
   formatFileSize(bytes: number): string {
@@ -297,7 +285,7 @@ export default class MediaDialog extends Vue {
               <el-icon class="el-icon--upload"><upload /></el-icon>
               <div class="el-upload__text">Drag files here, or <em>click to upload</em></div>
               <template #tip>
-                <div class="el-upload__tip">jpg/png files with a size less than 10MB.</div>
+                <div class="el-upload__tip">支持 {{ allowedExtensions }} 格式，文件大小不超过 10MB</div>
               </template>
             </el-upload>
           </el-form-item>

@@ -2,6 +2,7 @@ import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
 import { Inject } from 'bwcx-core';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import { GetMediaListReqDTO, GetMediaListResDTO, UploadMediaReqDTO, MediaDetailResDTO } from '@common/modules/media/media.dto';
+import { validateMediaFile } from '@common/config/media-type-config';
 import appDataSource from '@server/db';
 import { Media } from '@server/db/entity/media';
 import * as fs from 'fs';
@@ -58,6 +59,13 @@ export default class MediaService {
   async uploadMedia(data: UploadMediaReqDTO): Promise<MediaDetailResDTO> {
     const { file, type, alt } = data;
     console.log('Received file for upload:', file);
+
+    // 验证文件类型
+    const validation = validateMediaFile(type, file.mimetype, file.originalname);
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
     const publicDir = path.join(process.cwd(), 'public');
     if (!fs.existsSync(publicDir)) {
       fs.mkdirSync(publicDir, { recursive: true });
