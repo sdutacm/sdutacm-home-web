@@ -6,21 +6,6 @@ import { AdminToolSectionEnum } from '@common/enums/admin-tool-section.enum';
 import localForge from 'localforage';
 
 import { ElRow, ElCol, ElMenu, ElMenuItem, ElMenuItemGroup, ElSubMenu, ElIcon, ElButton, ElAvatar } from 'element-plus';
-// import {
-//   Location,
-//   Menu as IconMenu,
-//   Document,
-//   Setting,
-//   Box,
-//   Microphone,
-//   VideoCamera,
-//   PictureFilled,
-//   PictureRounded,
-//   HomeFilled,
-//   PieChart,
-//   Picture
-// } from '@element-plus/icons-vue';
-
 import { Smile, House, Tv, Newspaper, Package, Image, Activity, Video, ChartColumnIncreasing } from 'lucide-vue-next';
 
 @Options({
@@ -91,7 +76,7 @@ export default class AdminTools extends Vue {
     <el-row align="top" style="height: 100%; width: 100; position: relative">
       <el-col style="width: 100%">
         <div style="font-size: 0.5rem" class="admin-tools-header">
-          <span class="title">Tars</span>
+          <span class="title">Tars 🌻</span>
           <el-button size="small" @click="goHome">Go Home</el-button>
         </div>
         <el-menu
@@ -165,6 +150,7 @@ export default class AdminTools extends Vue {
   width: 100%;
   height: 100%;
   background-color: var(--el-menu-bg-color);
+  user-select: none;
 
   & .user-dis {
     position: absolute;

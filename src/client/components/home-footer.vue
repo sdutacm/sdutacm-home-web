@@ -14,6 +14,7 @@ import IconWechat from './homepage/icon/icon-wechat.vue';
   },
 })
 export default class HomeFooter extends Vue {
+
   goHome() {
     this.$router.push('/');
   }
@@ -29,9 +30,6 @@ export default class HomeFooter extends Vue {
 
 <template>
   <footer class="home-footer">
-    <!-- <div class="sunflower-to-top" @click="toTop">
-      <img src="../assets/images/sunflower.png" alt="">
-    </div> -->
     <div class="footer-container">
       <div class="display">
         <a class="logo-section" href="/" target="_parent">
@@ -50,12 +48,22 @@ export default class HomeFooter extends Vue {
         </div>
         <div class="links">
           <span>关注我们</span>
-          <a href="https://space.bilibili.com/1479542015" target="_blank" rel="noopener">
-            <IconBilibili style="width: .6rem; height: .6rem" />
-          </a>
-          <a href="https://mp.weixin.qq.com/s/0n9sKqj8qLhXH9n2eQYg" target="_blank" rel="noopener">
-            <IconWechat style="width: .6rem; height: .6rem" />
-          </a>
+          <div class="link-item">
+            <a href="https://space.bilibili.com/1479542015" target="_blank" rel="noopener">
+              <IconBilibili style="width: .6rem; height: .6rem" />
+            </a>
+            <div class="qr-popup">
+              <img src="../assets/images/qr_bilibili.png" alt="Bilibili 二维码" />
+            </div>
+          </div>
+          <div class="link-item">
+            <a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzA3NDg0NjEwOA==&scene=124#wechat_redirect" target="_blank" rel="noopener">
+              <IconWechat style="width: .6rem; height: .6rem" />
+            </a>
+            <div class="qr-popup">
+              <img src="../assets/images/qr_wx.png" alt="微信公众号二维码" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -85,6 +93,7 @@ export default class HomeFooter extends Vue {
       justify-content: space-between;
       align-items: start;
       height: fit-content;
+      margin-bottom: 1rem;
 
       & .logo-section {
         display: flex;
@@ -139,7 +148,61 @@ export default class HomeFooter extends Vue {
           color: var(--ah-c-text2);
         }
 
-        & a {
+        & .link-item {
+          position: relative;
+          display: flex;
+          align-items: center;
+
+          & a {
+            font-size: 0.32rem;
+            color: var(--ah-c-text2);
+            text-decoration: underline;
+            display: flex;
+            align-items: center;
+
+            &:hover {
+              & + .qr-popup {
+                opacity: 1;
+              }
+            }
+          }
+
+          & .qr-popup {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 0.3rem;
+            height: fit-content;
+            padding: 0.3rem;
+            background: #fff;
+            border-radius: 0.2rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 1001;
+
+            &::after {
+              content: '';
+              position: absolute;
+              top: 100%;
+              left: 50%;
+              transform: translateX(-50%);
+              border: 0.15rem solid transparent;
+              border-top-color: #fff;
+            }
+
+            & img {
+              display: block;
+              width: 2.5rem;
+              height: 2.5rem;
+              object-fit: contain;
+              border-radius: 0.1rem;
+            }
+          }
+        }
+
+        & > a {
           font-size: 0.32rem;
           color: var(--ah-c-text2);
           text-decoration: underline;

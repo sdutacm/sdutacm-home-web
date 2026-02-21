@@ -174,9 +174,8 @@ export default class NewsEditDialog extends Vue {
       <h4 :id="titleId" :class="titleClass" style="display: flex; align-items: center; gap: 0.1rem">
         <el-icon><SquarePen /></el-icon>
         <span>{{ dialogTitle }}</span>
-        <el-button @click="previewNews" round size="small" style="margin-left: .3rem;">
+        <el-button @click="previewNews" circle size="small" style="margin-left: .3rem;" v-if="dialogType === 'edit'">
           <el-icon><Eye /></el-icon>
-          <span>Preview</span>
         </el-button>
       </h4>
     </template>

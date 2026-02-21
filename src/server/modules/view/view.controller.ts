@@ -27,16 +27,8 @@ export default class ViewController {
     return this.service.render(renderMethod || RenderMethodKind.CSR);
   }
 
-  @OverrideView('AdminView')
-  @UseGuards(LoginGuard)
-  public adminView(@PrimaryRenderMethod() renderMethod: RenderMethodKind) {
-    console.log('AdminView has been overridden. The original render method is:', renderMethod);
-    return this.service.render(renderMethod || RenderMethodKind.CSR);
-  }
-
   @OverrideView('HomeView')
   public async homeView(@PrimaryRenderMethod() renderMethod: RenderMethodKind) {
-    // 异步增加首页浏览次数（不阻塞渲染）
     this.statsService.incrementPageViewCount('home').catch(err => {
       console.error('Failed to increment home page view count:', err);
     });
@@ -50,7 +42,6 @@ export default class ViewController {
   ) {
     const newsId = parseInt(id, 10);
     if (!isNaN(newsId)) {
-      // 异步增加新闻浏览次数（不阻塞渲染）
       this.newsService.incrementViewCount(newsId).catch(err => {
         console.error('Failed to increment news view count:', err);
       });

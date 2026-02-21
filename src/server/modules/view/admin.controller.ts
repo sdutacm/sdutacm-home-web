@@ -1,0 +1,28 @@
+
+import { Controller, InjectCtx, RequestContext, UseGuards } from 'bwcx-ljsm';
+import { UseClientRoutes, PrimaryRenderMethod } from 'bwcx-client-vue/server';
+import { Inject } from 'bwcx-core';
+import LoginGuard from '@server/guards/login';
+import ViewService from '@server/modules/view/view.service';
+import { RenderMethodKind } from 'bwcx-client-vue';
+import { HtmlResponse } from '@server/response-handlers/html.response-handler';
+
+@Controller('/admin/*',{ priority: -110 })
+@UseGuards(LoginGuard)
+@HtmlResponse()
+export default class AdminController {
+  public constructor(
+    @InjectCtx()
+    private readonly ctx: RequestContext,
+    @Inject()
+    private readonly service: ViewService
+  ) {}
+
+  /** routes */
+  @UseClientRoutes()
+  public autoWiredView(@PrimaryRenderMethod() renderMethod: RenderMethodKind) {
+    console.log('Admin autoWiredView renderMethod:', renderMethod);
+    return this.service.render(renderMethod || RenderMethodKind.CSR);
+  }
+}
+

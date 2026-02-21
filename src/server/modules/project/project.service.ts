@@ -6,6 +6,8 @@ import {
   GetProjectDetailResDTO,
   GetProjectListResDTO,
   GetProjectReqDTO,
+  GetAllProjectsReqDTO,
+  GetAllProjectsResDTO,
 } from '@common/modules/project/project.dto';
 import appDataSource from '@server/db';
 import { Project } from '@server/db/entity/project';
@@ -98,12 +100,18 @@ export default class ProjectService {
     };
   }
 
-  // 获取所有项目列表
-  public async getAllProjects(): Promise<GetProjectListResDTO> {
+  // 获取所有项目列表（管理员用，支持分页）
+  public async getAllProjects(data?: GetAllProjectsReqDTO): Promise<GetAllProjectsResDTO> {
     const projectRepo = appDataSource.getRepository(Project);
-    const projectList = await projectRepo.find({
+    const page = data?.page || 1;
+    const pageSize = data?.pageSize || 35;
+    const skip = (page - 1) * pageSize;
+
+    const [projectList, total] = await projectRepo.findAndCount({
       relations: ['updatedBy'],
       order: { createdAt: 'DESC' },
+      skip,
+      take: pageSize,
     });
 
     return {
@@ -126,6 +134,10 @@ export default class ProjectService {
             }
           : undefined,
       })),
+      total,
+      page,
+      pageSize,
+      hasMore: skip + projectList.length < total,
     };
   }
 }

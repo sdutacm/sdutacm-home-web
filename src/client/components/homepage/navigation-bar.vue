@@ -4,7 +4,7 @@ import { throttle } from '@client/utils';
 import { Prop } from 'vue-property-decorator';
 
 import IconMenu from './icon/icon-menu.vue';
-import { Right } from '@element-plus/icons-vue';
+import { ArrowRight as Right } from 'lucide-vue-next';
 
 @Options({
   components: {
@@ -20,7 +20,7 @@ export default class NavigationBar extends Vue {
 
   sdutacmLinks = [
     { title: '最新动态', link: '/news/overview' },
-    { title: '项目展柜', link: '/projects' },
+    { title: '光锥实验室', link: 'https://lcl.sdutacm.cn' },
     { title: 'SDUT OJ', link: 'https://oj.sdutacm.cn/' },
   ];
 
@@ -42,7 +42,7 @@ export default class NavigationBar extends Vue {
   <header>
     <!-- 菜单(仅在移动端居左显示) -->
     <div class="menu" @click="isFastLinkShow = !isFastLinkShow">
-        <IconMenu />
+      <IconMenu />
     </div>
 
     <!-- LOGO(PC端居左, 移动端居中) -->

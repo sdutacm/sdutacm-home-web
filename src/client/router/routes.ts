@@ -161,16 +161,6 @@ const clientRoutes = parseRoutes([
     ],
     otherOptions: undefined,
   },
-  {
-    name: 'ProjectsView',
-    path: '/projects',
-    fullPath: '/projects',
-    component: () => import(/* webpackChunkName: "ProjectsView" */ '../modules/projects/projects.view.vue'),
-    routeProps: undefined,
-    priority: undefined,
-    renderMethod: RenderMethodKind.CSR,
-    otherOptions: undefined,
-  },
 ]);
 
 export default clientRoutes;

@@ -8,6 +8,8 @@ import {
   GetNewsReqDTO,
   GetPublishedNewsListReqDTO,
   GetPublishedNewsListResDTO,
+  GetAllNewsReqDTO,
+  GetAllNewsResDTO,
 } from '@common/modules/news/news.dto';
 import appDataSource from '@server/db';
 import { News } from '@server/db/entity/news';
@@ -74,7 +76,7 @@ export default class NewsService {
     await newsRepo.remove(news);
   }
 
-  // 获取新闻详情
+  // 获取新闻详情（管理员用，可获取任何新闻）
   public async getNews(data: GetNewsReqDTO): Promise<GetNewsDetailResDTO> {
     const newsRepo = appDataSource.getRepository(News);
     const news = await newsRepo.findOne({
@@ -106,12 +108,50 @@ export default class NewsService {
     };
   }
 
-  // 获取所有新闻列表
-  public async getAllNews(): Promise<GetNewsListResDTO> {
+  // 获取已发布新闻详情（普通用户用，只能获取已发布的新闻）
+  public async getPublishedNews(data: GetNewsReqDTO): Promise<GetNewsDetailResDTO> {
     const newsRepo = appDataSource.getRepository(News);
-    const newsList = await newsRepo.find({
+    const news = await newsRepo.findOne({
+      where: { id: data.id, isPublished: true },
+      relations: ['updatedBy'],
+    });
+    if (!news) {
+      throw new Error('新闻不存在或未发布');
+    }
+
+    return {
+      id: news.id,
+      title: news.title,
+      summary: news.summary,
+      content: news.content,
+      coverImage: news.coverImage,
+      isPublished: news.isPublished,
+      publishedAt: news.publishedAt,
+      createdAt: news.createdAt,
+      updatedAt: news.updatedAt,
+      viewCount: news.viewCount,
+      updatedBy: news.updatedBy
+        ? {
+            id: news.updatedBy.id,
+            username: news.updatedBy.username,
+            avatar: news.updatedBy.avatar,
+          }
+        : undefined,
+    };
+  }
+
+  // 获取所有新闻列表（管理员用，支持分页）
+  public async getAllNews(data?: GetAllNewsReqDTO): Promise<GetAllNewsResDTO> {
+    const newsRepo = appDataSource.getRepository(News);
+    const page = data?.page || 1;
+    const pageSize = data?.pageSize || 35;
+    const skip = (page - 1) * pageSize;
+
+    const [newsList, total] = await newsRepo.findAndCount({
       relations: ['updatedBy'],
       order: { createdAt: 'DESC' },
+      skip,
+      take: pageSize,
     });
 
     return {
@@ -134,6 +174,10 @@ export default class NewsService {
             }
           : undefined,
       })),
+      total,
+      page,
+      pageSize,
+      hasMore: skip + newsList.length < total,
     };
   }
 

@@ -100,7 +100,7 @@ export default class HomeView extends Vue {
     <!-- 我们的项目 -->
     <div class="section-title" ref="section3" id="3">我们的项目</div>
     <SectionProject :projectItems="homeState.projectsPreview" />
-    <a class="more" href="/projects" target="_blank">
+    <a class="more" href="https://lcl.sdutacm.cn" target="_blank">
       <el-icon><square-arrow-out-up-right-icon /></el-icon>
       <span>探索更多</span>
     </a>

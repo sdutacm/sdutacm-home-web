@@ -1,8 +1,9 @@
-import { Data, Controller, InjectCtx, RequestContext, Post, Contract } from 'bwcx-ljsm';
+import { Data, Controller, InjectCtx, RequestContext, Post, Contract, UseGuards } from 'bwcx-ljsm';
 import { Inject } from 'bwcx-core';
 import { Api } from 'bwcx-api';
 import { ApiController } from '@server/decorators';
 import NewsService from './news.service';
+import LoginGuard from '@server/guards/login';
 import {
   CreateNewsReqDTO,
   UpdateNewsReqDTO,
@@ -12,6 +13,8 @@ import {
   GetNewsReqDTO,
   GetPublishedNewsListReqDTO,
   GetPublishedNewsListResDTO,
+  GetAllNewsReqDTO,
+  GetAllNewsResDTO,
 } from '@common/modules/news/news.dto';
 
 @ApiController()
@@ -26,6 +29,7 @@ export default class NewsController {
   @Api.Summary('创建新闻')
   @Post('/createNews')
   @Contract(CreateNewsReqDTO, null)
+  @UseGuards(LoginGuard)
   public async createNews(@Data() data: CreateNewsReqDTO): Promise<void> {
     await this.newsService.createNews(data);
   }
@@ -33,6 +37,7 @@ export default class NewsController {
   @Api.Summary('更新新闻')
   @Post('/updateNews')
   @Contract(UpdateNewsReqDTO, null)
+  @UseGuards(LoginGuard)
   public async updateNews(@Data() data: UpdateNewsReqDTO): Promise<void> {
     await this.newsService.updateNews(data);
   }
@@ -40,22 +45,32 @@ export default class NewsController {
   @Api.Summary('删除新闻')
   @Post('/deleteNews')
   @Contract(DeleteNewsReqDTO, null)
+  @UseGuards(LoginGuard)
   public async deleteNews(@Data() data: DeleteNewsReqDTO): Promise<void> {
     await this.newsService.deleteNews(data);
   }
 
-  @Api.Summary('获取新闻详情')
+  @Api.Summary('获取新闻详情（管理员用）')
   @Post('/getNews')
   @Contract(GetNewsReqDTO, GetNewsDetailResDTO)
+  @UseGuards(LoginGuard)
   public async getNews(@Data() data: GetNewsReqDTO): Promise<GetNewsDetailResDTO> {
     return await this.newsService.getNews(data);
   }
 
-  @Api.Summary('获取所有新闻列表')
+  @Api.Summary('获取已发布新闻详情（普通用户用）')
+  @Post('/getPublishedNews')
+  @Contract(GetNewsReqDTO, GetNewsDetailResDTO)
+  public async getPublishedNews(@Data() data: GetNewsReqDTO): Promise<GetNewsDetailResDTO> {
+    return await this.newsService.getPublishedNews(data);
+  }
+
+  @Api.Summary('获取所有新闻列表（管理员用）')
   @Post('/getAllNews')
-  @Contract(null, GetNewsListResDTO)
-  public async getAllNews(): Promise<GetNewsListResDTO> {
-    return await this.newsService.getAllNews();
+  @Contract(GetAllNewsReqDTO, GetAllNewsResDTO)
+  @UseGuards(LoginGuard)
+  public async getAllNews(@Data() data: GetAllNewsReqDTO): Promise<GetAllNewsResDTO> {
+    return await this.newsService.getAllNews(data);
   }
 
   @Api.Summary('分页获取已发布新闻列表')

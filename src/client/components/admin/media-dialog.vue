@@ -3,12 +3,17 @@ import { Vue, Options } from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import { GetMediaListResDTO, MediaDetailResDTO } from '@common/modules/media/media.dto';
-import { getAcceptTypes, getMediaTypeLabel, isAllowedMimeType, MEDIA_TYPE_CONFIG } from '@common/config/media-type-config';
-import { UploadFile } from 'element-plus';
+import {
+  getAcceptTypes,
+  getMediaTypeLabel,
+  isAllowedMimeType,
+  MEDIA_TYPE_CONFIG,
+} from '@common/config/media-type-config';
 
 import {
   ElDialog,
   ElButton,
+  UploadFile,
   ElUpload,
   ElInput,
   ElMessage,
@@ -20,7 +25,7 @@ import {
   ElDescriptionsItem,
   ElLoading,
 } from 'element-plus';
-import { Upload } from '@element-plus/icons-vue';
+import { Upload } from 'lucide-vue-next';
 
 export type MediaDialogMode = 'upload' | 'edit';
 
@@ -32,11 +37,11 @@ export type MediaDialogMode = 'upload' | 'edit';
     ElInput,
     ElForm,
     ElFormItem,
-    Upload,
     ElIcon,
     ElImage,
     ElDescriptions,
     ElDescriptionsItem,
+    Upload,
   },
   directives: {
     loading: ElLoading.directive,
@@ -127,7 +132,7 @@ export default class MediaDialog extends Vue {
 
   async handleUpload() {
     if (!this.uploadFormData.files.length) {
-      ElMessage.warning('请选择要上传的文件');
+      ElMessage.warning('Please select at least one file to upload');
       return;
     }
     this.loading = true;
@@ -142,7 +147,7 @@ export default class MediaDialog extends Vue {
 
       await Promise.all(uploadPromises);
 
-      ElMessage.success('上传成功');
+      ElMessage.success('Upload successful');
       this.handleClose();
       const newMediaList = await this.$api.getMediaList({ type: this.mediaType });
       this.updateMediaList(newMediaList);
@@ -156,7 +161,7 @@ export default class MediaDialog extends Vue {
 
   beforeUpload(rawFile: File) {
     if (!isAllowedMimeType(this.mediaType, rawFile.type)) {
-      ElMessage.error(`不支持的文件类型: ${rawFile.type}。请选择正确的${this.mediaTypeLabel}文件`);
+      ElMessage.error(`Invalid file type. Please upload a ${getMediaTypeLabel(this.mediaType)} file.`);
       return false;
     }
     if (rawFile.size > 10 * 1024 * 1024) {
@@ -177,7 +182,7 @@ export default class MediaDialog extends Vue {
       this.editFormData.alt = this.mediaDetail.alt || '';
     } catch (error) {
       console.error('获取媒体详情失败:', error);
-      ElMessage.error('加载失败，请重试');
+      ElMessage.error('Failed to fetch media details, please try again');
       this.handleClose();
     } finally {
       this.loading = false;
@@ -197,7 +202,7 @@ export default class MediaDialog extends Vue {
       this.updateMediaList();
       this.handleClose();
     } catch (error) {
-      ElMessage.error('Update failed, please try again');
+      ElMessage.error('Failed to update media, please try again');
     } finally {
       this.loading = false;
     }
@@ -223,7 +228,7 @@ export default class MediaDialog extends Vue {
   get allowedExtensions(): string {
     const config = MEDIA_TYPE_CONFIG[this.mediaType];
     if (!config) return '';
-    return config.extensions.map(ext => `.${ext}`).join(', ');
+    return config.extensions.map((ext) => `.${ext}`).join(', ');
   }
 
   formatFileSize(bytes: number): string {
@@ -264,9 +269,12 @@ export default class MediaDialog extends Vue {
   <el-dialog
     :model-value="visible"
     :title="dialogTitle"
-    :width="mode === 'upload' ? '500px' : '10rem'"
+    :width="mode === 'upload' ? '15rem' : '10rem'"
     @close="handleClose"
   >
+    <template #header="{ titleId, titleClass }">
+      <h4 :id="titleId" :class="titleClass" style="line-height: normal">{{ dialogTitle }}</h4>
+    </template>
     <div v-loading="loading" class="dialog-content">
       <!-- 上传模式 -->
       <template v-if="mode === 'upload'">
@@ -282,10 +290,10 @@ export default class MediaDialog extends Vue {
               multiple
               drag
             >
-              <el-icon class="el-icon--upload"><upload /></el-icon>
+              <el-icon class="el-icon--upload" size="20"><upload /></el-icon>
               <div class="el-upload__text">Drag files here, or <em>click to upload</em></div>
               <template #tip>
-                <div class="el-upload__tip">支持 {{ allowedExtensions }} 格式，文件大小不超过 10MB</div>
+                <div class="el-upload__tip">{{ allowedExtensions }} files with a size less than 10MB</div>
               </template>
             </el-upload>
           </el-form-item>
@@ -305,10 +313,10 @@ export default class MediaDialog extends Vue {
       <template v-else-if="mode === 'edit'">
         <div v-if="mediaDetail" class="media-detail">
           <div class="preview-section">
-            <el-image style="width: 100px" :src="mediaDetail.path" fit="cover" class="preview-image" />
+            <el-image style="width: 2.5rem" :src="mediaDetail.path" fit="cover" class="preview-image" />
           </div>
 
-          <el-descriptions :column="1" border>
+          <el-descriptions :column="2" title="Media Info" style="width: 100%" size="small" direction="vertical">
             <el-descriptions-item label="Size">
               {{ formatFileSize(mediaDetail.size) }}
             </el-descriptions-item>
@@ -374,6 +382,8 @@ export default class MediaDialog extends Vue {
 }
 
 .media-detail {
+  display: flex;
+  flex-direction: column;
   .preview-section {
     margin-bottom: 20px;
     text-align: center;

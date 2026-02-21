@@ -22,7 +22,7 @@ export const MEDIA_TYPE_CONFIG: Record<MediaTypeEnum, MediaTypeConfig> = {
     mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/svg+xml'],
     extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
     accept: 'image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml',
-    label: '图片',
+    label: 'Image',
   },
   [MediaTypeEnum.LOGO]: {
     mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/svg+xml'],
@@ -34,31 +34,31 @@ export const MEDIA_TYPE_CONFIG: Record<MediaTypeEnum, MediaTypeConfig> = {
     mimeTypes: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/flac', 'audio/mp4'],
     extensions: ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a'],
     accept: 'audio/mpeg,audio/wav,audio/ogg,audio/aac,audio/flac,audio/mp4',
-    label: '音频',
+    label: 'Audio',
   },
   [MediaTypeEnum.VIDEO]: {
     mimeTypes: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'],
     extensions: ['mp4', 'webm', 'ogv', 'mov', 'avi'],
     accept: 'video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo',
-    label: '视频',
+    label: 'Video',
   },
   [MediaTypeEnum.ADMIN_AVATAR]: {
     mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
     extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
     accept: 'image/jpeg,image/png,image/gif,image/webp',
-    label: '管理员头像',
+    label: 'Admin Avatar',
   },
   [MediaTypeEnum.NEWS_COVER]: {
     mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'],
     extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'],
     accept: 'image/jpeg,image/png,image/gif,image/webp,image/avif',
-    label: '新闻封面',
+    label: 'News Cover',
   },
   [MediaTypeEnum.PROJECT_COVER]: {
     mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'],
     extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'],
     accept: 'image/jpeg,image/png,image/gif,image/webp,image/avif',
-    label: '项目封面',
+    label: 'Project Cover',
   },
 };
 
@@ -104,7 +104,7 @@ export function getAcceptTypes(mediaType: MediaTypeEnum): string {
  */
 export function getMediaTypeLabel(mediaType: MediaTypeEnum): string {
   const config = MEDIA_TYPE_CONFIG[mediaType];
-  return config?.label || '媒体';
+  return config?.label || 'Media';
 }
 
 /**

@@ -20,10 +20,11 @@ import {
   ElUpload,
   ElImage,
   ElColorPicker,
+  ElPagination,
   vLoading,
 } from 'element-plus';
 import { Head } from '@vueuse/head';
-import { Plus, Edit, Delete, Upload, Link } from '@element-plus/icons-vue';
+import { Link, Edit, Trash2 as Delete, Upload } from 'lucide-vue-next';
 import UserAvatar from '@client/components/user-avatar.vue';
 
 interface UpdatedAdmin {
@@ -66,7 +67,7 @@ interface ProjectItem {
     ElUpload,
     ElImage,
     ElColorPicker,
-    Plus,
+    ElPagination,
     Edit,
     Delete,
     Upload,
@@ -78,9 +79,15 @@ interface ProjectItem {
 export default class ProjectListContainer extends Vue {
   projectList: ProjectItem[] = [];
   dialogVisible = false;
-  dialogTitle = '创建项目';
+  dialogTitle = 'Add Project';
   isEdit = false;
   currentProjectId: number | null = null;
+  loading: boolean = true;
+  coverImageFile: any = null;
+  uploadingCover = false;
+
+  currentPage = 1;
+  pageSize = 35;
 
   projectForm = {
     name: '',
@@ -91,16 +98,9 @@ export default class ProjectListContainer extends Vue {
     bgColor: '#f4f4f4',
   };
 
-  coverImageFile: any = null;
-  uploadingCover = false;
-
-  async mounted() {
-    await this.loadProjectList();
-  }
-
   async loadProjectList() {
     try {
-      const res = await this.$api.getAllProjects();
+      const res = await this.$api.getAllProjects({});
       this.projectList = res.rows;
     } catch (error) {
       console.error('加载项目列表失败:', error);
@@ -108,8 +108,27 @@ export default class ProjectListContainer extends Vue {
     }
   }
 
+  get paginatedProjectList() {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.projectList.slice(start, end);
+  }
+
+  get totalProjects() {
+    return this.projectList.length;
+  }
+
+  handlePageChange(page: number) {
+    this.currentPage = page;
+  }
+
+  handleSizeChange(size: number) {
+    this.pageSize = size;
+    this.currentPage = 1;
+  }
+
   handleCreate() {
-    this.dialogTitle = '创建项目';
+    this.dialogTitle = 'Add Project';
     this.isEdit = false;
     this.currentProjectId = null;
     this.projectForm = {
@@ -125,7 +144,7 @@ export default class ProjectListContainer extends Vue {
   }
 
   handleEdit(project: ProjectItem) {
-    this.dialogTitle = '编辑项目';
+    this.dialogTitle = 'Edit Project';
     this.isEdit = true;
     this.currentProjectId = project.id;
     this.projectForm = {
@@ -142,46 +161,46 @@ export default class ProjectListContainer extends Vue {
 
   async handleDelete(project: ProjectItem) {
     try {
-      await ElMessageBox.confirm(`确定要删除项目 "${project.name}" 吗？`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      await ElMessageBox.confirm(`Are you sure you want to delete the project "${project.name}"?`, 'Confirmation', {
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel',
         type: 'warning',
       });
 
       await this.$api.deleteProject({ id: project.id });
-      ElMessage.success('删除成功');
+      ElMessage.success('Deleted successfully');
       await this.loadProjectList();
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除项目失败:', error);
-        ElMessage.error('删除项目失败');
+        ElMessage.error('Failed to delete project');
       }
     }
   }
 
   async handleSubmit() {
     if (!this.projectForm.name.trim()) {
-      ElMessage.warning('请输入项目名称');
+      ElMessage.warning('Please enter project name');
       return;
     }
 
-    const loading = ElLoading.service({ fullscreen: true, text: '保存中...' });
+    const loading = ElLoading.service({ fullscreen: true, text: 'Saving...' });
     try {
       if (this.isEdit && this.currentProjectId) {
         await this.$api.updateProject({
           id: this.currentProjectId,
           ...this.projectForm,
         });
-        ElMessage.success('更新成功');
+        ElMessage.success('Updated successfully');
       } else {
         await this.$api.createProject(this.projectForm);
-        ElMessage.success('创建成功');
+        ElMessage.success('Created successfully');
       }
       this.dialogVisible = false;
       await this.loadProjectList();
     } catch (error) {
-      console.error('保存项目失败:', error);
-      ElMessage.error('保存项目失败');
+      console.error('Save project failed:', error);
+      ElMessage.error('Failed to save project');
     } finally {
       loading.close();
     }
@@ -196,7 +215,7 @@ export default class ProjectListContainer extends Vue {
   handleCoverImageChange(file: any) {
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      ElMessage.error('图片大小不能超过 10MB');
+      ElMessage.error('Image size must be less than 10MB');
       return false;
     }
     this.coverImageFile = file.raw;
@@ -237,61 +256,68 @@ export default class ProjectListContainer extends Vue {
       this.uploadingCover = false;
     }
   }
+
+  async mounted() {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await this.loadProjectList();
+    } finally {
+      this.loading = false;
+    }
+  }
 }
 </script>
 
 <template>
   <Head>
     <title>SDUTACM Admin | Project Management</title>
-    <meta name="description" content="SDUTACM 管理后台项目管理">
+    <meta name="description" content="SDUTACM 管理后台项目管理" />
   </Head>
-  <div class="project-list-container">
+
+  <div class="project-list-container" v-loading="loading">
     <div class="toolbar">
-      <el-button type="primary" @click="handleCreate">
-        <el-icon><Plus /></el-icon>
-        创建项目
-      </el-button>
+      <el-button plain @click="handleCreate"> Add Project </el-button>
     </div>
 
-    <el-table :data="projectList" style="width: 100%; margin-top: 16px" stripe>
+    <el-table :data="paginatedProjectList" style="width: 100%; margin-top: 16px" stripe v-show="!loading">
       <el-table-column prop="id" label="ID" width="60" />
-      <el-table-column label="封面" width="100">
+      <el-table-column label="Cover Image">
         <template #default="{ row }">
           <el-image v-if="row.coverImage" :src="row.coverImage" style="width: 60px; height: 40px" fit="cover" />
-          <span v-else style="color: #999">暂无</span>
+          <span v-else style="color: #999">Null</span>
         </template>
       </el-table-column>
-      <el-table-column prop="name" label="项目名称" min-width="150" />
-      <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-      <el-table-column label="代码仓库" width="120">
+      <el-table-column prop="name" label="Name" min-width="150" />
+      <el-table-column prop="description" label="Description" min-width="200" show-overflow-tooltip />
+      <el-table-column label="Repo" width="120">
         <template #default="{ row }">
           <a v-if="row.repoUrl" :href="row.repoUrl" target="_blank" style="color: #409eff">
             <el-icon><Link /></el-icon>
-            查看
+            <span> link </span>
           </a>
           <span v-else style="color: #999">-</span>
         </template>
       </el-table-column>
-      <el-table-column label="官网" width="100">
+      <el-table-column label="Website" width="100">
         <template #default="{ row }">
           <a v-if="row.websiteUrl" :href="row.websiteUrl" target="_blank" style="color: #409eff">
             <el-icon><Link /></el-icon>
-            访问
+            <span> link </span>
           </a>
           <span v-else style="color: #999">-</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" width="180">
+      <el-table-column label="CreatedAt" width="180">
         <template #default="{ row }">
           {{ formatDate(row.createdAt) }}
         </template>
       </el-table-column>
-      <el-table-column label="更新时间" width="180">
+      <el-table-column label="UpdatedAt" width="180">
         <template #default="{ row }">
           {{ formatDate(row.updatedAt) }}
         </template>
       </el-table-column>
-      <el-table-column label="更新人" width="100">
+      <el-table-column label="Updated By">
         <template #default="{ row }">
           <div v-if="row.updatedBy" class="editor-container">
             <user-avatar :avatarUrl="row.updatedBy.avatar" />
@@ -300,35 +326,51 @@ export default class ProjectListContainer extends Vue {
           <div v-else>-</div>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column label="Operate" width="150" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="handleEdit(row)" link>
             <el-icon><Edit /></el-icon>
-            编辑
+            Edit
           </el-button>
           <el-button type="danger" size="small" @click="handleDelete(row)" link>
             <el-icon><Delete /></el-icon>
-            删除
+            Delete
           </el-button>
         </template>
       </el-table-column>
     </el-table>
 
+    <!-- 分页 -->
+    <div class="pagination-wrapper" v-show="!loading && totalProjects > 0">
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :page-sizes="[35]"
+        :total="totalProjects"
+        layout="total, prev, pager, next"
+        @current-change="handlePageChange"
+        @size-change="handleSizeChange"
+      />
+    </div>
+
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="700px">
+      <template #header="{ titleId, titleClass }">
+        <h4 :id="titleId" :class="titleClass" style="line-height: normal">Add Project</h4>
+      </template>
       <el-form :model="projectForm" label-width="100px">
-        <el-form-item label="项目名称" required>
-          <el-input v-model="projectForm.name" placeholder="请输入项目名称" />
+        <el-form-item label="Name" required>
+          <el-input v-model="projectForm.name" />
         </el-form-item>
-        <el-form-item label="项目描述">
-          <el-input v-model="projectForm.description" type="textarea" :rows="3" placeholder="请输入项目描述" />
+        <el-form-item label="Description">
+          <el-input v-model="projectForm.description" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item label="代码仓库">
+        <el-form-item label="Repo URL">
           <el-input v-model="projectForm.repoUrl" placeholder="https://github.com/..." />
         </el-form-item>
-        <el-form-item label="项目官网">
+        <el-form-item label="Website URL">
           <el-input v-model="projectForm.websiteUrl" placeholder="https://..." />
         </el-form-item>
-        <el-form-item label="封面图片">
+        <el-form-item label="Cover Image">
           <div class="cover-upload-wrapper">
             <el-upload
               :show-file-list="false"
@@ -345,12 +387,12 @@ export default class ProjectListContainer extends Vue {
                   fit="cover"
                 />
                 <div v-else class="upload-placeholder">
-                  <el-icon :size="40"><Upload /></el-icon>
-                  <div>点击上传封面</div>
+                  <el-icon size="20"><Upload /></el-icon>
+                  <div>Click to upload cover image</div>
                 </div>
               </div>
             </el-upload>
-            <div class="upload-tip">支持 jpg/png 格式，大小不超过 10MB</div>
+            <div class="upload-tip">jpg/png files with a size less than 10MB.</div>
           </div>
         </el-form-item>
         <el-form-item label="卡片背景色">
@@ -377,6 +419,13 @@ export default class ProjectListContainer extends Vue {
     display: flex;
     align-items: center;
     justify-content: flex-start;
+  }
+
+  .pagination-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    padding: 12px 0;
   }
 
   .cover-upload-wrapper {
@@ -437,7 +486,7 @@ export default class ProjectListContainer extends Vue {
   .editor-container {
     display: flex;
     align-items: center;
-    gap: .1rem;
+    gap: 0.1rem;
   }
 }
 </style>

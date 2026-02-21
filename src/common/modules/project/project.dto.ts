@@ -125,6 +125,28 @@ export class GetProjectListResDTO {
   rows: GetProjectDetailResDTO[];
 }
 
+// 获取所有项目请求（管理员用，支持分页）
+export class GetAllProjectsReqDTO {
+  @FromBody()
+  @IsOptional()
+  @IsNumber()
+  page?: number;
+
+  @FromBody()
+  @IsOptional()
+  @IsNumber()
+  pageSize?: number;
+}
+
+// 获取所有项目响应（管理员用，支持分页）
+export class GetAllProjectsResDTO {
+  rows: GetProjectDetailResDTO[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
 // 获取项目详情请求
 export class GetProjectReqDTO {
   @FromBody()

@@ -41,7 +41,15 @@ export default class NewsContainer extends Vue {
   private copyLink() {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(
-      () => {},
+      () => {
+        const copyText = document.querySelector('.copy-text');
+        if (copyText) {
+          copyText.classList.add('copied');
+          setTimeout(() => {
+            copyText.classList.remove('copied');
+          }, 1000);
+        }
+      },
       (err) => {
         console.error('Failed to copy link:', err);
       },
@@ -90,6 +98,7 @@ export default class NewsContainer extends Vue {
     </header>
     <div class="share-button" @click="copyLink" v-if="newsInfo.id">
       <el-icon size="medium"><Share /></el-icon>
+      <span class="copy-text">Copied!</span>
     </div>
     <div class="divider-container">
       <el-divider border-style="dashed" v-if="newsInfo.id" />
@@ -274,6 +283,27 @@ export default class NewsContainer extends Vue {
   }
   &:active {
     transform: scale(0.9);
+  }
+}
+
+.copy-text {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  font-size: .3rem;
+  transform: translate(-50%, -150%) rotate(-10deg);
+  opacity: 0;
+}
+
+.copied {
+  opacity: 1;
+  animation: fadeOut 1s ease forwards;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -200%) rotate(-10deg);
   }
 }
 </style>

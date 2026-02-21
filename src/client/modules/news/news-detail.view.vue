@@ -41,7 +41,7 @@ export default class NewsDetailView extends Vue {
     this.id = parseInt(this.$route.params.id as string);
     console.log('NewsPreviewView mounted with id:', this.id);
     try {
-      this.newsInfo = await this.$api.getNews({ id: this.id });
+      this.newsInfo = await this.$api.getPublishedNews({ id: this.id });
     } catch (error) {
       console.error('Failed to fetch news detail:', error);
       this.newsLoadedFailed = true;

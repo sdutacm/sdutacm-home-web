@@ -125,7 +125,7 @@ export default class MediaListContainer extends Vue {
       const cardMinWidth = 200 + 12;
       cols = Math.max(Math.floor((containerWidth + 12) / cardMinWidth), 1);
       // 图片180px + 卡片padding约20px + 描述20px + footer约40px + gap 12px
-      cardHeight = 180 + 20 + 20 + 40 + 12;
+      cardHeight = 140 + 20 + 20 + 40 + 12;
       console.log('使用估算值:', { cols, cardHeight });
     }
 
@@ -308,10 +308,10 @@ export default class MediaListContainer extends Vue {
     <title>SDUTACM Admin | {{ mediaType }} Management</title>
     <meta name="description" content="SDUTACM 管理后台媒体资源管理">
   </Head>
+
   <div class="media-list-container">
     <header class="media-list-header">
-      <el-button type="primary" @click="showUploadDialog">
-        <el-icon><CirclePlus /></el-icon>
+      <el-button plain @click="showUploadDialog">
         <span>Upload {{ mediaType }}</span>
       </el-button>
     </header>
@@ -391,7 +391,7 @@ export default class MediaListContainer extends Vue {
 
   .media-list-card {
     .media-list-image-container {
-      height: 140px;
+      height: 135px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -428,22 +428,6 @@ export default class MediaListContainer extends Vue {
     display: flex;
     justify-content: center;
     padding: 12px;
-  }
-
-  @media (max-width: 768px) {
-    .media-list-card {
-      .media-list-image-container {
-        height: 120px;
-      }
-    }
-  }
-
-  @media (max-width: 480px) {
-    .media-list-card {
-      .media-list-image-container {
-        height: 100px;
-      }
-    }
   }
 }
 

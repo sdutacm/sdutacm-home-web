@@ -119,6 +119,28 @@ export class GetNewsListResDTO {
   rows: GetNewsDetailResDTO[];
 }
 
+// 获取所有新闻请求（管理员用，支持分页）
+export class GetAllNewsReqDTO {
+  @FromBody()
+  @IsOptional()
+  @IsNumber()
+  page?: number;
+
+  @FromBody()
+  @IsOptional()
+  @IsNumber()
+  pageSize?: number;
+}
+
+// 获取所有新闻响应（管理员用，支持分页）
+export class GetAllNewsResDTO {
+  rows: GetNewsDetailResDTO[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
 // 获取新闻详情请求
 export class GetNewsReqDTO {
   @FromBody()

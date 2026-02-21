@@ -84,6 +84,9 @@ export default class SelectLogoDialog extends Vue {
 
 <template>
   <el-dialog :model-value="visible" title="Select Logo" width="800px" @close="handleClose">
+    <template #header="{ titleId, titleClass }">
+      <h4 :id="titleId" :class="titleClass" style="line-height: normal">Select Logo</h4>
+    </template>
     <div v-loading="loading" class="logo-list-container">
       <div v-if="logoList.length === 0 && !loading" class="empty-container">
         <el-empty description="No logo resources available, please upload first" />

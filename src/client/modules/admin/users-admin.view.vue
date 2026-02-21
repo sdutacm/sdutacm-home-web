@@ -25,7 +25,7 @@ import {
   ElImage,
   vLoading,
 } from 'element-plus';
-import { Upload, User } from '@element-plus/icons-vue';
+import { Upload } from 'lucide-vue-next';
 
 @View('/admin/users')
 @ChildOf('AdminView')
@@ -47,7 +47,6 @@ import { Upload, User } from '@element-plus/icons-vue';
     ElEmpty,
     ElImage,
     Upload,
-    User,
   },
   directives: {
     loading: vLoading,
@@ -69,10 +68,10 @@ export default class UsersAdminView extends Vue {
     role: AdminRoleEnum.ADMIN,
   };
   createUserFormRules = {
-    username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+    username: [{ required: true, message: 'Please enter username', trigger: 'blur' }],
     password: [
-      { required: true, message: '请输入密码', trigger: 'blur' },
-      { min: 6, message: '密码长度至少6位', trigger: 'blur' },
+      { required: true, message: 'Please enter password', trigger: 'blur' },
+      { min: 6, message: 'Password must be at least 6 characters long', trigger: 'blur' },
     ],
   };
   creatingUser = false;
@@ -82,8 +81,8 @@ export default class UsersAdminView extends Vue {
   loadingAdminList = false;
 
   roleOptions = [
-    { label: '管理员', value: AdminRoleEnum.ADMIN },
-    { label: '超级管理员', value: AdminRoleEnum.SUPER_ADMIN },
+    { label: 'Admin', value: AdminRoleEnum.ADMIN },
+    { label: 'Super Admin', value: AdminRoleEnum.SUPER_ADMIN },
   ];
 
   // 管理员编辑的新闻列表
@@ -140,16 +139,15 @@ export default class UsersAdminView extends Vue {
       // 更新本地头像显示
       this.userInfo.avatar = avatarPath;
 
-      ElMessage.success('头像更新成功');
+      ElMessage.success('Avatar updated successfully');
 
       // 刷新用户信息
       this.$emit('refresh-user');
     } catch (error) {
-      console.error('上传头像失败:', error);
-      ElMessage.error('上传头像失败');
+      console.error('Failed to update avatar:', error);
+      ElMessage.error('Failed to update avatar');
     } finally {
       this.uploadingAvatar = false;
-      // 清空 input 以便重复选择相同文件
       input.value = '';
     }
   }
@@ -157,7 +155,7 @@ export default class UsersAdminView extends Vue {
   // 打开创建用户对话框
   openCreateUserDialog() {
     if (!this.isSuperAdmin) {
-      ElMessage.warning('只有超级管理员才能创建新用户');
+      ElMessage.warning('Only super admin can create new users');
       return;
     }
     this.createUserDialogVisible = true;
@@ -187,12 +185,12 @@ export default class UsersAdminView extends Vue {
     this.creatingUser = true;
     try {
       await this.$api.register(this.createUserForm);
-      ElMessage.success('创建用户成功');
+      ElMessage.success('User created successfully');
       this.createUserDialogVisible = false;
       this.$emit('user-created');
     } catch (error: any) {
-      console.error('创建用户失败:', error);
-      ElMessage.error(error?.message || '创建用户失败');
+      console.error('Failed to create user:', error);
+      ElMessage.error(error?.message || 'Failed to create user');
     } finally {
       this.creatingUser = false;
     }
@@ -203,8 +201,8 @@ export default class UsersAdminView extends Vue {
       await this.$api.logout();
       this.$router.push('/login');
     } catch (error) {
-      console.error('登出失败:', error);
-      ElMessage.error('登出失败，请重试');
+      console.error('Failed to logout:', error);
+      ElMessage.error('Failed to logout, please try again');
     }
   }
 
@@ -217,8 +215,8 @@ export default class UsersAdminView extends Vue {
       const result = await this.$api.getAllAdmins();
       this.adminList = result.rows;
     } catch (error) {
-      console.error('加载管理员列表失败:', error);
-      ElMessage.error('加载管理员列表失败');
+      console.error('Failed to load admin list:', error);
+      ElMessage.error('Failed to load admin list');
     } finally {
       this.loadingAdminList = false;
     }
@@ -227,17 +225,17 @@ export default class UsersAdminView extends Vue {
   // 修改用户权限
   async handleUpdateRole(admin: GetAllAdminsResDTO, newRole: AdminRoleEnum) {
     if (admin.id === this.userInfo.id) {
-      ElMessage.warning('不能修改自己的权限');
+      ElMessage.warning('Cannot change your own role');
       return;
     }
 
     try {
       await this.$api.updateAdminRole({ adminId: admin.id, role: newRole });
-      ElMessage.success('权限修改成功');
+      ElMessage.success('Role updated successfully');
       await this.loadAdminList();
     } catch (error: any) {
-      console.error('修改权限失败:', error);
-      ElMessage.error(error?.message || '修改权限失败');
+      console.error('Failed to update role:', error);
+      ElMessage.error(error?.message || 'Failed to update role');
     }
   }
 
@@ -280,10 +278,10 @@ export default class UsersAdminView extends Vue {
   async loadMyNews() {
     this.loadingNews = true;
     try {
-      const result = await this.$api.getAllNews();
+      const result = await this.$api.getAllNews({});
       this.myNewsList = result.rows;
     } catch (error) {
-      console.error('加载新闻列表失败:', error);
+      console.error('Failed to load news list:', error);
     } finally {
       this.loadingNews = false;
     }
@@ -293,10 +291,10 @@ export default class UsersAdminView extends Vue {
   async loadMyProjects() {
     this.loadingProjects = true;
     try {
-      const result = await this.$api.getAllProjects();
+      const result = await this.$api.getAllProjects({});
       this.myProjectsList = result.rows;
     } catch (error) {
-      console.error('加载项目列表失败:', error);
+      console.error('Failed to load projects list:', error);
     } finally {
       this.loadingProjects = false;
     }
@@ -364,8 +362,8 @@ export default class UsersAdminView extends Vue {
 
       <el-form-item label="Admin List" v-if="isSuperAdmin">
         <div class="user-management-content">
-          <el-button type="primary" @click="openCreateUserDialog">
-            + Create
+          <el-button plain @click="openCreateUserDialog">
+            Add New Admin
           </el-button>
 
           <!-- 所有用户列表 -->
@@ -390,7 +388,7 @@ export default class UsersAdminView extends Vue {
                   :model-value="admin.role"
                   size="small"
                   @change="(val: AdminRoleEnum) => handleUpdateRole(admin, val)"
-                  placeholder="修改权限"
+                  placeholder="Change Role"
                 >
                   <el-option
                     v-for="option in roleOptions"
@@ -401,7 +399,7 @@ export default class UsersAdminView extends Vue {
                 </el-select>
               </div>
               <div class="current-user-tag" v-else>
-                <el-tag type="info" size="small">当前用户</el-tag>
+                <el-tag type="info" size="small">Current User</el-tag>
               </div>
             </el-card>
           </div>
@@ -410,7 +408,7 @@ export default class UsersAdminView extends Vue {
 
       <el-form-item label="My News">
         <div v-loading="loadingNews" class="content-cards-container">
-        <el-empty v-if="!loadingNews && filteredNewsList.length === 0" description="暂无编辑过的新闻" />
+        <el-empty v-if="!loadingNews && filteredNewsList.length === 0" description="No edited news available" />
         <template v-else>
           <div class="preview-cards-grid">
             <el-card
@@ -456,7 +454,7 @@ export default class UsersAdminView extends Vue {
 
       <el-form-item label="My Projects">
         <div v-loading="loadingProjects" class="content-cards-container">
-        <el-empty v-if="!loadingProjects && filteredProjectsList.length === 0" description="暂无编辑过的项目" />
+        <el-empty v-if="!loadingProjects && filteredProjectsList.length === 0" description="No edited projects available" />
         <template v-else>
           <div class="preview-cards-grid">
             <el-card
@@ -504,35 +502,36 @@ export default class UsersAdminView extends Vue {
     <!-- 创建用户对话框 -->
     <el-dialog
       v-model="createUserDialogVisible"
-      title="创建新用户"
+      title="Add New Admin"
       width="500px"
       :close-on-click-modal="false"
     >
+    <template #header="{ titleId, titleClass }">
+      <h4 :id="titleId" :class="titleClass" style="line-height: normal;">
+        Add New Admin
+      </h4>
+    </template>
       <el-form
         ref="createUserFormRef"
         :model="createUserForm"
         :rules="createUserFormRules"
         label-width="80px"
       >
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="createUserForm.username" placeholder="请输入用户名">
-            <template #prefix>
-              <el-icon><User /></el-icon>
-            </template>
+        <el-form-item label="Username" prop="username">
+          <el-input v-model="createUserForm.username" >
           </el-input>
         </el-form-item>
 
-        <el-form-item label="密码" prop="password">
+        <el-form-item label="Password" prop="password">
           <el-input
             v-model="createUserForm.password"
             type="password"
-            placeholder="请输入密码"
             show-password
           />
         </el-form-item>
 
-        <el-form-item label="角色" prop="role">
-          <el-select v-model="createUserForm.role" placeholder="请选择角色">
+        <el-form-item label="Role" prop="role">
+          <el-select v-model="createUserForm.role">
             <el-option
               v-for="option in roleOptions"
               :key="option.value"
@@ -544,9 +543,9 @@ export default class UsersAdminView extends Vue {
       </el-form>
 
       <template #footer>
-        <el-button @click="createUserDialogVisible = false">取消</el-button>
+        <el-button @click="createUserDialogVisible = false">Cancel</el-button>
         <el-button type="primary" :loading="creatingUser" @click="handleCreateUser">
-          创建
+          Create
         </el-button>
       </template>
     </el-dialog>

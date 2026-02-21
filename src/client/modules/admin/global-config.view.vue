@@ -1,8 +1,17 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
 import { GetGlobalConfigResDTO } from '@common/modules/global-config/global-config.dto';
-import { Prop } from 'vue-property-decorator';
-import { ElForm, ElInput, ElFormItem, ElImage, ElButton, ElMessage, ElLoading, ElTransfer } from 'element-plus';
+import {
+  ElForm,
+  ElInput,
+  ElFormItem,
+  ElImage,
+  ElButton,
+  ElMessage,
+  ElLoading,
+  ElTransfer,
+  vLoading,
+} from 'element-plus';
 import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import { Head } from '@vueuse/head';
 import SelectLogoDialog from '@client/components/admin/select-logo-dialog.vue';
@@ -40,8 +49,12 @@ interface TransferItem {
     SelectLogoDialog,
     ElTransfer,
   },
+  directives: {
+    loading: vLoading,
+  },
 })
 export default class GlobalConfigView extends Vue {
+  loading: boolean = true;
   globalConfigState: GetGlobalConfigResDTO = {
     title: '',
     slogan: '',
@@ -127,7 +140,7 @@ export default class GlobalConfigView extends Vue {
 
   async loadNewsList() {
     try {
-      const res = await this.$api.getAllNews();
+      const res = await this.$api.getAllNews({});
       this.allNews = res.rows;
     } catch (error) {
       console.error('加载新闻列表失败:', error);
@@ -136,7 +149,7 @@ export default class GlobalConfigView extends Vue {
 
   async loadProjectsList() {
     try {
-      const res = await this.$api.getAllProjects();
+      const res = await this.$api.getAllProjects({});
       this.allProjects = res.rows;
     } catch (error) {
       console.error('加载项目列表失败:', error);
@@ -192,27 +205,29 @@ export default class GlobalConfigView extends Vue {
   }
 
   async mounted() {
-    this.globalConfigState = await this.$api.getGlobalConfig();
-    console.log('当前全局配置:', { ...this.globalConfigState });
-    await this.loadNewsList();
-    await this.loadProjectsList();
-    this.selectedNewsIds = this.globalConfigState?.homeNewsPreviewIds || [];
-    this.selectedProjectIds = this.globalConfigState?.homeProjectsPreviewIds || [];
+    try {
+      this.globalConfigState = await this.$api.getGlobalConfig();
+      console.log('当前全局配置:', { ...this.globalConfigState });
+      await this.loadNewsList();
+      await this.loadProjectsList();
+      this.selectedNewsIds = this.globalConfigState?.homeNewsPreviewIds || [];
+      this.selectedProjectIds = this.globalConfigState?.homeProjectsPreviewIds || [];
 
-    // 保存原始状态
-    this.originalConfigState = { ...this.globalConfigState };
-    this.originalNewsIds = [...this.selectedNewsIds];
-    this.originalProjectIds = [...this.selectedProjectIds];
+      // 保存原始状态
+      this.originalConfigState = { ...this.globalConfigState };
+      this.originalNewsIds = [...this.selectedNewsIds];
+      this.originalProjectIds = [...this.selectedProjectIds];
 
-    // 监听页面离开事件
-    window.addEventListener('beforeunload', this.handleBeforeUnload);
+      window.addEventListener('beforeunload', this.handleBeforeUnload);
+    } finally {
+      this.loading = false;
+    }
   }
 
   beforeUnmount() {
     window.removeEventListener('beforeunload', this.handleBeforeUnload);
   }
 
-  // Vue Router 路由守卫
   beforeRouteLeave(to: any, from: any, next: any) {
     if (this.hasUnsavedChanges) {
       const answer = window.confirm('您有未保存的更改，确定要离开吗？');
@@ -233,8 +248,8 @@ export default class GlobalConfigView extends Vue {
     <title>SDUTACM Admin | Homepage Config</title>
     <meta name="description" content="SDUTACM 管理后台首页配置" />
   </Head>
-  <div class="global-config-container">
-    <div class="config-layout">
+  <div class="global-config-container" v-loading="loading">
+    <div class="config-layout" v-show="!loading">
       <!-- 左侧：基础配置 -->
       <div class="config-left">
         <div class="section-title">Basic Settings</div>
