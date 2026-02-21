@@ -24,10 +24,18 @@ import {
   ElDescriptions,
   ElDescriptionsItem,
   ElLoading,
+  ElProgress,
 } from 'element-plus';
 import { Upload } from 'lucide-vue-next';
 
 export type MediaDialogMode = 'upload' | 'edit';
+
+// 分片大小: 2MB（与服务端一致）
+const CHUNK_SIZE = 2 * 1024 * 1024;
+// 普通文件大小限制: 10MB
+const NORMAL_FILE_SIZE_LIMIT = 10 * 1024 * 1024;
+// 大文件大小限制: 500MB（音视频）
+const LARGE_FILE_SIZE_LIMIT = 500 * 1024 * 1024;
 
 @Options({
   components: {
@@ -42,6 +50,7 @@ export type MediaDialogMode = 'upload' | 'edit';
     ElDescriptions,
     ElDescriptionsItem,
     Upload,
+    ElProgress,
   },
   directives: {
     loading: ElLoading.directive,
@@ -77,6 +86,9 @@ export default class MediaDialog extends Vue {
   };
 
   loading = false;
+  // 分片上传进度
+  uploadProgress = 0;
+  isChunkUploading = false;
 
   @Watch('visible')
   async onVisibleChange(val: boolean) {
@@ -113,6 +125,8 @@ export default class MediaDialog extends Vue {
   resetAll() {
     this.resetUploadForm();
     this.resetEditForm();
+    this.uploadProgress = 0;
+    this.isChunkUploading = false;
   }
 
   handleClose() {
@@ -122,6 +136,21 @@ export default class MediaDialog extends Vue {
 
   // ==================== 上传模式方法 ====================
 
+  /** 检查是否为大文件类型（音视频） */
+  get isLargeFileType() {
+    return this.mediaType === MediaTypeEnum.AUDIO || this.mediaType === MediaTypeEnum.VIDEO;
+  }
+
+  /** 获取文件大小限制 */
+  get fileSizeLimit() {
+    return this.isLargeFileType ? LARGE_FILE_SIZE_LIMIT : NORMAL_FILE_SIZE_LIMIT;
+  }
+
+  /** 格式化文件大小限制显示 */
+  get fileSizeLimitText() {
+    return this.isLargeFileType ? '500MB' : '10MB';
+  }
+
   handleFileChange(file: File, fileList: UploadFile[]) {
     this.uploadFormData.files = fileList;
   }
@@ -130,19 +159,65 @@ export default class MediaDialog extends Vue {
     this.uploadFormData.files = fileList;
   }
 
+  /** 分片上传单个文件 */
+  async uploadFileInChunks(file: File, type: MediaTypeEnum, alt?: string): Promise<MediaDetailResDTO> {
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+    // 1. 初始化分片上传
+    const initRes = await this.$api.initChunkUpload({
+      filename: file.name,
+      fileSize: file.size,
+      type,
+      alt,
+      totalChunks,
+    });
+
+    const { uploadId, chunkSize } = initRes;
+
+    // 2. 上传各分片
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, file.size);
+      const chunk = file.slice(start, end);
+
+      await this.$api.uploadChunk({
+        uploadId,
+        chunkIndex: i,
+        chunk,
+      });
+
+      // 更新进度
+      this.uploadProgress = Math.round(((i + 1) / totalChunks) * 100);
+    }
+
+    // 3. 完成上传
+    const result = await this.$api.completeChunkUpload({ uploadId });
+    return result;
+  }
+
   async handleUpload() {
     if (!this.uploadFormData.files.length) {
       ElMessage.warning('Please select at least one file to upload');
       return;
     }
     this.loading = true;
+    this.uploadProgress = 0;
+
     try {
       const uploadPromises = this.uploadFormData.files.map(async (file: UploadFile) => {
-        return await this.$api.uploadMedia({
-          file: file.raw,
-          type: this.uploadFormData.type,
-          alt: this.uploadFormData.alt,
-        });
+        const rawFile = file.raw!;
+        // 对于音视频大文件（>10MB），使用分片上传
+        if (this.isLargeFileType && rawFile.size > NORMAL_FILE_SIZE_LIMIT) {
+          this.isChunkUploading = true;
+          return await this.uploadFileInChunks(rawFile, this.uploadFormData.type, this.uploadFormData.alt);
+        } else {
+          // 普通上传
+          return await this.$api.uploadMedia({
+            file: rawFile,
+            type: this.uploadFormData.type,
+            alt: this.uploadFormData.alt,
+          });
+        }
       });
 
       await Promise.all(uploadPromises);
@@ -156,6 +231,7 @@ export default class MediaDialog extends Vue {
       ElMessage.error(error.message || 'Upload failed, please try again');
     } finally {
       this.loading = false;
+      this.isChunkUploading = false;
     }
   }
 
@@ -164,8 +240,8 @@ export default class MediaDialog extends Vue {
       ElMessage.error(`Invalid file type. Please upload a ${getMediaTypeLabel(this.mediaType)} file.`);
       return false;
     }
-    if (rawFile.size > 10 * 1024 * 1024) {
-      ElMessage.error('File size cannot exceed 10MB');
+    if (rawFile.size > this.fileSizeLimit) {
+      ElMessage.error(`File size cannot exceed ${this.fileSizeLimitText}`);
       return false;
     }
     return true;
@@ -293,9 +369,17 @@ export default class MediaDialog extends Vue {
               <el-icon class="el-icon--upload" size="20"><upload /></el-icon>
               <div class="el-upload__text">Drag files here, or <em>click to upload</em></div>
               <template #tip>
-                <div class="el-upload__tip">{{ allowedExtensions }} files with a size less than 10MB</div>
+                <div class="el-upload__tip">{{ allowedExtensions }} files with a size less than {{ fileSizeLimitText }}</div>
               </template>
             </el-upload>
+
+            <!-- 分片上传进度条 -->
+            <el-progress
+              v-if="isChunkUploading"
+              :percentage="uploadProgress"
+              :stroke-width="10"
+              class="chunk-upload-progress"
+            />
           </el-form-item>
 
           <el-form-item label="Description">
@@ -379,6 +463,10 @@ export default class MediaDialog extends Vue {
     color: #409eff;
     font-style: normal;
   }
+}
+
+.chunk-upload-progress {
+  margin-top: 16px;
 }
 
 .media-detail {

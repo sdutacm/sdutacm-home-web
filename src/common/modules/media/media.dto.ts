@@ -85,3 +85,64 @@ export class GetMediaListResDTO {
   rows: MediaDetailResDTO[];
   total: number;
 }
+
+// ==================== 分片上传相关 ====================
+
+// 初始化分片上传
+export class InitChunkUploadReqDTO {
+  @FromBody()
+  @IsString()
+  filename: string;
+
+  @FromBody()
+  @IsNumber()
+  fileSize: number;
+
+  @FromBody()
+  @IsEnum(MediaTypeEnum)
+  type: MediaTypeEnum;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  alt?: string;
+
+  @FromBody()
+  @IsNumber()
+  totalChunks: number;
+}
+
+export class InitChunkUploadResDTO {
+  uploadId: string;
+  chunkSize: number;
+}
+
+// 上传分片
+export class UploadChunkReqDTO {
+  @FromBody()
+  @IsString()
+  uploadId: string;
+
+  @FromBody()
+  @IsNumber()
+  chunkIndex: number;
+
+  @FromBody()
+  @IsFile()
+  chunk: any;
+}
+
+export class UploadChunkResDTO {
+  chunkIndex: number;
+  received: boolean;
+}
+
+// 完成分片上传
+export class CompleteChunkUploadReqDTO {
+  @FromBody()
+  @IsString()
+  uploadId: string;
+}
+
+export class CompleteChunkUploadResDTO extends MediaDetailResDTO {}
+

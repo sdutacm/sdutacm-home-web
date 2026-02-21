@@ -3,7 +3,21 @@ import { Inject } from 'bwcx-core';
 import { ApiController } from '@server/decorators';
 import { Api } from 'bwcx-api';
 import MediaService from './media.service';
-import { GetMediaListReqDTO, GetMediaListResDTO, UploadMediaReqDTO, DeleteMediaReqDTO, GetMediaByIdReqDTO, MediaDetailResDTO, UpdateMediaReqDTO } from '@common/modules/media/media.dto';
+import {
+  GetMediaListReqDTO,
+  GetMediaListResDTO,
+  UploadMediaReqDTO,
+  DeleteMediaReqDTO,
+  GetMediaByIdReqDTO,
+  MediaDetailResDTO,
+  UpdateMediaReqDTO,
+  InitChunkUploadReqDTO,
+  InitChunkUploadResDTO,
+  UploadChunkReqDTO,
+  UploadChunkResDTO,
+  CompleteChunkUploadReqDTO,
+  CompleteChunkUploadResDTO,
+} from '@common/modules/media/media.dto';
 
 @ApiController()
 export default class MediaController {
@@ -48,5 +62,28 @@ export default class MediaController {
   @Contract(DeleteMediaReqDTO, null)
   public async deleteMedia(@Data() data: DeleteMediaReqDTO): Promise<void> {
     await this.mediaService.deleteMedia(data.id);
+  }
+
+  // ==================== 分片上传接口 ====================
+
+  @Api.Summary('初始化分片上传')
+  @Post('/initChunkUpload')
+  @Contract(InitChunkUploadReqDTO, InitChunkUploadResDTO)
+  public async initChunkUpload(@Data() data: InitChunkUploadReqDTO): Promise<InitChunkUploadResDTO> {
+    return await this.mediaService.initChunkUpload(data);
+  }
+
+  @Api.Summary('上传分片')
+  @Post('/uploadChunk')
+  @Contract(UploadChunkReqDTO, UploadChunkResDTO)
+  public async uploadChunk(@Data() data: UploadChunkReqDTO): Promise<UploadChunkResDTO> {
+    return await this.mediaService.uploadChunk(data);
+  }
+
+  @Api.Summary('完成分片上传')
+  @Post('/completeChunkUpload')
+  @Contract(CompleteChunkUploadReqDTO, CompleteChunkUploadResDTO)
+  public async completeChunkUpload(@Data() data: CompleteChunkUploadReqDTO): Promise<CompleteChunkUploadResDTO> {
+    return await this.mediaService.completeChunkUpload(data);
   }
 }

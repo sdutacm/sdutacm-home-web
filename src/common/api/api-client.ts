@@ -10,7 +10,7 @@ import { GetGlobalConfigResDTO, UpdateGlobalConfigReqDTO } from '../modules/glob
 import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '../modules/admin/admin.dto';
 import { DemoGetReqDTO, DemoGetRespDTO } from '../modules/demo/demo.dto';
 import { GetHomeDataResDTO, GetHomeNewsResDTO } from '../modules/home/home.dto';
-import { GetMediaListReqDTO, GetMediaListResDTO, UploadMediaReqDTO, MediaDetailResDTO, GetMediaByIdReqDTO, UpdateMediaReqDTO, DeleteMediaReqDTO } from '../modules/media/media.dto';
+import { GetMediaListReqDTO, GetMediaListResDTO, UploadMediaReqDTO, MediaDetailResDTO, GetMediaByIdReqDTO, UpdateMediaReqDTO, DeleteMediaReqDTO, InitChunkUploadReqDTO, InitChunkUploadResDTO, UploadChunkReqDTO, UploadChunkResDTO, CompleteChunkUploadReqDTO, CompleteChunkUploadResDTO } from '../modules/media/media.dto';
 import { CreateNewsReqDTO, UpdateNewsReqDTO, DeleteNewsReqDTO, GetNewsReqDTO, GetNewsDetailResDTO, GetAllNewsReqDTO, GetAllNewsResDTO, GetPublishedNewsListReqDTO, GetPublishedNewsListResDTO } from '../modules/news/news.dto';
 import { CreateProjectReqDTO, UpdateProjectReqDTO, DeleteProjectReqDTO, GetProjectReqDTO, GetProjectDetailResDTO, GetAllProjectsReqDTO, GetAllProjectsResDTO } from '../modules/project/project.dto';
 import { GetOverviewStatsResDTO, GetDailyViewStatsReqDTO, GetDailyViewStatsResDTO, GetAllPageViewStatsResDTO } from '../modules/stats/stats.dto';
@@ -217,6 +217,39 @@ export class ApiClient<T = undefined> {
   }
 
   /**
+   * 初始化分片上传
+   *
+   * @param {InitChunkUploadReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {InitChunkUploadResDTO} The response data (RespDTO).
+   */
+  public async initChunkUpload(req: InitChunkUploadReqDTO, opts?: T): Promise<InitChunkUploadResDTO> {
+    return this._r(this._rArgs.r(req, opts)).then((resp) => this._rp.pat(InitChunkUploadResDTO, resp));
+  }
+
+  /**
+   * 上传分片
+   *
+   * @param {UploadChunkReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {UploadChunkResDTO} The response data (RespDTO).
+   */
+  public async uploadChunk(req: UploadChunkReqDTO, opts?: T): Promise<UploadChunkResDTO> {
+    return this._r(this._rArgs.s(req, opts)).then((resp) => this._rp.pat(UploadChunkResDTO, resp));
+  }
+
+  /**
+   * 完成分片上传
+   *
+   * @param {CompleteChunkUploadReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {CompleteChunkUploadResDTO} The response data (RespDTO).
+   */
+  public async completeChunkUpload(req: CompleteChunkUploadReqDTO, opts?: T): Promise<CompleteChunkUploadResDTO> {
+    return this._r(this._rArgs.t(req, opts)).then((resp) => this._rp.pat(CompleteChunkUploadResDTO, resp));
+  }
+
+  /**
    * 创建新闻
    *
    * @param {CreateNewsReqDTO} req The request data (compatible with ReqDTO).
@@ -224,7 +257,7 @@ export class ApiClient<T = undefined> {
    * @returns {null} The response data (RespDTO).
    */
   public async createNews(req: CreateNewsReqDTO, opts?: T): Promise<null> {
-    return this._r(this._rArgs.r(req, opts)).then((resp) => this._rp.pat(null, resp));
+    return this._r(this._rArgs.u(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   /**
@@ -235,7 +268,7 @@ export class ApiClient<T = undefined> {
    * @returns {null} The response data (RespDTO).
    */
   public async updateNews(req: UpdateNewsReqDTO, opts?: T): Promise<null> {
-    return this._r(this._rArgs.s(req, opts)).then((resp) => this._rp.pat(null, resp));
+    return this._r(this._rArgs.v(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   /**
@@ -246,7 +279,7 @@ export class ApiClient<T = undefined> {
    * @returns {null} The response data (RespDTO).
    */
   public async deleteNews(req: DeleteNewsReqDTO, opts?: T): Promise<null> {
-    return this._r(this._rArgs.t(req, opts)).then((resp) => this._rp.pat(null, resp));
+    return this._r(this._rArgs.w(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   /**
@@ -257,7 +290,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetNewsDetailResDTO} The response data (RespDTO).
    */
   public async getNews(req: GetNewsReqDTO, opts?: T): Promise<GetNewsDetailResDTO> {
-    return this._r(this._rArgs.u(req, opts)).then((resp) => this._rp.pat(GetNewsDetailResDTO, resp));
+    return this._r(this._rArgs.x(req, opts)).then((resp) => this._rp.pat(GetNewsDetailResDTO, resp));
   }
 
   /**
@@ -268,7 +301,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetNewsDetailResDTO} The response data (RespDTO).
    */
   public async getPublishedNews(req: GetNewsReqDTO, opts?: T): Promise<GetNewsDetailResDTO> {
-    return this._r(this._rArgs.v(req, opts)).then((resp) => this._rp.pat(GetNewsDetailResDTO, resp));
+    return this._r(this._rArgs.y(req, opts)).then((resp) => this._rp.pat(GetNewsDetailResDTO, resp));
   }
 
   /**
@@ -279,7 +312,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetAllNewsResDTO} The response data (RespDTO).
    */
   public async getAllNews(req: GetAllNewsReqDTO, opts?: T): Promise<GetAllNewsResDTO> {
-    return this._r(this._rArgs.w(req, opts)).then((resp) => this._rp.pat(GetAllNewsResDTO, resp));
+    return this._r(this._rArgs.z(req, opts)).then((resp) => this._rp.pat(GetAllNewsResDTO, resp));
   }
 
   /**
@@ -290,7 +323,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetPublishedNewsListResDTO} The response data (RespDTO).
    */
   public async getPublishedNewsList(req: GetPublishedNewsListReqDTO, opts?: T): Promise<GetPublishedNewsListResDTO> {
-    return this._r(this._rArgs.x(req, opts)).then((resp) => this._rp.pat(GetPublishedNewsListResDTO, resp));
+    return this._r(this._rArgs.aa(req, opts)).then((resp) => this._rp.pat(GetPublishedNewsListResDTO, resp));
   }
 
   /**
@@ -301,7 +334,7 @@ export class ApiClient<T = undefined> {
    * @returns {null} The response data (RespDTO).
    */
   public async createProject(req: CreateProjectReqDTO, opts?: T): Promise<null> {
-    return this._r(this._rArgs.y(req, opts)).then((resp) => this._rp.pat(null, resp));
+    return this._r(this._rArgs.ab(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   /**
@@ -312,7 +345,7 @@ export class ApiClient<T = undefined> {
    * @returns {null} The response data (RespDTO).
    */
   public async updateProject(req: UpdateProjectReqDTO, opts?: T): Promise<null> {
-    return this._r(this._rArgs.z(req, opts)).then((resp) => this._rp.pat(null, resp));
+    return this._r(this._rArgs.ac(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   /**
@@ -323,7 +356,7 @@ export class ApiClient<T = undefined> {
    * @returns {null} The response data (RespDTO).
    */
   public async deleteProject(req: DeleteProjectReqDTO, opts?: T): Promise<null> {
-    return this._r(this._rArgs.aa(req, opts)).then((resp) => this._rp.pat(null, resp));
+    return this._r(this._rArgs.ad(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   /**
@@ -334,7 +367,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetProjectDetailResDTO} The response data (RespDTO).
    */
   public async getProject(req: GetProjectReqDTO, opts?: T): Promise<GetProjectDetailResDTO> {
-    return this._r(this._rArgs.ab(req, opts)).then((resp) => this._rp.pat(GetProjectDetailResDTO, resp));
+    return this._r(this._rArgs.ae(req, opts)).then((resp) => this._rp.pat(GetProjectDetailResDTO, resp));
   }
 
   /**
@@ -345,7 +378,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetAllProjectsResDTO} The response data (RespDTO).
    */
   public async getAllProjects(req: GetAllProjectsReqDTO, opts?: T): Promise<GetAllProjectsResDTO> {
-    return this._r(this._rArgs.ac(req, opts)).then((resp) => this._rp.pat(GetAllProjectsResDTO, resp));
+    return this._r(this._rArgs.af(req, opts)).then((resp) => this._rp.pat(GetAllProjectsResDTO, resp));
   }
 
   /**
@@ -356,7 +389,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetOverviewStatsResDTO} The response data (RespDTO).
    */
   public async getOverviewStats(req?: null, opts?: T): Promise<GetOverviewStatsResDTO> {
-    return this._r(this._rArgs.ad(req, opts)).then((resp) => this._rp.pat(GetOverviewStatsResDTO, resp));
+    return this._r(this._rArgs.ag(req, opts)).then((resp) => this._rp.pat(GetOverviewStatsResDTO, resp));
   }
 
   /**
@@ -367,7 +400,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetDailyViewStatsResDTO} The response data (RespDTO).
    */
   public async getDailyViewStats(req: GetDailyViewStatsReqDTO, opts?: T): Promise<GetDailyViewStatsResDTO> {
-    return this._r(this._rArgs.ae(req, opts)).then((resp) => this._rp.pat(GetDailyViewStatsResDTO, resp));
+    return this._r(this._rArgs.ah(req, opts)).then((resp) => this._rp.pat(GetDailyViewStatsResDTO, resp));
   }
 
   /**
@@ -378,7 +411,7 @@ export class ApiClient<T = undefined> {
    * @returns {GetAllPageViewStatsResDTO} The response data (RespDTO).
    */
   public async getAllPageViewStats(req?: null, opts?: T): Promise<GetAllPageViewStatsResDTO> {
-    return this._r(this._rArgs.af(req, opts)).then((resp) => this._rp.pat(GetAllPageViewStatsResDTO, resp));
+    return this._r(this._rArgs.ai(req, opts)).then((resp) => this._rp.pat(GetAllPageViewStatsResDTO, resp));
   }
 
   private _rArgs = {
@@ -728,7 +761,76 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    r: (req: CreateNewsReqDTO, opts?: any) => {
+    r: (req: InitChunkUploadReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/initChunkUpload', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          filename: req.filename,
+          fileSize: req.fileSize,
+          type: req.type,
+          alt: req.alt,
+          totalChunks: req.totalChunks,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'initChunkUpload',
+          method: 'POST',
+          path: '/api/initChunkUpload',
+          req: InitChunkUploadReqDTO,
+          resp: InitChunkUploadResDTO,
+        },
+      };
+    },
+    s: (req: UploadChunkReqDTO, opts?: any) => {
+      const formData = new FormData();
+      formData.append('uploadId', req.uploadId);
+      formData.append('chunkIndex', req.chunkIndex);
+      formData.append('chunk', req.chunk);
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/uploadChunk', {
+          param: {},
+          query: {},
+        }),
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'uploadChunk',
+          method: 'POST',
+          path: '/api/uploadChunk',
+          req: UploadChunkReqDTO,
+          resp: UploadChunkResDTO,
+        },
+      };
+    },
+    t: (req: CompleteChunkUploadReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/completeChunkUpload', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          uploadId: req.uploadId,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'completeChunkUpload',
+          method: 'POST',
+          path: '/api/completeChunkUpload',
+          req: CompleteChunkUploadReqDTO,
+          resp: CompleteChunkUploadResDTO,
+        },
+      };
+    },
+    u: (req: CreateNewsReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/createNews', {
@@ -752,7 +854,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    s: (req: UpdateNewsReqDTO, opts?: any) => {
+    v: (req: UpdateNewsReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/updateNews', {
@@ -777,7 +879,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    t: (req: DeleteNewsReqDTO, opts?: any) => {
+    w: (req: DeleteNewsReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/deleteNews', {
@@ -797,7 +899,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    u: (req: GetNewsReqDTO, opts?: any) => {
+    x: (req: GetNewsReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getNews', {
@@ -817,7 +919,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    v: (req: GetNewsReqDTO, opts?: any) => {
+    y: (req: GetNewsReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getPublishedNews', {
@@ -837,7 +939,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    w: (req: GetAllNewsReqDTO, opts?: any) => {
+    z: (req: GetAllNewsReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getAllNews', {
@@ -858,7 +960,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    x: (req: GetPublishedNewsListReqDTO, opts?: any) => {
+    aa: (req: GetPublishedNewsListReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getPublishedNewsList', {
@@ -879,7 +981,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    y: (req: CreateProjectReqDTO, opts?: any) => {
+    ab: (req: CreateProjectReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/createProject', {
@@ -905,7 +1007,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    z: (req: UpdateProjectReqDTO, opts?: any) => {
+    ac: (req: UpdateProjectReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/updateProject', {
@@ -932,7 +1034,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    aa: (req: DeleteProjectReqDTO, opts?: any) => {
+    ad: (req: DeleteProjectReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/deleteProject', {
@@ -952,7 +1054,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    ab: (req: GetProjectReqDTO, opts?: any) => {
+    ae: (req: GetProjectReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getProject', {
@@ -972,7 +1074,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    ac: (req: GetAllProjectsReqDTO, opts?: any) => {
+    af: (req: GetAllProjectsReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getAllProjects', {
@@ -993,7 +1095,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    ad: (req: null, opts?: any) => {
+    ag: (req: null, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getOverviewStats', {
@@ -1011,7 +1113,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    ae: (req: GetDailyViewStatsReqDTO, opts?: any) => {
+    ah: (req: GetDailyViewStatsReqDTO, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getDailyViewStats', {
@@ -1032,7 +1134,7 @@ export class ApiClient<T = undefined> {
         },
       };
     },
-    af: (req: null, opts?: any) => {
+    ai: (req: null, opts?: any) => {
       return {
         method: 'POST' as AllowedRequestMethod,
         url: this._uf('/api/getAllPageViewStats', {

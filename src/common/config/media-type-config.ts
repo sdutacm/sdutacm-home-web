@@ -108,6 +108,15 @@ export function getMediaTypeLabel(mediaType: MediaTypeEnum): string {
 }
 
 /**
+ * 获取媒体类型配置
+ * @param mediaType 媒体类型枚举
+ * @returns 配置对象
+ */
+export function getMediaTypeConfig(mediaType: MediaTypeEnum): MediaTypeConfig | undefined {
+  return MEDIA_TYPE_CONFIG[mediaType];
+}
+
+/**
  * 根据文件名获取扩展名
  * @param filename 文件名
  * @returns 扩展名（不含点号）
