@@ -53,6 +53,11 @@ export default class GlobalConfigView extends Vue {
     updatedAt: new Date(),
   };
 
+  // 原始配置状态，用于检测是否有未保存的更改
+  originalConfigState: GetGlobalConfigResDTO | null = null;
+  originalNewsIds: number[] = [];
+  originalProjectIds: number[] = [];
+
   selectLogoDialogVisible = false;
   selectedLogoId: number | null = null;
   allNews: NewsItem[] = [];
@@ -88,6 +93,37 @@ export default class GlobalConfigView extends Vue {
       disabled: false,
     }));
   }
+
+  get hasUnsavedChanges(): boolean {
+    if (!this.originalConfigState) return false;
+
+    // 检查基本字段是否有变化
+    const basicFieldsChanged =
+      this.globalConfigState.title !== this.originalConfigState.title ||
+      this.globalConfigState.slogan !== this.originalConfigState.slogan ||
+      this.globalConfigState.description !== this.originalConfigState.description ||
+      this.selectedLogoId !== null;
+
+    // 检查新闻选择是否有变化
+    const newsChanged =
+      this.selectedNewsIds.length !== this.originalNewsIds.length ||
+      !this.selectedNewsIds.every((id) => this.originalNewsIds.includes(id));
+
+    // 检查项目选择是否有变化
+    const projectsChanged =
+      this.selectedProjectIds.length !== this.originalProjectIds.length ||
+      !this.selectedProjectIds.every((id) => this.originalProjectIds.includes(id));
+
+    return basicFieldsChanged || newsChanged || projectsChanged;
+  }
+
+  handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    if (this.hasUnsavedChanges) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  };
 
   async loadNewsList() {
     try {
@@ -140,6 +176,11 @@ export default class GlobalConfigView extends Vue {
       this.selectedNewsIds = newConfig.homeNewsPreviewIds || [];
       this.selectedProjectIds = newConfig.homeProjectsPreviewIds || [];
 
+      // 更新原始状态
+      this.originalConfigState = { ...newConfig };
+      this.originalNewsIds = [...this.selectedNewsIds];
+      this.originalProjectIds = [...this.selectedProjectIds];
+
       ElMessage.success('配置保存成功');
       this.selectedLogoId = null;
     } catch (e) {
@@ -157,6 +198,32 @@ export default class GlobalConfigView extends Vue {
     await this.loadProjectsList();
     this.selectedNewsIds = this.globalConfigState?.homeNewsPreviewIds || [];
     this.selectedProjectIds = this.globalConfigState?.homeProjectsPreviewIds || [];
+
+    // 保存原始状态
+    this.originalConfigState = { ...this.globalConfigState };
+    this.originalNewsIds = [...this.selectedNewsIds];
+    this.originalProjectIds = [...this.selectedProjectIds];
+
+    // 监听页面离开事件
+    window.addEventListener('beforeunload', this.handleBeforeUnload);
+  }
+
+  beforeUnmount() {
+    window.removeEventListener('beforeunload', this.handleBeforeUnload);
+  }
+
+  // Vue Router 路由守卫
+  beforeRouteLeave(to: any, from: any, next: any) {
+    if (this.hasUnsavedChanges) {
+      const answer = window.confirm('您有未保存的更改，确定要离开吗？');
+      if (answer) {
+        next();
+      } else {
+        next(false);
+      }
+    } else {
+      next();
+    }
   }
 }
 </script>
@@ -167,52 +234,70 @@ export default class GlobalConfigView extends Vue {
     <meta name="description" content="SDUTACM 管理后台首页配置" />
   </Head>
   <div class="global-config-container">
-    <el-form :model="globalConfigState" label-width="140px">
-      <el-form-item label="Logo">
-        <el-image style="width: 100px; height: 100px" :src="globalConfigState.logoUrl" fit="contain" />
-        <el-button size="small" style="margin-left: 10px" @click="showSelectLogoDialog">Select Logo from Library</el-button>
-      </el-form-item>
-      <el-form-item label="Title" required>
-        <el-input v-model="globalConfigState.title" placeholder="Enter website title" class="inp"></el-input>
-      </el-form-item>
-      <el-form-item label="Slogan" required>
-        <el-input v-model="globalConfigState.slogan" class="inp"></el-input>
-      </el-form-item>
-      <el-form-item label="Description" required>
-        <el-input
-          class="inp"
-          type="textarea"
-          autosize
-          v-model="globalConfigState.description"
-          placeholder="Enter website description"
-        ></el-input>
-      </el-form-item>
-      <el-form-item label="News Preview">
-        <div class="transfer-wrapper">
-          <el-transfer
-            v-model="selectedNewsIds"
-            :data="newsTransferData"
-            :titles="['All News', 'Homepage Display']"
-            filterable
-            filter-placeholder="Search News"
-          />
-          <div class="transfer-tip">Select 5 published news articles to display on the homepage.</div>
+    <div class="config-layout">
+      <!-- 左侧：基础配置 -->
+      <div class="config-left">
+        <div class="section-title">Basic Settings</div>
+        <el-form :model="globalConfigState" label-position="top">
+          <el-form-item label="Logo">
+            <div class="logo-wrapper">
+              <el-image class="logo-preview" :src="globalConfigState.logoUrl" fit="contain" />
+              <el-button size="small" @click="showSelectLogoDialog">Select Logo</el-button>
+            </div>
+          </el-form-item>
+          <el-form-item label="Title" required>
+            <el-input v-model="globalConfigState.title" placeholder="Enter website title"></el-input>
+          </el-form-item>
+          <el-form-item label="Slogan" required>
+            <el-input v-model="globalConfigState.slogan" placeholder="Enter website slogan"></el-input>
+          </el-form-item>
+          <el-form-item label="Description" required class="description-form-item">
+            <el-input
+              class="description-textarea"
+              type="textarea"
+              v-model="globalConfigState.description"
+              placeholder="Enter website description"
+              resize="none"
+            ></el-input>
+          </el-form-item>
+          <div class="form-actions">
+            <el-button type="primary" @click="saveConfig">Save</el-button>
+            <span v-if="hasUnsavedChanges" class="unsaved-indicator">Unsaved changes</span>
+          </div>
+        </el-form>
+      </div>
+
+      <!-- 右侧：内容选择 -->
+      <div class="config-right">
+        <div class="transfer-section">
+          <div class="section-title">News Preview</div>
+          <div class="transfer-wrapper">
+            <el-transfer
+              v-model="selectedNewsIds"
+              :data="newsTransferData"
+              :titles="['All News', 'Homepage']"
+              filterable
+              filter-placeholder="Search"
+            />
+            <div class="transfer-tip">Select 5 published news articles to display on the homepage.</div>
+          </div>
         </div>
-      </el-form-item>
-      <el-form-item label="Projects Preview">
-        <div class="transfer-wrapper">
-          <el-transfer
-            v-model="selectedProjectIds"
-            :data="projectsTransferData"
-            :titles="['All Projects', 'Homepage Display']"
-            filterable
-            filter-placeholder="Search Projects"
-          />
-          <div class="transfer-tip">Select 3 projects to display on the homepage.</div>
+
+        <div class="transfer-section">
+          <div class="section-title">Projects Preview</div>
+          <div class="transfer-wrapper">
+            <el-transfer
+              v-model="selectedProjectIds"
+              :data="projectsTransferData"
+              :titles="['All Projects', 'Homepage']"
+              filterable
+              filter-placeholder="Search"
+            />
+            <div class="transfer-tip">Select 3 projects to display on the homepage.</div>
+          </div>
         </div>
-      </el-form-item>
-      <el-button type="primary" size="large" @click="saveConfig">Save</el-button>
-    </el-form>
+      </div>
+    </div>
 
     <select-logo-dialog
       v-model:visible="selectLogoDialogVisible"
@@ -224,27 +309,159 @@ export default class GlobalConfigView extends Vue {
 
 <style lang="less" scoped>
 .global-config-container {
-  padding: 20px;
+  height: calc(100vh - 120px);
+  padding: 0 32px 32px;
+  overflow: hidden;
 }
 
-.inp {
-  width: 10rem;
+.config-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 48px;
+  height: 100%;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 20px;
+}
+
+.config-left {
+  display: flex;
+  flex-direction: column;
+  padding-top: 8px;
+
+  .el-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  :deep(.el-form-item) {
+    margin-bottom: 28px;
+
+    .el-form-item__label {
+      font-size: 14px;
+      color: var(--el-text-color-regular);
+      padding-bottom: 8px;
+    }
+  }
+
+  .description-form-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0 !important;
+
+    :deep(.el-form-item__content) {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  .description-textarea {
+    flex: 1;
+
+    :deep(.el-textarea__inner) {
+      height: 100% !important;
+      min-height: 120px;
+    }
+  }
+}
+
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  .logo-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    border: 1px solid var(--el-border-color-lighter);
+  }
+}
+
+.config-right {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  overflow-y: auto;
+  padding: 8px 8px 8px 0;
+}
+
+.transfer-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .transfer-wrapper {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 
   :deep(.el-transfer) {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+
     .el-transfer-panel {
-      width: 280px;
+      flex: 1;
+      max-width: 280px;
+      min-height: 240px;
+      height: auto;
+
+      .el-transfer-panel__body {
+        height: calc(100% - 40px);
+      }
+
+      .el-transfer-panel__list {
+        height: calc(100% - 40px);
+      }
+    }
+
+    .el-transfer__buttons {
+      padding: 0 16px;
     }
   }
 
   .transfer-tip {
     font-size: 12px;
-    color: #999;
+    color: var(--el-text-color-secondary);
+    flex-shrink: 0;
+  }
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.unsaved-indicator {
+  color: #e6a23c;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #e6a23c;
+    border-radius: 50%;
   }
 }
 </style>

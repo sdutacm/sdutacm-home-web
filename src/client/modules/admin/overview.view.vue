@@ -111,6 +111,16 @@ export default class OverviewView extends Vue {
     return window.matchMedia?.('(prefers-color-scheme: dark)').matches;
   }
 
+  get chartStats() {
+    const views = this.dailyViewData.map((item) => item.viewCount);
+    if (views.length === 0) return { max: 0, min: 0, avg: 0, total: 0 };
+    const max = Math.max(...views);
+    const min = Math.min(...views);
+    const total = views.reduce((a, b) => a + b, 0);
+    const avg = Math.round(total / views.length);
+    return { max, min, avg, total };
+  }
+
   initChart() {
     const chartDom = this.$refs.chartRef as HTMLElement;
     if (!chartDom) return;
@@ -120,28 +130,20 @@ export default class OverviewView extends Vue {
 
     const dates = this.dailyViewData.map((item) => item.date);
     const views = this.dailyViewData.map((item) => item.viewCount);
+    const { avg } = this.chartStats;
 
     const option: EChartsOption = {
-      title: {
-        text: '访问趋势',
-        left: 0,
-        textStyle: {
-          fontSize: 14,
-          fontWeight: 500,
-        },
-      },
       tooltip: {
         trigger: 'axis',
-        formatter: (params: any) => {
-          const data = params[0];
-          return `<div style="font-size: 12px;">${data.axisValue}<br/><span style="color: #409eff;">访问量: ${data.value}</span></div>`;
+        axisPointer: {
+          type: 'line',
         },
       },
       grid: {
-        left: 0,
-        right: 0,
-        bottom: 0,
-        top: 40,
+        left: 12,
+        right: 24,
+        bottom: 12,
+        top: 24,
         containLabel: true,
       },
       xAxis: {
@@ -152,10 +154,13 @@ export default class OverviewView extends Vue {
         axisTick: { show: false },
         axisLabel: {
           fontSize: 11,
+          color: this.isDarkMode ? '#999' : '#666',
           formatter: (value: string) => {
             const date = new Date(value);
             return `${date.getMonth() + 1}/${date.getDate()}`;
           },
+          interval: 'auto',
+          rotate: 0,
         },
       },
       yAxis: {
@@ -166,27 +171,68 @@ export default class OverviewView extends Vue {
         splitLine: {
           lineStyle: {
             type: 'dashed',
+            color: this.isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
           },
         },
         axisLabel: {
           fontSize: 11,
+          color: this.isDarkMode ? '#999' : '#666',
         },
       },
       series: [
         {
+          name: '访问量',
           type: 'line',
           smooth: true,
-          symbol: 'none',
+          symbol: 'circle',
+          symbolSize: 6,
+          showSymbol: false,
+          emphasis: {
+            focus: 'series',
+            scale: true,
+            itemStyle: {
+              shadowBlur: 10,
+              shadowColor: 'rgba(64, 158, 255, 0.5)',
+            },
+          },
           data: views,
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
-              { offset: 1, color: 'rgba(64, 158, 255, 0.05)' },
+              { offset: 0, color: 'rgba(64, 158, 255, 0.25)' },
+              { offset: 0.5, color: 'rgba(64, 158, 255, 0.1)' },
+              { offset: 1, color: 'rgba(64, 158, 255, 0.02)' },
             ]),
           },
           lineStyle: {
             color: '#409eff',
-            width: 2,
+            width: 2.5,
+          },
+          itemStyle: {
+            color: '#409eff',
+            borderColor: '#fff',
+            borderWidth: 2,
+          },
+          markLine: {
+            silent: true,
+            symbol: 'none',
+            lineStyle: {
+              color: '#e6a23c',
+              type: 'dashed',
+              width: 1,
+              opacity: 0.6,
+            },
+            label: {
+              show: true,
+              position: 'end',
+              fontSize: 10,
+              color: '#e6a23c',
+              formatter: `均值: ${avg}`,
+            },
+            data: [
+              {
+                yAxis: avg,
+              },
+            ],
           },
         },
       ],
@@ -340,6 +386,31 @@ export default class OverviewView extends Vue {
 
         <!-- 访问趋势图表 -->
         <div class="chart-section">
+          <div class="chart-header">
+            <div class="chart-title">
+              <TrendingUp class="chart-icon" :size="16" />
+              <span>访问趋势</span>
+              <span class="chart-subtitle">近30天</span>
+            </div>
+            <div class="chart-stats">
+              <div class="chart-stat-item">
+                <span class="chart-stat-label">总计</span>
+                <span class="chart-stat-value">{{ chartStats.total.toLocaleString() }}</span>
+              </div>
+              <div class="chart-stat-item">
+                <span class="chart-stat-label">日均</span>
+                <span class="chart-stat-value">{{ chartStats.avg.toLocaleString() }}</span>
+              </div>
+              <div class="chart-stat-item">
+                <span class="chart-stat-label">最高</span>
+                <span class="chart-stat-value highlight">{{ chartStats.max.toLocaleString() }}</span>
+              </div>
+              <div class="chart-stat-item">
+                <span class="chart-stat-label">最低</span>
+                <span class="chart-stat-value secondary">{{ chartStats.min.toLocaleString() }}</span>
+              </div>
+            </div>
+          </div>
           <div ref="chartRef" class="chart-container"></div>
         </div>
       </template>
@@ -431,10 +502,74 @@ export default class OverviewView extends Vue {
 
 .chart-section {
   background: var(--el-fill-color-light);
+  border-radius: 12px;
+  padding: 20px 24px 16px;
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .chart-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--el-text-color-primary);
+
+    .chart-icon {
+      color: var(--el-color-primary);
+    }
+
+    .chart-subtitle {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--el-text-color-secondary);
+      margin-left: 4px;
+    }
+  }
+
+  .chart-stats {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .chart-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+
+    .chart-stat-label {
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+    }
+
+    .chart-stat-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+      font-variant-numeric: tabular-nums;
+
+      &.highlight {
+        color: var(--el-color-success);
+      }
+
+      &.secondary {
+        color: var(--el-text-color-secondary);
+      }
+    }
+  }
 
   .chart-container {
     width: 100%;
-    height: 280px;
+    height: 260px;
   }
 }
 </style>
