@@ -3,7 +3,7 @@ import { Inject } from 'bwcx-core';
 import { Api } from 'bwcx-api';
 import { ApiController } from '@server/decorators';
 import AuthService from './auth.service';
-import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '@common/modules/admin/admin.dto';
+import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO, ResetAdminPasswordReqDTO, DeleteAdminReqDTO } from '@common/modules/admin/admin.dto';
 
 @ApiController()
 export default class AuthController {
@@ -63,6 +63,20 @@ export default class AuthController {
   @Contract(UpdateAdminRoleReqDTO, null)
   public async updateAdminRole(@Data() data: UpdateAdminRoleReqDTO): Promise<void> {
     await this.authService.updateAdminRole(data);
+  }
+
+  @Api.Summary('重置管理员密码')
+  @Post('/resetAdminPassword')
+  @Contract(ResetAdminPasswordReqDTO, null)
+  public async resetAdminPassword(@Data() data: ResetAdminPasswordReqDTO): Promise<void> {
+    await this.authService.resetAdminPassword(data);
+  }
+
+  @Api.Summary('删除管理员')
+  @Post('/deleteAdmin')
+  @Contract(DeleteAdminReqDTO, null)
+  public async deleteAdmin(@Data() data: DeleteAdminReqDTO): Promise<void> {
+    await this.authService.deleteAdmin(data);
   }
 }
 

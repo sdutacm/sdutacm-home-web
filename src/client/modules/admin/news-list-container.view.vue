@@ -26,9 +26,11 @@ import {
   vLoading,
 } from 'element-plus';
 import { Head } from '@vueuse/head';
-import { Edit, Trash2 as Delete } from 'lucide-vue-next';
+import { Edit, Trash2 as Delete, Plus } from 'lucide-vue-next';
 import NewsEditDialog from '@client/components/admin/news-edit-dialog.vue';
 import UserAvatar from '@client/components/user-avatar.vue';
+import AddButton from '@client/components/admin/add-button.vue';
+import TipButton from '@client/components/admin/tip-button.vue';
 
 @View('/admin/news-list')
 @ChildOf('AdminView')
@@ -41,6 +43,7 @@ import UserAvatar from '@client/components/user-avatar.vue';
     ElIcon,
     ElButton,
     ElTable,
+    AddButton,
     ElTableColumn,
     ElTag,
     ElDialog,
@@ -58,6 +61,8 @@ import UserAvatar from '@client/components/user-avatar.vue';
     Delete,
     NewsEditDialog,
     UserAvatar,
+    TipButton,
+    Plus,
   },
 })
 export default class NewsListContainer extends Vue {
@@ -198,6 +203,7 @@ export default class NewsListContainer extends Vue {
 
   async mounted() {
     try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       await this.loadNewsList();
     } finally {
       this.loading = false;
@@ -212,17 +218,29 @@ export default class NewsListContainer extends Vue {
     <meta name="description" content="SDUTACM 管理后台新闻管理" />
   </Head>
 
-  <div class="news-list-container" v-loading="loading">
+  <div class="news-list-container">
     <div class="toolbar">
-      <el-button  plain @click="showCreateDialog" style="padding: 0 1rem;"> Add News </el-button>
-      <el-select v-model="filterStatus" placeholder="Select State" style="width: 120px; margin-left: 12px">
-        <el-option label="Total" value="all" />
-        <el-option label="Published" value="published" />
-        <el-option label="Draft" value="draft" />
-      </el-select>
+      <add-button content="News" @click="showCreateDialog"></add-button>
+      <div style="display: flex; align-items: center; gap: .2rem;">
+        <el-select v-model="filterStatus" placeholder="Select State" style="width: 120px; margin-left: 12px">
+          <el-option label="All" value="all" />
+          <el-option label="Published" value="published" />
+          <el-option label="Draft" value="draft" />
+        </el-select>
+        <tip-button :content="[
+          'Filter news by status: All, Published, or Draft.',
+          'Click 「Add News」 to create a new news item.',
+          'Use the Edit and Delete buttons to manage existing news items.',
+        ]"></tip-button>
+      </div>
     </div>
 
-    <el-table :data="paginatedNewsList" style="width: 100%; margin-top: 16px" stripe v-show="!loading">
+    <el-table
+      :data="paginatedNewsList"
+      style="width: 100%; margin-top: 16px; user-select: none"
+      stripe
+      v-loading="loading"
+    >
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column prop="title" label="Title" min-width="200" show-overflow-tooltip />
       <el-table-column prop="summary" label="Summary" min-width="150" show-overflow-tooltip />
@@ -271,8 +289,7 @@ export default class NewsListContainer extends Vue {
       </el-table-column>
     </el-table>
 
-    <!-- 分页 -->
-    <div class="pagination-wrapper" v-show="!loading && totalNews > 0">
+    <div class="pagination-wrapper" v-show="totalNews > 0">
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
@@ -284,7 +301,6 @@ export default class NewsListContainer extends Vue {
       />
     </div>
 
-    <!-- 编辑新闻对话框 -->
     <news-edit-dialog
       :visible="dialogVisible"
       :closeDialog="
@@ -308,11 +324,13 @@ export default class NewsListContainer extends Vue {
   flex-direction: column;
   justify-content: start;
   overflow-x: auto;
+  position: relative;
 
   .toolbar {
+    width: 100%;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
   }
 
   .pagination-wrapper {
@@ -363,5 +381,13 @@ export default class NewsListContainer extends Vue {
   display: flex;
   align-items: center;
   gap: 0.1rem;
+}
+
+.loading-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
 }
 </style>

@@ -36,7 +36,6 @@
     "url": "git+https://github.com/sdutacm/sdutacm-home-web.git"
   },
   "dependencies": {
-    "@element-plus/icons-vue": "^2.3.2",
     "@vue/runtime-core": "^3.2.31",
     "@vue/server-renderer": "^3.2.31",
     "@vueup/vue-quill": "^1.2.0",
@@ -61,7 +60,6 @@
     "koa-mount": "^4.0.0",
     "koa-session": "^7.0.2",
     "koa-static": "^5.0.0",
-    "localforage": "^1.10.0",
     "lucide-vue-next": "^0.563.0",
     "module-alias": "^2.2.2",
     "multer": "^2.0.2",

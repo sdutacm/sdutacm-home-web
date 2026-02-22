@@ -26,6 +26,8 @@ import {
 import { Head } from '@vueuse/head';
 import { Link, Edit, Trash2 as Delete, Upload } from 'lucide-vue-next';
 import UserAvatar from '@client/components/user-avatar.vue';
+import AddButton from '@client/components/admin/add-button.vue';
+import TipButton from '@client/components/admin/tip-button.vue';
 
 interface UpdatedAdmin {
   id: number;
@@ -57,6 +59,7 @@ interface ProjectItem {
     ElIcon,
     ElButton,
     ElTable,
+    AddButton,
     ElTableColumn,
     ElTag,
     ElDialog,
@@ -74,6 +77,7 @@ interface ProjectItem {
     Link,
     Head,
     UserAvatar,
+    TipButton,
   },
 })
 export default class ProjectListContainer extends Vue {
@@ -259,7 +263,7 @@ export default class ProjectListContainer extends Vue {
 
   async mounted() {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       await this.loadProjectList();
     } finally {
       this.loading = false;
@@ -274,12 +278,13 @@ export default class ProjectListContainer extends Vue {
     <meta name="description" content="SDUTACM 管理后台项目管理" />
   </Head>
 
-  <div class="project-list-container" v-loading="loading">
+  <div class="project-list-container">
     <div class="toolbar">
-      <el-button plain @click="handleCreate"> Add Project </el-button>
+      <add-button content="Project" @click="handleCreate"></add-button>
+      <tip-button :content="['You can add, edit, or delete projects here. Click on the project name to view details on the website.', 'Please upload transparent PNG images whenever possible, and choose appropriate colors for the image.']" />
     </div>
 
-    <el-table :data="paginatedProjectList" style="width: 100%; margin-top: 16px" stripe v-show="!loading">
+    <el-table :data="paginatedProjectList" style="width: 100%; margin-top: 16px; user-select: none;" stripe v-loading="loading">
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column label="Cover Image">
         <template #default="{ row }">
@@ -340,7 +345,6 @@ export default class ProjectListContainer extends Vue {
       </el-table-column>
     </el-table>
 
-    <!-- 分页 -->
     <div class="pagination-wrapper" v-show="!loading && totalProjects > 0">
       <el-pagination
         v-model:current-page="currentPage"
@@ -404,8 +408,8 @@ export default class ProjectListContainer extends Vue {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">保存</el-button>
+        <el-button @click="dialogVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="handleSubmit">Save</el-button>
       </template>
     </el-dialog>
   </div>
@@ -418,7 +422,7 @@ export default class ProjectListContainer extends Vue {
   .toolbar {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
   }
 
   .pagination-wrapper {

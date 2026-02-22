@@ -3,7 +3,6 @@ import { Vue, Options } from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { GetSessionResDTO } from '@common/modules/admin/admin.dto';
 import { AdminToolSectionEnum } from '@common/enums/admin-tool-section.enum';
-import localForge from 'localforage';
 
 import { ElRow, ElCol, ElMenu, ElMenuItem, ElMenuItemGroup, ElSubMenu, ElIcon, ElButton, ElAvatar } from 'element-plus';
 import { Smile, House, Tv, Newspaper, Package, Image, Activity, Video, ChartColumnIncreasing } from 'lucide-vue-next';
@@ -151,6 +150,7 @@ export default class AdminTools extends Vue {
   height: 100%;
   background-color: var(--el-menu-bg-color);
   user-select: none;
+  z-index: 1001;
 
   & .user-dis {
     position: absolute;
@@ -175,7 +175,7 @@ export default class AdminTools extends Vue {
       cursor: pointer;
       transition: background-color 0.3s;
       &:hover {
-        background-color: var(--el-menu-hover-bg-color);
+        background-color: var(--ah-c-background-bg);
       }
     }
   }

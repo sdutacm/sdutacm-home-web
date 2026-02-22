@@ -68,3 +68,19 @@ export class UpdateAdminRoleReqDTO {
   @IsNotEmpty()
   role: AdminRoleEnum;
 }
+
+export class ResetAdminPasswordReqDTO {
+  @FromBody()
+  @IsNotEmpty()
+  adminId: number;
+
+  @FromBody()
+  @IsNotEmpty()
+  newPassword: string;
+}
+
+export class DeleteAdminReqDTO {
+  @FromBody()
+  @IsNotEmpty()
+  adminId: number;
+}

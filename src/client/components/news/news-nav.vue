@@ -25,6 +25,7 @@ export default class NewsNav extends Vue {
 
   async mounted() {
     await this.loadAllNews();
+    this.initFuse();
   }
 
   async loadAllNews() {
@@ -34,7 +35,6 @@ export default class NewsNav extends Vue {
         pageSize: 1000,
       });
       this.allNews = res.rows;
-      this.initFuse();
     } catch (error) {
       console.error('Failed to load news for search:', error);
     }

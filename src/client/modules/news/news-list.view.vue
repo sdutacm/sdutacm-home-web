@@ -77,11 +77,13 @@ export default class NewsListView extends Vue {
     <title>SDUTACM News</title>
     <meta name="description" content="SDUTACM 新闻" />
   </Head>
+
   <div class="news-list-container">
     <h2 class="news-divide-title">
       <el-icon><PartyPopper /></el-icon>
       <span>动态精选</span>
     </h2>
+
     <div class="news-latest-carousel">
       <el-carousel trigger="click" height="500px" indicator-position="outside" type="card">
         <el-carousel-item

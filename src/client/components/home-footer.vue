@@ -80,6 +80,8 @@ export default class HomeFooter extends Vue {
   justify-content: center;
   margin-top: 1rem;
   position: relative;
+  user-select: none;
+
   & .footer-container {
     width: 60%;
     display: flex;
@@ -198,6 +200,7 @@ export default class HomeFooter extends Vue {
               height: 2.5rem;
               object-fit: contain;
               border-radius: 0.1rem;
+              -webkit-user-drag: none;
             }
           }
         }

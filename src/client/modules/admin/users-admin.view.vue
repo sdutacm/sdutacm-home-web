@@ -17,15 +17,19 @@ import {
   ElSelect,
   ElOption,
   ElMessage,
+  ElMessageBox,
   ElIcon,
   ElCard,
   ElTag,
   ElPagination,
   ElEmpty,
   ElImage,
+  ElDropdown,
+  ElDropdownMenu,
+  ElDropdownItem,
   vLoading,
 } from 'element-plus';
-import { Upload } from 'lucide-vue-next';
+import { Upload, MoreVertical } from 'lucide-vue-next';
 
 @View('/admin/users')
 @ChildOf('AdminView')
@@ -46,7 +50,11 @@ import { Upload } from 'lucide-vue-next';
     ElPagination,
     ElEmpty,
     ElImage,
+    ElDropdown,
+    ElDropdownMenu,
+    ElDropdownItem,
     Upload,
+    MoreVertical,
   },
   directives: {
     loading: vLoading,
@@ -76,9 +84,29 @@ export default class UsersAdminView extends Vue {
   };
   creatingUser = false;
 
-  // 用户列表
+  // 重置密码对话框
+  resetPasswordDialogVisible = false;
+  resetPasswordForm = {
+    adminId: 0,
+    adminName: '',
+    newPassword: '',
+  };
+  resetPasswordFormRules = {
+    newPassword: [
+      { required: true, message: 'Please enter new password', trigger: 'blur' },
+      { min: 6, message: 'Password must be at least 6 characters long', trigger: 'blur' },
+    ],
+  };
+  resettingPassword = false;
+
   adminList: GetAllAdminsResDTO[] = [];
-  loadingAdminList = false;
+  adminPage = 1;
+  adminPageSize = 6;
+  loadingState = {
+    adminList: true,
+    adminNews: true,
+    adminProjects: true,
+  };
 
   roleOptions = [
     { label: 'Admin', value: AdminRoleEnum.ADMIN },
@@ -87,13 +115,11 @@ export default class UsersAdminView extends Vue {
 
   // 管理员编辑的新闻列表
   myNewsList: GetNewsDetailResDTO[] = [];
-  loadingNews = false;
   newsPage = 1;
   newsPageSize = 6;
 
   // 管理员编辑的项目列表
   myProjectsList: GetProjectDetailResDTO[] = [];
-  loadingProjects = false;
   projectsPage = 1;
   projectsPageSize = 6;
 
@@ -120,7 +146,7 @@ export default class UsersAdminView extends Vue {
 
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
-      ElMessage.warning('请选择图片文件');
+      ElMessage.warning('Please select an image file');
       return;
     }
 
@@ -209,8 +235,7 @@ export default class UsersAdminView extends Vue {
   // 加载管理员列表
   async loadAdminList() {
     if (!this.isSuperAdmin) return;
-
-    this.loadingAdminList = true;
+    this.loadingState.adminList = true;
     try {
       const result = await this.$api.getAllAdmins();
       this.adminList = result.rows;
@@ -218,7 +243,7 @@ export default class UsersAdminView extends Vue {
       console.error('Failed to load admin list:', error);
       ElMessage.error('Failed to load admin list');
     } finally {
-      this.loadingAdminList = false;
+      this.loadingState.adminList = false;
     }
   }
 
@@ -239,6 +264,72 @@ export default class UsersAdminView extends Vue {
     }
   }
 
+  // 打开重置密码对话框
+  openResetPasswordDialog(admin: GetAllAdminsResDTO) {
+    this.resetPasswordForm = {
+      adminId: admin.id,
+      adminName: admin.username,
+      newPassword: '',
+    };
+    this.resetPasswordDialogVisible = true;
+  }
+
+  // 重置密码
+  async handleResetPassword() {
+    const formRef = this.$refs.resetPasswordFormRef as any;
+    if (!formRef) return;
+
+    try {
+      await formRef.validate();
+    } catch (error) {
+      return;
+    }
+
+    this.resettingPassword = true;
+    try {
+      await this.$api.resetAdminPassword({
+        adminId: this.resetPasswordForm.adminId,
+        newPassword: this.resetPasswordForm.newPassword,
+      });
+      ElMessage.success('Password reset successfully');
+      this.resetPasswordDialogVisible = false;
+    } catch (error: any) {
+      console.error('Failed to reset password:', error);
+      ElMessage.error(error?.message || 'Failed to reset password');
+    } finally {
+      this.resettingPassword = false;
+    }
+  }
+
+  // 删除管理员
+  async handleDeleteAdmin(admin: GetAllAdminsResDTO) {
+    if (admin.id === this.userInfo.id) {
+      ElMessage.warning('Cannot delete yourself');
+      return;
+    }
+
+    try {
+      await ElMessageBox.confirm(
+        `Are you sure you want to delete admin "${admin.username}"? This action cannot be undone.`,
+        'Delete Admin',
+        {
+          confirmButtonText: 'Delete',
+          cancelButtonText: 'Cancel',
+          type: 'warning',
+        },
+      );
+
+      await this.$api.deleteAdmin({ adminId: admin.id });
+      ElMessage.success('Admin deleted successfully');
+      await this.loadAdminList();
+    } catch (error: any) {
+      if (error !== 'cancel') {
+        console.error('Failed to delete admin:', error);
+        ElMessage.error(error?.message || 'Failed to delete admin');
+      }
+    }
+  }
+
   // 获取用户头像
   getUserAvatar(avatar?: string) {
     return avatar || this.defaultAvatarUrl;
@@ -251,12 +342,23 @@ export default class UsersAdminView extends Vue {
 
   // 获取角色显示文本
   getRoleLabel(role: AdminRoleEnum) {
-    return role === AdminRoleEnum.SUPER_ADMIN ? '超级管理员' : '管理员';
+    return role === AdminRoleEnum.SUPER_ADMIN ? 'Super Admin' : 'Admin';
+  }
+
+  // 分页后的管理员列表
+  get paginatedAdminList() {
+    const start = (this.adminPage - 1) * this.adminPageSize;
+    return this.adminList.slice(start, start + this.adminPageSize);
+  }
+
+  // 管理员分页变化
+  handleAdminPageChange(page: number) {
+    this.adminPage = page;
   }
 
   // 获取当前管理员编辑的新闻列表
   get filteredNewsList() {
-    return this.myNewsList.filter(news => news.updatedBy?.id === this.userInfo?.id);
+    return this.myNewsList.filter((news) => news.updatedBy?.id === this.userInfo?.id);
   }
 
   get paginatedNewsList() {
@@ -266,7 +368,7 @@ export default class UsersAdminView extends Vue {
 
   // 获取当前管理员编辑的项目列表
   get filteredProjectsList() {
-    return this.myProjectsList.filter(project => project.updatedBy?.id === this.userInfo?.id);
+    return this.myProjectsList.filter((project) => project.updatedBy?.id === this.userInfo?.id);
   }
 
   get paginatedProjectsList() {
@@ -276,27 +378,27 @@ export default class UsersAdminView extends Vue {
 
   // 加载新闻列表
   async loadMyNews() {
-    this.loadingNews = true;
+    this.loadingState.adminNews = true;
     try {
       const result = await this.$api.getAllNews({});
       this.myNewsList = result.rows;
     } catch (error) {
       console.error('Failed to load news list:', error);
     } finally {
-      this.loadingNews = false;
+      this.loadingState.adminNews = false;
     }
   }
 
   // 加载项目列表
   async loadMyProjects() {
-    this.loadingProjects = true;
+    this.loadingState.adminProjects = true;
     try {
       const result = await this.$api.getAllProjects({});
       this.myProjectsList = result.rows;
     } catch (error) {
       console.error('Failed to load projects list:', error);
     } finally {
-      this.loadingProjects = false;
+      this.loadingState.adminProjects = false;
     }
   }
 
@@ -318,10 +420,10 @@ export default class UsersAdminView extends Vue {
 
   async mounted() {
     this.userInfo = await this.$api.getSession();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     if (this.isSuperAdmin) {
       await this.loadAdminList();
     }
-    // 加载当前管理员编辑的新闻和项目
     await Promise.all([this.loadMyNews(), this.loadMyProjects()]);
   }
 }
@@ -355,25 +457,21 @@ export default class UsersAdminView extends Vue {
               <span class="label">Role：</span>
               <span class="value">{{ userInfo?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin' }}</span>
             </div>
+            <div class="user-item">
+              <el-button plain @click="logout" class="logout-btn">Logout</el-button>
+            </div>
           </div>
-          <el-button type="danger" size="small" @click="logout" class="logout-btn">Logout</el-button>
         </div>
       </el-form-item>
 
       <el-form-item label="Admin List" v-if="isSuperAdmin">
         <div class="user-management-content">
-          <el-button plain @click="openCreateUserDialog">
-            Add New Admin
-          </el-button>
+          <el-button plain @click="openCreateUserDialog" style="padding: 0 1rem;" round> Add New Admin </el-button>
 
           <!-- 所有用户列表 -->
-          <div v-loading="loadingAdminList" class="admin-cards-container">
-            <el-card
-              v-for="admin in adminList"
-              :key="admin.id"
-              class="admin-card"
-              shadow="hover"
-            >
+          <div v-loading="loadingState.adminList" class="admin-cards-container">
+            <el-empty v-if="!loadingState.adminList && adminList.length === 0" description="No admins available" />
+            <el-card v-for="admin in paginatedAdminList" :key="admin.id" class="admin-card" shadow="hover">
               <div class="admin-card-content">
                 <el-avatar :src="getUserAvatar(admin.avatar)" :size="40" />
                 <div class="admin-info">
@@ -382,6 +480,20 @@ export default class UsersAdminView extends Vue {
                     {{ getRoleLabel(admin.role) }}
                   </el-tag>
                 </div>
+                <!-- 操作下拉菜单 -->
+                <el-dropdown v-if="admin.id !== userInfo.id" trigger="click" class="admin-actions-dropdown">
+                  <el-button text circle size="small">
+                    <el-icon :size="16"><MoreVertical /></el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item @click="openResetPasswordDialog(admin)"> Reset Password </el-dropdown-item>
+                      <el-dropdown-item @click="handleDeleteAdmin(admin)" divided>
+                        <span style="color: var(--el-color-danger)">Delete Admin</span>
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
               </div>
               <div class="admin-card-actions" v-if="admin.id !== userInfo.id">
                 <el-select
@@ -403,150 +515,147 @@ export default class UsersAdminView extends Vue {
               </div>
             </el-card>
           </div>
+          <el-pagination
+            v-if="adminList.length > adminPageSize"
+            class="pagination"
+            :current-page="adminPage"
+            :page-size="adminPageSize"
+            :total="adminList.length"
+            layout="prev, pager, next"
+            @current-change="handleAdminPageChange"
+          />
         </div>
       </el-form-item>
 
       <el-form-item label="My News">
-        <div v-loading="loadingNews" class="content-cards-container">
-        <el-empty v-if="!loadingNews && filteredNewsList.length === 0" description="No edited news available" />
-        <template v-else>
-          <div class="preview-cards-grid">
-            <el-card
-              v-for="news in paginatedNewsList"
-              :key="news.id"
-              class="preview-card"
-              shadow="hover"
-            >
-              <div class="card-cover">
-                <el-image
-                  v-if="news.coverImage"
-                  :src="news.coverImage"
-                  fit="cover"
-                  class="cover-image"
-                />
-                <div v-else class="no-cover">
-                  <span>No Cover</span>
-                </div>
-              </div>
-              <div class="card-content">
-                <div class="card-title">{{ news.title }}</div>
-                <div class="card-meta">
-                  <el-tag :type="news.isPublished ? 'success' : 'info'" size="small">
-                    {{ news.isPublished ? 'Published' : 'Draft' }}
-                  </el-tag>
-                  <span class="card-date">{{ formatDate(news.updatedAt) }}</span>
-                </div>
-              </div>
-            </el-card>
-          </div>
-          <el-pagination
-            v-if="filteredNewsList.length > newsPageSize"
-            class="pagination"
-            :current-page="newsPage"
-            :page-size="newsPageSize"
-            :total="filteredNewsList.length"
-            layout="prev, pager, next"
-            @current-change="handleNewsPageChange"
+        <div v-loading="loadingState.adminNews" class="content-cards-container">
+          <el-empty
+            v-if="!loadingState.adminNews && filteredNewsList.length === 0"
+            description="No edited news available"
           />
-        </template>
+          <template v-else>
+            <div class="preview-cards-grid">
+              <el-card v-for="news in paginatedNewsList" :key="news.id" class="preview-card" shadow="hover">
+                <div class="card-cover">
+                  <el-image v-if="news.coverImage" :src="news.coverImage" fit="cover" class="cover-image" />
+                  <div v-else class="no-cover">
+                    <span>No Cover</span>
+                  </div>
+                </div>
+                <div class="card-content">
+                  <div class="card-title">{{ news.title }}</div>
+                  <div class="card-meta">
+                    <el-tag :type="news.isPublished ? 'success' : 'info'" size="small">
+                      {{ news.isPublished ? 'Published' : 'Draft' }}
+                    </el-tag>
+                    <span class="card-date">{{ formatDate(news.updatedAt) }}</span>
+                  </div>
+                </div>
+              </el-card>
+            </div>
+            <el-pagination
+              v-if="filteredNewsList.length > newsPageSize"
+              class="pagination"
+              :current-page="newsPage"
+              :page-size="newsPageSize"
+              :total="filteredNewsList.length"
+              layout="prev, pager, next"
+              @current-change="handleNewsPageChange"
+            />
+          </template>
         </div>
       </el-form-item>
 
       <el-form-item label="My Projects">
-        <div v-loading="loadingProjects" class="content-cards-container">
-        <el-empty v-if="!loadingProjects && filteredProjectsList.length === 0" description="No edited projects available" />
-        <template v-else>
-          <div class="preview-cards-grid">
-            <el-card
-              v-for="project in paginatedProjectsList"
-              :key="project.id"
-              class="preview-card"
-              shadow="hover"
-            >
-              <div class="card-cover">
-                <el-image
-                  v-if="project.coverImage"
-                  :src="project.coverImage"
-                  fit="cover"
-                  class="cover-image"
-                />
-                <div v-else class="no-cover">
-                  <span>No Cover</span>
-                </div>
-              </div>
-              <div class="card-content">
-                <div class="card-title">{{ project.name }}</div>
-                <div class="card-meta">
-                  <el-tag :type="project.isFeatured ? 'warning' : 'info'" size="small">
-                    {{ project.isFeatured ? 'Featured' : 'Normal' }}
-                  </el-tag>
-                  <span class="card-date">{{ formatDate(project.updatedAt) }}</span>
-                </div>
-              </div>
-            </el-card>
-          </div>
-          <el-pagination
-            v-if="filteredProjectsList.length > projectsPageSize"
-            class="pagination"
-            :current-page="projectsPage"
-            :page-size="projectsPageSize"
-            :total="filteredProjectsList.length"
-            layout="prev, pager, next"
-            @current-change="handleProjectsPageChange"
+        <div v-loading="loadingState.adminProjects" class="content-cards-container">
+          <el-empty
+            v-if="!loadingState.adminProjects && filteredProjectsList.length === 0"
+            description="No edited projects available"
           />
-        </template>
+          <template v-else>
+            <div class="preview-cards-grid">
+              <el-card v-for="project in paginatedProjectsList" :key="project.id" class="preview-card" shadow="hover">
+                <div class="card-cover">
+                  <el-image v-if="project.coverImage" :src="project.coverImage" fit="cover" class="cover-image" />
+                  <div v-else class="no-cover">
+                    <span>No Cover</span>
+                  </div>
+                </div>
+                <div class="card-content">
+                  <div class="card-title">{{ project.name }}</div>
+                  <div class="card-meta">
+                    <span class="card-date">{{ formatDate(project.updatedAt) }}</span>
+                  </div>
+                </div>
+              </el-card>
+            </div>
+            <el-pagination
+              v-if="filteredProjectsList.length > projectsPageSize"
+              class="pagination"
+              :current-page="projectsPage"
+              :page-size="projectsPageSize"
+              :total="filteredProjectsList.length"
+              layout="prev, pager, next"
+              @current-change="handleProjectsPageChange"
+            />
+          </template>
         </div>
       </el-form-item>
     </el-form>
 
     <!-- 创建用户对话框 -->
-    <el-dialog
-      v-model="createUserDialogVisible"
-      title="Add New Admin"
-      width="500px"
-      :close-on-click-modal="false"
-    >
-    <template #header="{ titleId, titleClass }">
-      <h4 :id="titleId" :class="titleClass" style="line-height: normal;">
-        Add New Admin
-      </h4>
-    </template>
-      <el-form
-        ref="createUserFormRef"
-        :model="createUserForm"
-        :rules="createUserFormRules"
-        label-width="80px"
-      >
+    <el-dialog v-model="createUserDialogVisible" title="Add New Admin" width="500px" :close-on-click-modal="false">
+      <template #header="{ titleId, titleClass }">
+        <h4 :id="titleId" :class="titleClass" style="line-height: normal;">Add New Admin</h4>
+      </template>
+      <el-form ref="createUserFormRef" :model="createUserForm" :rules="createUserFormRules" label-width="80px">
         <el-form-item label="Username" prop="username">
-          <el-input v-model="createUserForm.username" >
-          </el-input>
+          <el-input v-model="createUserForm.username"> </el-input>
         </el-form-item>
 
         <el-form-item label="Password" prop="password">
-          <el-input
-            v-model="createUserForm.password"
-            type="password"
-            show-password
-          />
+          <el-input v-model="createUserForm.password" type="password" show-password />
         </el-form-item>
 
         <el-form-item label="Role" prop="role">
           <el-select v-model="createUserForm.role">
-            <el-option
-              v-for="option in roleOptions"
-              :key="option.value"
-              :label="option.label"
-              :value="option.value"
-            />
+            <el-option v-for="option in roleOptions" :key="option.value" :label="option.label" :value="option.value" />
           </el-select>
         </el-form-item>
       </el-form>
 
       <template #footer>
         <el-button @click="createUserDialogVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="creatingUser" @click="handleCreateUser">
-          Create
-        </el-button>
+        <el-button type="primary" :loading="creatingUser" @click="handleCreateUser"> Create </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 重置密码对话框 -->
+    <el-dialog v-model="resetPasswordDialogVisible" title="Reset Password" width="400px" :close-on-click-modal="false">
+      <template #header="{ titleId, titleClass }">
+        <h4 :id="titleId" :class="titleClass" style="line-height: normal;">
+          Reset Password for "{{ resetPasswordForm.adminName }}"
+        </h4>
+      </template>
+      <el-form
+        ref="resetPasswordFormRef"
+        :model="resetPasswordForm"
+        :rules="resetPasswordFormRules"
+        label-width="120px"
+      >
+        <el-form-item label="New Password" prop="newPassword">
+          <el-input
+            v-model="resetPasswordForm.newPassword"
+            type="password"
+            show-password
+            placeholder="Enter new password"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="resetPasswordDialogVisible = false">Cancel</el-button>
+        <el-button type="primary" :loading="resettingPassword" @click="handleResetPassword"> Reset </el-button>
       </template>
     </el-dialog>
   </div>
@@ -555,6 +664,7 @@ export default class UsersAdminView extends Vue {
 <style scoped lang="less">
 .admin-operate-container {
   padding: 20px;
+  user-select: none;
 
   .user-info-section {
     display: flex;
@@ -622,10 +732,6 @@ export default class UsersAdminView extends Vue {
         }
       }
     }
-
-    .logout-btn {
-      margin-left: auto;
-    }
   }
 
   .user-management-content {
@@ -633,9 +739,10 @@ export default class UsersAdminView extends Vue {
 
     .admin-cards-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
       margin-top: 12px;
+      min-height: 200px;
 
       .admin-card {
         :deep(.el-card__body) {
@@ -662,6 +769,10 @@ export default class UsersAdminView extends Vue {
               white-space: nowrap;
             }
           }
+
+          .admin-actions-dropdown {
+            flex-shrink: 0;
+          }
         }
 
         .admin-card-actions {
@@ -679,7 +790,7 @@ export default class UsersAdminView extends Vue {
   }
 
   .content-cards-container {
-    min-height: 150px;
+    min-height: 200px;
     width: 100%;
   }
 

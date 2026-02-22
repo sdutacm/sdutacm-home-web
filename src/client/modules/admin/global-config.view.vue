@@ -327,6 +327,7 @@ export default class GlobalConfigView extends Vue {
   height: calc(100vh - 120px);
   padding: 0 32px 32px;
   overflow: hidden;
+  user-select: none;
 }
 
 .config-layout {

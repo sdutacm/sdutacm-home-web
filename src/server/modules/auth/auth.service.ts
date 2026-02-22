@@ -1,5 +1,5 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
-import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO } from '@common/modules/admin/admin.dto';
+import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO, ResetAdminPasswordReqDTO, DeleteAdminReqDTO } from '@common/modules/admin/admin.dto';
 import bcrypt from 'bcrypt';
 import appDataSource from '@server/db';
 import { Admin } from '@server/db/entity/admin';
@@ -127,5 +127,80 @@ export default class AuthService {
 
     admin.role = role;
     await adminRepo.save(admin);
+  }
+
+  public async resetAdminPassword(data: ResetAdminPasswordReqDTO): Promise<void> {
+    const { adminId, newPassword } = data;
+    const currentAdminId = this.ctx.session.admin?.id;
+    const currentAdminRole = this.ctx.session.admin?.role;
+
+    // 检查是否登录
+    if (!currentAdminId) {
+      throw new Error('未登录');
+    }
+
+    // 检查是否为超级管理员
+    if (currentAdminRole !== AdminRoleEnum.SUPER_ADMIN) {
+      throw new Error('只有超级管理员才能重置用户密码');
+    }
+
+    // 不能重置自己的密码（应通过其他方式修改）
+    if (currentAdminId === adminId) {
+      throw new Error('不能通过此方式重置自己的密码');
+    }
+
+    const adminRepo = appDataSource.getRepository(Admin);
+    const admin = await adminRepo.findOne({
+      where: {
+        id: adminId,
+      },
+    });
+
+    if (!admin) {
+      throw new Error('管理员不存在');
+    }
+
+    // 密码长度验证
+    if (newPassword.length < 6) {
+      throw new Error('密码长度不能少于6位');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    admin.password = hashedPassword;
+    await adminRepo.save(admin);
+  }
+
+  public async deleteAdmin(data: DeleteAdminReqDTO): Promise<void> {
+    const { adminId } = data;
+    const currentAdminId = this.ctx.session.admin?.id;
+    const currentAdminRole = this.ctx.session.admin?.role;
+
+    // 检查是否登录
+    if (!currentAdminId) {
+      throw new Error('未登录');
+    }
+
+    // 检查是否为超级管理员
+    if (currentAdminRole !== AdminRoleEnum.SUPER_ADMIN) {
+      throw new Error('只有超级管理员才能删除管理员');
+    }
+
+    // 不能删除自己
+    if (currentAdminId === adminId) {
+      throw new Error('不能删除自己');
+    }
+
+    const adminRepo = appDataSource.getRepository(Admin);
+    const admin = await adminRepo.findOne({
+      where: {
+        id: adminId,
+      },
+    });
+
+    if (!admin) {
+      throw new Error('管理员不存在');
+    }
+
+    await adminRepo.remove(admin);
   }
 }

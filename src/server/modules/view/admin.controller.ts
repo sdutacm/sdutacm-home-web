@@ -7,7 +7,7 @@ import ViewService from '@server/modules/view/view.service';
 import { RenderMethodKind } from 'bwcx-client-vue';
 import { HtmlResponse } from '@server/response-handlers/html.response-handler';
 
-@Controller('/admin/*',{ priority: -110 })
+@Controller('/admin(/.*)?',{ priority: -90 })
 @UseGuards(LoginGuard)
 @HtmlResponse()
 export default class AdminController {

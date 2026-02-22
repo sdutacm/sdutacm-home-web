@@ -26,7 +26,7 @@ import {
   ElLoading,
   ElProgress,
 } from 'element-plus';
-import { Upload } from 'lucide-vue-next';
+import { Upload, FileMusic, FileVideoCamera } from 'lucide-vue-next';
 
 export type MediaDialogMode = 'upload' | 'edit';
 
@@ -50,6 +50,8 @@ const LARGE_FILE_SIZE_LIMIT = 500 * 1024 * 1024;
     ElDescriptions,
     ElDescriptionsItem,
     Upload,
+    FileMusic,
+    FileVideoCamera,
     ElProgress,
   },
   directives: {
@@ -336,7 +338,7 @@ export default class MediaDialog extends Vue {
     if (this.loading) {
       return this.mode === 'upload' ? 'Uploading...' : 'Saving...';
     }
-    return this.mode === 'upload' ? 'Confirm Upload' : 'Save';
+    return this.mode === 'upload' ? 'Confirm' : 'Save';
   }
 }
 </script>
@@ -397,7 +399,9 @@ export default class MediaDialog extends Vue {
       <template v-else-if="mode === 'edit'">
         <div v-if="mediaDetail" class="media-detail">
           <div class="preview-section">
-            <el-image style="width: 2.5rem" :src="mediaDetail.path" fit="cover" class="preview-image" />
+            <el-image v-if="mediaType === 'logo' || mediaType === 'image'" style="width: 2.5rem" :src="mediaDetail.path" fit="cover" class="preview-image" />
+            <el-icon v-else-if="mediaType === 'video'" size="48"><FileVideoCamera /></el-icon>
+            <el-icon v-else-if="mediaType === 'audio'" size="48"><FileMusic /></el-icon>
           </div>
 
           <el-descriptions :column="2" title="Media Info" style="width: 100%" size="small" direction="vertical">

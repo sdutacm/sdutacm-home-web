@@ -107,8 +107,8 @@ export default class MediaService {
       fs.mkdirSync(typeDir, { recursive: true });
     }
     const mediaRepo = appDataSource.getRepository(Media);
-    let newAlt = '';
-    if (!alt || alt.length === 0) {
+    let newAlt = alt || '';
+    if (!newAlt || newAlt.length === 0) {
       const originalName = file.originalname;
       const fileName = originalName.split('.', 1)[0];
       newAlt = fileName;

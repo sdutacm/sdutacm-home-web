@@ -17,9 +17,12 @@ import {
   ElPagination,
   ElLoading,
 } from 'element-plus';
-import { Copy, Download, Trash, FilePenLine, CirclePlus } from 'lucide-vue-next';
+import { Copy, Download, Trash, FilePenLine, CirclePlus, FileVideoCamera, FileMusic } from 'lucide-vue-next';
 import MediaDialog, { MediaDialogMode } from '@client/components/admin/media-dialog.vue';
 import { Head } from '@vueuse/head';
+import AddButton from '@client/components/admin/add-button.vue';
+import TipButton from '@client/components/admin/tip-button.vue';
+import { MEDIA_TYPE_CONFIG } from '@common/config/media-type-config';
 
 @View('/admin/media-list/:id')
 @ChildOf('AdminView')
@@ -40,6 +43,10 @@ import { Head } from '@vueuse/head';
     CirclePlus,
     Copy,
     Download,
+    FileVideoCamera,
+    FileMusic,
+    AddButton,
+    TipButton,
   },
   directives: {
     loading: ElLoading.directive,
@@ -57,6 +64,10 @@ import { Head } from '@vueuse/head';
 })
 export default class MediaListContainer extends Vue {
   mediaType: MediaTypeEnum = MediaTypeEnum.IMAGE;
+
+  get mediaTypeConfig() {
+    return MEDIA_TYPE_CONFIG[this.mediaType];
+  }
 
   mediaList: GetMediaListResDTO = {
     rows: [],
@@ -168,7 +179,13 @@ export default class MediaListContainer extends Vue {
   // 2. 向服务端发送网络请求获取当前页的数据
   async fetchMediaList(isInitialLoad = false) {
     const currentReqId = ++this.reqId;
-    console.log('开始加载媒体列表:', { mediaType: this.mediaType, page: this.currentPage, pageSize: this.pageSize, reqId: currentReqId, isInitialLoad });
+    console.log('开始加载媒体列表:', {
+      mediaType: this.mediaType,
+      page: this.currentPage,
+      pageSize: this.pageSize,
+      reqId: currentReqId,
+      isInitialLoad,
+    });
 
     try {
       this.loading = true;
@@ -305,16 +322,23 @@ export default class MediaListContainer extends Vue {
 
 <template>
   <Head>
-    <title>SDUTACM Admin | {{ mediaType }} Management</title>
-    <meta name="description" content="SDUTACM 管理后台媒体资源管理">
+    <title>SDUTACM Admin | {{ mediaTypeConfig.label }} Management</title>
+    <meta name="description" content="SDUTACM 管理后台媒体资源管理" />
   </Head>
 
   <div class="media-list-container">
     <header class="media-list-header">
-      <el-button plain @click="showUploadDialog">
-        <span>Upload {{ mediaType }}</span>
-      </el-button>
+      <add-button :content="mediaTypeConfig.label" @click="showUploadDialog"></add-button>
+      <tip-button
+        :content="[
+          'Media management aims to maintain SDUTACM online assets.',
+          'The logo is primarily used to store icons for SDUTACM related products.',
+          'Image is mainly used to store historical honor photos.',
+          'Audio and Video support large file uploads.',
+        ]"
+      />
     </header>
+
     <main ref="mediaListMain" class="media-list-main" v-loading="loading">
       <div v-if="mediaList.rows.length === 0" class="media-list-fallback">
         <el-empty :description="`No ${mediaType} resources available, please upload first`" />
@@ -322,7 +346,15 @@ export default class MediaListContainer extends Vue {
       <div v-else class="media-list-grid">
         <el-card v-for="media in mediaList.rows" :key="media.id" shadow="hover" class="media-list-card">
           <div class="media-list-image-container">
-            <el-image :src="media.path" class="media-list-card-image" fit="contain" style="width: 100%; height: 100%;" />
+            <el-image
+              v-if="media.type === 'image' || media.type === 'logo'"
+              :src="media.path"
+              class="media-list-card-image"
+              fit="contain"
+              style="width: 100%; height: 100%"
+            />
+            <el-icon v-else-if="media.type === 'video'"><FileVideoCamera /></el-icon>
+            <el-icon v-else-if="media.type === 'audio'"><FileMusic /></el-icon>
           </div>
           <template #footer>
             <div class="media-list-card-alt">
@@ -390,6 +422,7 @@ export default class MediaListContainer extends Vue {
   }
 
   .media-list-card {
+    user-select: none;
     .media-list-image-container {
       height: 135px;
       display: flex;
@@ -411,9 +444,8 @@ export default class MediaListContainer extends Vue {
 
     .media-list-card-footer {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-around;
       align-items: center;
-      gap: 8px;
     }
   }
 
@@ -444,5 +476,12 @@ export default class MediaListContainer extends Vue {
     align-items: center;
     aspect-ratio: 1 / 1;
   }
+}
+
+.media-list-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>
