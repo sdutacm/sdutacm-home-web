@@ -72,7 +72,7 @@ export default class HomeView extends Vue {
     <meta name="description" content="山东理工大学 ACM 实验室官方网站" />
   </Head>
   <!-- 顶部导航栏及其下拉列表 -->
-  <NavigationBar :logoPath="homeState.logo.path" />
+  <NavigationBar :logoPath="homeState.logoPath" />
 
   <main>
     <!-- 页面位置指示器 -->

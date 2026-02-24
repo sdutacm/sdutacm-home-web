@@ -5,7 +5,7 @@ import { GetSessionResDTO } from '@common/modules/admin/admin.dto';
 import { AdminToolSectionEnum } from '@common/enums/admin-tool-section.enum';
 
 import { ElRow, ElCol, ElMenu, ElMenuItem, ElMenuItemGroup, ElSubMenu, ElIcon, ElButton, ElAvatar } from 'element-plus';
-import { Smile, House, Tv, Newspaper, Package, Image, Activity, Video, ChartColumnIncreasing } from 'lucide-vue-next';
+import { Smile, House, Tv, Newspaper, Package, Image, Activity, Video, ChartColumnIncreasing, FileText } from 'lucide-vue-next';
 
 @Options({
   components: {
@@ -27,6 +27,7 @@ import { Smile, House, Tv, Newspaper, Package, Image, Activity, Video, ChartColu
     Video,
     ChartColumnIncreasing,
     House,
+    FileText,
   },
 })
 export default class AdminTools extends Vue {
@@ -49,6 +50,7 @@ export default class AdminTools extends Vue {
     [this.adminToolSectionEnum.MEDIA_MANAGEMENT]: '/admin/media-list/logo',
     [this.adminToolSectionEnum.PROJECT_MANAGEMENT]: '/admin/project-list',
     [this.adminToolSectionEnum.USERS]: '/admin/users',
+    [this.adminToolSectionEnum.AUDIT_LOG]: '/admin/audit-log',
   };
 
   handleSelect(index: string) {
@@ -124,6 +126,10 @@ export default class AdminTools extends Vue {
           <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.PROJECT_MANAGEMENT]">
             <el-icon><Package /></el-icon>
             <span>Projects</span>
+          </el-menu-item>
+          <el-menu-item :index="adminToolSectionToRouterMap[adminToolSectionEnum.AUDIT_LOG]">
+            <el-icon><FileText /></el-icon>
+            <span>Audit Log</span>
           </el-menu-item>
         </el-menu>
       </el-col>

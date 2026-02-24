@@ -1,5 +1,5 @@
 import { FromBody } from "bwcx-common";
-import { IsNotEmpty, IsOptional, IsNumber, IsArray, ArrayMaxSize } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsArray, ArrayMaxSize } from "class-validator";
 
 export class GetGlobalConfigResDTO {
   title: string;
@@ -34,8 +34,8 @@ export class UpdateGlobalConfigReqDTO {
 
   @FromBody()
   @IsOptional()
-  @IsNumber()
-  logoId?: number;  // 可选字段，如果不传则保持原有 logo 不变
+  @IsString()
+  logoPath?: string;  // 可选字段，如果不传则保持原有 logo 不变
 
   @FromBody()
   @IsOptional()

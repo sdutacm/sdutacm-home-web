@@ -14,7 +14,8 @@ import {
 } from 'element-plus';
 import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import { Head } from '@vueuse/head';
-import SelectLogoDialog from '@client/components/admin/select-logo-dialog.vue';
+import SelectMediaDialog from '@client/components/admin/select-logo-dialog.vue';
+import { MediaTypeEnum } from '@common/enums/media-type.enum';
 
 interface NewsItem {
   id: number;
@@ -46,7 +47,7 @@ interface TransferItem {
     ElImage,
     ElButton,
     ElMessage,
-    SelectLogoDialog,
+    SelectMediaDialog,
     ElTransfer,
   },
   directives: {
@@ -72,18 +73,19 @@ export default class GlobalConfigView extends Vue {
   originalProjectIds: number[] = [];
 
   selectLogoDialogVisible = false;
-  selectedLogoId: number | null = null;
   allNews: NewsItem[] = [];
   selectedNewsIds: number[] = [];
   allProjects: ProjectItem[] = [];
   selectedProjectIds: number[] = [];
+
+  // 暴露 MediaTypeEnum 给模板使用
+  MediaTypeEnum = MediaTypeEnum;
 
   showSelectLogoDialog() {
     this.selectLogoDialogVisible = true;
   }
 
   handleLogoSelect(logo: any) {
-    this.selectedLogoId = logo.id;
     this.globalConfigState.logoUrl = logo.path;
   }
 
@@ -115,7 +117,7 @@ export default class GlobalConfigView extends Vue {
       this.globalConfigState.title !== this.originalConfigState.title ||
       this.globalConfigState.slogan !== this.originalConfigState.slogan ||
       this.globalConfigState.description !== this.originalConfigState.description ||
-      this.selectedLogoId !== null;
+      this.globalConfigState.logoUrl !== this.originalConfigState.logoUrl;
 
     // 检查新闻选择是否有变化
     const newsChanged =
@@ -173,13 +175,10 @@ export default class GlobalConfigView extends Vue {
         title: this.globalConfigState.title,
         slogan: this.globalConfigState.slogan,
         description: this.globalConfigState.description,
+        logoPath: this.globalConfigState.logoUrl,
         homeNewsPreviewIds: this.selectedNewsIds,
         homeProjectsPreviewIds: this.selectedProjectIds,
       };
-
-      if (this.selectedLogoId !== null) {
-        updateData.logoId = this.selectedLogoId;
-      }
 
       await this.$api.updateGlobalConfig(updateData);
 
@@ -195,7 +194,6 @@ export default class GlobalConfigView extends Vue {
       this.originalProjectIds = [...this.selectedProjectIds];
 
       ElMessage.success('配置保存成功');
-      this.selectedLogoId = null;
     } catch (e) {
       console.error('保存全局配置失败:', e);
       ElMessage.error('配置保存失败，请重试');
@@ -314,9 +312,11 @@ export default class GlobalConfigView extends Vue {
       </div>
     </div>
 
-    <select-logo-dialog
+    <select-media-dialog
       v-model:visible="selectLogoDialogVisible"
-      :current-logo-url="globalConfigState.logoUrl"
+      :media-type="MediaTypeEnum.LOGO"
+      :current-media-url="globalConfigState.logoUrl"
+      :show-upload-tab="true"
       @select="handleLogoSelect"
     />
   </div>

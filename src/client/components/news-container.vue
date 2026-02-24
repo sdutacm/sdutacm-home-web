@@ -82,7 +82,7 @@ export default class NewsContainer extends Vue {
           <el-icon><Eye /></el-icon>
           <span>{{ newsInfo.viewCount }}</span>
         </div>
-        <div class="admin-info">
+        <!-- <div class="admin-info">
           <div class="admin-avatar-container">
             <user-avatar
               :src="newsInfo.updatedBy.avatar"
@@ -93,7 +93,7 @@ export default class NewsContainer extends Vue {
           <div class="admin-details" v-if="newsInfo.updatedBy.username">
             <span>编辑 {{ newsInfo.updatedBy.username }}</span>
           </div>
-        </div>
+        </div> -->
       </div>
     </header>
     <div class="share-button" @click="copyLink" v-if="newsInfo.id">
@@ -104,6 +104,7 @@ export default class NewsContainer extends Vue {
       <el-divider border-style="dashed" v-if="newsInfo.id" />
     </div>
     <main class="news-preview-main" v-html="newsInfo?.content" v-if="newsInfo.id"></main>
+    <aside class="aside-info">编辑：{{ newsInfo.updatedBy?.username }}</aside>
   </div>
   <div class="news-found-error" v-else>
     <h2>找不到您想要查看的新闻 😢</h2>
@@ -290,7 +291,7 @@ export default class NewsContainer extends Vue {
   position: absolute;
   top: 0;
   left: 50%;
-  font-size: .3rem;
+  font-size: 0.3rem;
   transform: translate(-50%, -150%) rotate(-10deg);
   opacity: 0;
 }
@@ -305,5 +306,17 @@ export default class NewsContainer extends Vue {
     opacity: 0;
     transform: translate(-50%, -200%) rotate(-10deg);
   }
+}
+
+.aside-info {
+  width: 60%;
+  height: fit-content;
+  background-color: var(--ah-c-background-header);
+  text-align: left;
+  font-size: 0.3rem;
+  padding: 1rem;
+  color: gray;
+  border-bottom-left-radius: 0.3rem;
+  border-bottom-right-radius: 0.3rem;
 }
 </style>

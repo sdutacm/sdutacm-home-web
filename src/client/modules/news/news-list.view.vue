@@ -11,6 +11,7 @@ import { GetNewsDetailResDTO } from '@common/modules/news/news.dto';
 @RenderMethod(RenderMethodKind.SSR)
 @ChildOf('NewsView')
 @Options({
+  name: 'NewsListView',
   components: {
     ElImage,
     ElCarousel,
@@ -89,10 +90,10 @@ export default class NewsListView extends Vue {
         <el-carousel-item
           v-for="item in latestNewsList.rows"
           :key="item.id"
-          style="overflow: hidden; border-radius: 0.1rem; cursor: pointer"
+          class="carousel-item"
           @click="goToNewsDetail(item.id)"
         >
-          <el-image :src="item.coverImage" fit="cover" style="width: 100%; height: 99.9%" />
+          <el-image :src="item.coverImage" fit="cover" class="carousel-image" />
           <div class="latest-news-descs">
             <h4 class="title">{{ item.title }}</h4>
             <p class="summary">{{ item.summary }}</p>
@@ -119,7 +120,7 @@ export default class NewsListView extends Vue {
         </div>
       </div>
       <div class="load-more-container">
-        <el-button v-if="hasMore" :loading="loading" plain @click="loadMoreNews">
+        <el-button v-if="hasMore" :loading="loading" plain style="padding: 0 1rem;" round @click="loadMoreNews">
           {{ loading ? '加载中...' : '查看更多' }}
         </el-button>
         <p v-else class="no-more-text">所有新闻都看完啦！休息一下吧 (˶ˆ꒳ˆ˵)</p>
@@ -138,15 +139,44 @@ export default class NewsListView extends Vue {
   min-height: 100vh;
 
   .news-latest-carousel {
-    width: 100%;
+    width:90%;
     height: fit-content;
     min-width: 350px;
-    // background-color: red;
-    // background-color: #fff;
-    padding: 0.5rem;
-    border-radius: 0.1rem;
+    padding: 0.5rem 0;
+    border-radius: 0.2rem;
     border-top-left-radius: 0;
     position: relative;
+    overflow-x: clip;
+    overflow-y: visible;
+
+    :deep(.el-carousel) {
+      overflow: visible;
+    }
+
+    :deep(.el-carousel__mask) {
+      border-radius: 1rem;
+    }
+
+    :deep(.el-carousel__item) {
+      border-radius: 1rem;
+      overflow: hidden;
+      transition: all 0.4s ease;
+
+      &.is-active {
+        box-shadow: 0 0 45px rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    .carousel-item {
+      cursor: pointer;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .carousel-image {
+      width: 100%;
+      height: 100%;
+    }
   }
 
   .news-list {
@@ -178,7 +208,7 @@ export default class NewsListView extends Vue {
     .news-card {
       display: flex;
       flex-direction: column;
-      border-radius: 0.1rem;
+      border-radius: 0.2rem;
       overflow: hidden;
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -257,41 +287,38 @@ export default class NewsListView extends Vue {
   }
 }
 
-.el-carousel__item h3 {
-  color: #475669;
-  opacity: 0.75;
-  line-height: 150px;
-  margin: 0;
-  text-align: center;
-}
 
-.el-carousel__item:nth-child(2n) {
-  background-color: #99a9bf;
-}
-
-.el-carousel__item:nth-child(2n + 1) {
-  background-color: #d3dce6;
-}
 
 .latest-news-descs {
   position: absolute;
   width: 100%;
   height: 2rem;
   bottom: 0;
-  background-color: var(--ah-c-background-header);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4), transparent);
+  backdrop-filter: blur(4px);
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: flex-end;
   align-items: flex-start;
-  padding-left: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0 0 16px 16px;
+  color: #fff;
 
   & .title {
     font-size: 0.48rem;
     font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
 
   & p {
     font-size: 0.3rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  & .date {
+    font-size: 0.24rem;
+    color: rgba(255, 255, 255, 0.7);
   }
 }
 

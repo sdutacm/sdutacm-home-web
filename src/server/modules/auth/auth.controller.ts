@@ -3,6 +3,7 @@ import { Inject } from 'bwcx-core';
 import { Api } from 'bwcx-api';
 import { ApiController } from '@server/decorators';
 import AuthService from './auth.service';
+import AuditService from '@server/modules/audit/audit.service';
 import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO, ResetAdminPasswordReqDTO, DeleteAdminReqDTO } from '@common/modules/admin/admin.dto';
 
 @ApiController()
@@ -11,7 +12,9 @@ export default class AuthController {
     @InjectCtx()
     private readonly ctx: RequestContext,
     @Inject()
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    @Inject()
+    private readonly auditService: AuditService,
   ) {}
 
   /** routes */
@@ -34,6 +37,8 @@ export default class AuthController {
   @Post('/logout')
   @Contract(null, null)
   public async logout(): Promise<void> {
+    // 记录登出审计日志
+    await this.auditService.logLogout();
     this.ctx.session.admin = null;
   }
 

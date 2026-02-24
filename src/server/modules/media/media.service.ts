@@ -16,6 +16,7 @@ import {
 import { validateMediaFile, getMediaTypeConfig } from '@common/config/media-type-config';
 import appDataSource from '@server/db';
 import { Media } from '@server/db/entity/media';
+import AuditService from '@server/modules/audit/audit.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -45,6 +46,8 @@ export default class MediaService {
   public constructor(
     @InjectCtx()
     private readonly ctx: RequestContext,
+    @Inject()
+    private readonly auditService: AuditService,
   ) {}
 
   async getMediaList(type: MediaTypeEnum, page: number = 1, pageSize: number = 20): Promise<GetMediaListResDTO> {
@@ -130,6 +133,15 @@ export default class MediaService {
     const relativePath = `/${type}/${fileName}`;
     media.path = relativePath;
     await mediaRepo.save(media);
+
+    // 记录审计日志和创建版本
+    await this.auditService.logCreate('media', media.id, media.alt || media.path, {
+      path: media.path,
+      type: media.type,
+      alt: media.alt,
+      size: media.size,
+    });
+
     return {
       id: media.id,
       path: media.path,
@@ -188,9 +200,25 @@ export default class MediaService {
     }
 
     if (alt !== undefined) {
+      const oldData = {
+        path: media.path,
+        type: media.type,
+        alt: media.alt,
+        size: media.size,
+      };
+
       media.alt = alt;
       media.updatedBy = this.ctx.session.admin;
       await mediaRepo.save(media);
+
+      // 记录审计日志
+      const newData = {
+        path: media.path,
+        type: media.type,
+        alt: media.alt,
+        size: media.size,
+      };
+      await this.auditService.logUpdate('media', media.id, media.alt || media.path, oldData, newData);
     }
   }
 
@@ -201,6 +229,17 @@ export default class MediaService {
     if (!media) {
       throw new Error('Media not found');
     }
+
+    // 保存删除前的数据用于审计
+    const oldData = {
+      path: media.path,
+      type: media.type,
+      alt: media.alt,
+      size: media.size,
+    };
+
+    // 记录删除日志并标记版本为已删除
+    await this.auditService.logDelete('media', media.id, media.alt || media.path, oldData);
 
     const filePath = path.join(process.cwd(), 'public', media.path);
     if (fs.existsSync(filePath)) {
@@ -263,7 +302,8 @@ export default class MediaService {
    * 上传单个分片
    */
   async uploadChunk(data: UploadChunkReqDTO): Promise<UploadChunkResDTO> {
-    const { uploadId, chunkIndex, chunk } = data;
+    const { uploadId, chunkIndex: chunkIndexStr, chunk } = data;
+    const chunkIndex = parseInt(chunkIndexStr, 10);
 
     const state = chunkUploadStates.get(uploadId);
     if (!state) {

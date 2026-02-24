@@ -18,7 +18,14 @@ export default class NewsView extends Vue {}
 <template>
   <NewsNav />
   <router-view v-slot="{ Component }">
-    <component :is="Component" />
+    <client-only>
+      <keep-alive include="NewsListView">
+        <component :is="Component" />
+      </keep-alive>
+      <template #placeholder>
+        <component :is="Component" />
+      </template>
+    </client-only>
   </router-view>
   <HomeFooter />
 </template>

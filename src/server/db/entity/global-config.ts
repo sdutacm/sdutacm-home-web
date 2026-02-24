@@ -2,12 +2,9 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Media } from './media';
 
 @Entity('global_config')
 export class GlobalConfig {
@@ -23,9 +20,8 @@ export class GlobalConfig {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @ManyToOne(() => Media, { nullable: true })
-  @JoinColumn({ name: 'logo_id' })
-  logo?: Media;
+  @Column({ name: 'logo_path', length: 500, nullable: true })
+  logoPath?: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -263,7 +263,6 @@ export default class ProjectListContainer extends Vue {
 
   async mounted() {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
       await this.loadProjectList();
     } finally {
       this.loading = false;

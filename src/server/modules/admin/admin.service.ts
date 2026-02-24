@@ -1,19 +1,22 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
+import { Inject } from 'bwcx-core';
 import { GetGlobalConfigResDTO, UpdateGlobalConfigReqDTO } from '@common/modules/global-config/global-config.dto';
 import appDataSource from '@server/db';
 import { GlobalConfig } from '@server/db/entity/global-config';
-import { MediaTypeEnum } from '@common/enums/media-type.enum';
-import { Media } from '@server/db/entity/media';
 import { HomeNewsPreview } from '@server/db/entity/home-news-preview';
 import { News } from '@server/db/entity/news';
 import { HomeProjectsPreview } from '@server/db/entity/home-projects-preview';
 import { Project } from '@server/db/entity/project';
+import AuditService from '@server/modules/audit/audit.service';
+import { AuditActionType } from '@common/modules/audit/audit.dto';
 
 @Service()
 export default class AdminService {
   public constructor(
     @InjectCtx()
     private readonly ctx: RequestContext,
+    @Inject()
+    private readonly auditService: AuditService,
   ) {}
 
   /** methods */
@@ -21,7 +24,6 @@ export default class AdminService {
     try {
       const globalConfigRepo = appDataSource.getRepository(GlobalConfig);
       const configs = await globalConfigRepo.find({
-        relations: ['logo'],
         take: 1,
       });
 
@@ -47,7 +49,7 @@ export default class AdminService {
         title: config.title,
         slogan: config.slogan,
         description: config.description,
-        logoUrl: config.logo ? config.logo.path : '',
+        logoUrl: config.logoPath || '',
         homeNewsPreviewIds: homeNewsPreviews.map(preview => preview.news.id),
         homeProjectsPreviewIds: homeProjectsPreviews.map(preview => preview.project.id),
         createdAt: config.createdAt,
@@ -64,25 +66,27 @@ export default class AdminService {
     const globalConfigRepo = appDataSource.getRepository(GlobalConfig);
     const config = await globalConfigRepo.findOne({
       where: {},
-      relations: ['logo'],
     });
 
     if (!config) {
       throw new Error('Global config not found');
     }
 
+    // 保存旧数据用于审计
+    const oldData = {
+      title: config.title,
+      slogan: config.slogan,
+      description: config.description,
+      logoPath: config.logoPath,
+    };
+
     config.title = data.title;
     config.slogan = data.slogan;
     config.description = data.description;
 
-    // 只有明确传递了 logoId 时才更新 logo
-    if (data.logoId !== undefined && data.logoId !== null) {
-      const mediaRepo = appDataSource.getRepository(Media);
-      const logo = await mediaRepo.findOneBy({ id: data.logoId });
-      if (!logo) {
-        throw new Error('Logo media not found');
-      }
-      config.logo = logo;
+    // 只有明确传递了 logoPath 时才更新 logo
+    if (data.logoPath !== undefined) {
+      config.logoPath = data.logoPath;
     }
 
     // 处理首页新闻预览 (必须恰好5条)
@@ -148,5 +152,16 @@ export default class AdminService {
     }
 
     await globalConfigRepo.save(config);
+
+    // 记录审计日志并创建版本（globalConfig 只有一条记录，使用固定 id=1）
+    const newData = {
+      title: config.title,
+      slogan: config.slogan,
+      description: config.description,
+      logoPath: config.logoPath,
+      homeNewsPreviewIds: data.homeNewsPreviewIds,
+      homeProjectsPreviewIds: data.homeProjectsPreviewIds,
+    };
+    await this.auditService.logUpdate('globalConfig', 1, '全局配置', oldData, newData);
   }
 }

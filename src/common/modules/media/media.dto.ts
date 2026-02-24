@@ -124,8 +124,8 @@ export class UploadChunkReqDTO {
   uploadId: string;
 
   @FromBody()
-  @IsNumber()
-  chunkIndex: number;
+  @IsString()
+  chunkIndex: string;
 
   @FromBody()
   @IsFile()

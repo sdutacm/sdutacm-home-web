@@ -1,15 +1,20 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
+import { Inject } from 'bwcx-core';
 import { RegisterAdminReqDTO, LoginAdminWithUserNameReqDTO, GetSessionResDTO, UpdateAdminAvatarReqDTO, GetAllAdminsListResDTO, UpdateAdminRoleReqDTO, ResetAdminPasswordReqDTO, DeleteAdminReqDTO } from '@common/modules/admin/admin.dto';
 import bcrypt from 'bcrypt';
 import appDataSource from '@server/db';
 import { Admin } from '@server/db/entity/admin';
 import { AdminRoleEnum } from '@common/enums/admin-role';
+import AuditService from '@server/modules/audit/audit.service';
+import { AuditActionType } from '@common/modules/audit/audit.dto';
 
 @Service()
 export default class AuthService {
   public constructor(
     @InjectCtx()
     private readonly ctx: RequestContext,
+    @Inject()
+    private readonly auditService: AuditService,
   ) {}
 
   /** methods */
@@ -29,7 +34,14 @@ export default class AuthService {
       username,
       password: hashedPassword,
     });
-    await adminRepo.save(newAdmin);
+    const savedAdmin = await adminRepo.save(newAdmin);
+
+    // 记录创建管理员审计日志并创建版本
+    await this.auditService.logCreate('admin', savedAdmin.id, savedAdmin.username, {
+      username: savedAdmin.username,
+      role: savedAdmin.role,
+      avatar: savedAdmin.avatar,
+    });
   }
 
   public async login(data: LoginAdminWithUserNameReqDTO): Promise<void> {
@@ -54,6 +66,9 @@ export default class AuthService {
       role: admin.role,
       avatar: admin.avatar ? admin.avatar : undefined,
     };
+
+    // 记录登录审计日志
+    await this.auditService.logLogin(admin);
   }
 
   public async getSession(): Promise<GetSessionResDTO> {
@@ -76,11 +91,27 @@ export default class AuthService {
     if (!admin) {
       throw new Error('管理员不存在');
     }
+
+    // 保存旧数据
+    const oldData = {
+      username: admin.username,
+      role: admin.role,
+      avatar: admin.avatar,
+    };
+
     admin.avatar = avatar;
     await adminRepo.save(admin);
 
     // 更新 session
     this.ctx.session.admin.avatar = avatar;
+
+    // 记录审计日志并创建版本
+    const newData = {
+      username: admin.username,
+      role: admin.role,
+      avatar: admin.avatar,
+    };
+    await this.auditService.logUpdate('admin', admin.id, admin.username, oldData, newData);
   }
 
   public async getAllAdmins(): Promise<GetAllAdminsListResDTO> {
@@ -125,8 +156,24 @@ export default class AuthService {
       throw new Error('管理员不存在');
     }
 
+    // 保存旧数据
+    const oldData = {
+      username: admin.username,
+      role: admin.role,
+      avatar: admin.avatar,
+    };
+
+    const oldRole = admin.role;
     admin.role = role;
     await adminRepo.save(admin);
+
+    // 记录审计日志并创建版本
+    const newData = {
+      username: admin.username,
+      role: admin.role,
+      avatar: admin.avatar,
+    };
+    await this.auditService.logUpdate('admin', admin.id, admin.username, oldData, newData);
   }
 
   public async resetAdminPassword(data: ResetAdminPasswordReqDTO): Promise<void> {
@@ -168,6 +215,15 @@ export default class AuthService {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     admin.password = hashedPassword;
     await adminRepo.save(admin);
+
+    // 密码重置不存储版本（密码为敏感数据），仅记录日志
+    await this.auditService.logAction({
+      actionType: AuditActionType.UPDATE,
+      entityType: 'admin',
+      entityId: admin.id,
+      entityName: admin.username,
+      description: `重置管理员密码: ${admin.username}`,
+    });
   }
 
   public async deleteAdmin(data: DeleteAdminReqDTO): Promise<void> {
@@ -200,6 +256,14 @@ export default class AuthService {
     if (!admin) {
       throw new Error('管理员不存在');
     }
+
+    // 记录删除审计日志并标记版本已删除
+    const oldData = {
+      username: admin.username,
+      role: admin.role,
+      avatar: admin.avatar,
+    };
+    await this.auditService.logDelete('admin', admin.id, admin.username, oldData);
 
     await adminRepo.remove(admin);
   }

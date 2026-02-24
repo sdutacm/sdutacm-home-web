@@ -25,6 +25,7 @@ declare module '@vue/runtime-core' {
       to(target: 'NewsDetailView'): BwcxVueRouterActions;
       to(target: 'NewsListView'): BwcxVueRouterActions;
       to(target: 'NewsView'): BwcxVueRouterActions;
+      to(target: 'AuditLogContainer'): BwcxVueRouterActions;
     };
   }
 }

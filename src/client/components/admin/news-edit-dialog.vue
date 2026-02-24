@@ -18,8 +18,8 @@ import {
 import { Upload, Image as IconPicture, Eye, SquarePen } from 'lucide-vue-next';
 import { defineAsyncComponent } from 'vue';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
+import SelectMediaDialog from './select-logo-dialog.vue';
 
-// 动态导入 QuillEditor，避免在服务器端加载
 const QuillEditor = defineAsyncComponent(() =>
   import('@vueup/vue-quill').then(module => module.QuillEditor)
 );
@@ -42,9 +42,22 @@ const QuillEditor = defineAsyncComponent(() =>
     IconPicture,
     ElMessage,
     QuillEditor,
+    SelectMediaDialog,
   },
 })
 export default class NewsEditDialog extends Vue {
+  // QuillEditor 实例引用
+  quillEditorRef: any = null;
+
+  // 图片选择对话框状态
+  imageSelectDialogVisible = false;
+
+  // 封面图片选择对话框状态
+  coverSelectDialogVisible = false;
+
+  // 暴露 MediaTypeEnum 给模板使用
+  MediaTypeEnum = MediaTypeEnum;
+
   @Prop({ type: Boolean, default: false }) visible!: boolean;
   @Prop() closeDialog!: () => void;
   @Prop({ required: true }) newsId!: number;
@@ -54,6 +67,9 @@ export default class NewsEditDialog extends Vue {
 
   // 存储选中的封面图片文件
   selectedCoverFile: File | null = null;
+
+  // 存储从媒体库选择的封面图片路径
+  selectedCoverPath: string | null = null;
 
   async handleSubmmit() {
     if (this.dialogType === 'create') {
@@ -91,12 +107,15 @@ export default class NewsEditDialog extends Vue {
     try {
       let coverImagePath = '';
 
-      // 如果有封面图片文件，先上传
-      if (coverImageFile) {
+      // 如果有选中的封面图片路径（从媒体库选择），直接使用
+      if (this.selectedCoverPath) {
+        coverImagePath = this.selectedCoverPath;
+      } else if (coverImageFile) {
+        // 如果有封面图片文件，先上传
         const uploadResult = await this.$api.uploadMedia({
           file: coverImageFile,
-          type: MediaTypeEnum.IMAGE,
-          alt: title, // 使用新闻标题作为图片alt
+          type: MediaTypeEnum.NEWS_COVER,
+          alt: title,
         });
         coverImagePath = uploadResult.path;
       }
@@ -126,7 +145,11 @@ export default class NewsEditDialog extends Vue {
   ) {
     try {
       let coverImagePath: string | undefined = undefined;
-      if (coverImageFile) {
+
+      // 如果有选中的封面图片路径（从媒体库选择），直接使用
+      if (this.selectedCoverPath) {
+        coverImagePath = this.selectedCoverPath;
+      } else if (coverImageFile) {
         const uploadResult = await this.$api.uploadMedia({
           file: coverImageFile,
           type: MediaTypeEnum.NEWS_COVER,
@@ -155,21 +178,116 @@ export default class NewsEditDialog extends Vue {
     const file = e.target.files[0];
     if (!file) return;
     this.selectedCoverFile = file;
+    this.selectedCoverPath = null; // 清除媒体库选择
     this.newsForm.coverImage = URL.createObjectURL(file);
+  }
+
+  // 打开封面图片选择对话框
+  openCoverSelectDialog() {
+    this.coverSelectDialogVisible = true;
+  }
+
+  // 处理从媒体库选择的封面图片
+  handleCoverSelect(media: any) {
+    if (media && media.path) {
+      this.newsForm.coverImage = media.path;
+      this.selectedCoverPath = media.path;
+      this.selectedCoverFile = null; // 清除本地文件选择
+    }
   }
 
   previewNews() {
     this.$router.push({ name: 'NewsPreviewView', params: { id: this.newsId } });
   }
 
+  // 处理图片上传到服务器
+  async handleImageUpload(file: File): Promise<string | null> {
+    try {
+      const uploadResult = await this.$api.uploadMedia({
+        file: file,
+        type: MediaTypeEnum.IMAGE,
+        alt: file.name,
+      });
+      return uploadResult.path;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      ElMessage.error('Failed to upload image');
+      return null;
+    }
+  }
+
+  // 将图片插入到编辑器中
+  insertImageToEditor(url: string) {
+    const quill = this.quillEditorRef?.getQuill();
+    if (quill) {
+      const range = quill.getSelection(true);
+      quill.insertEmbed(range.index, 'image', url);
+      quill.setSelection(range.index + 1);
+    }
+  }
+
+  // 自定义图片工具栏按钮处理器 - 打开图片选择对话框
+  customImageHandler() {
+    this.imageSelectDialogVisible = true;
+  }
+
+  // 处理从媒体库选择的图片
+  handleImageSelect(media: any) {
+    if (media && media.path) {
+      this.insertImageToEditor(media.path);
+    }
+  }
+
+  // 处理粘贴事件中的图片
+  async handlePaste(event: ClipboardEvent) {
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
+
+    const items = clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.indexOf('image') !== -1) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const file = item.getAsFile();
+        if (file) {
+          const imageUrl = await this.handleImageUpload(file);
+          if (imageUrl) {
+            this.insertImageToEditor(imageUrl);
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  onEditorReady(quill: any) {
+    const toolbar = quill.getModule('toolbar');
+    if (toolbar) {
+      toolbar.addHandler('image', () => this.customImageHandler());
+    }
+
+    // 监听粘贴事件
+    quill.root.addEventListener('paste', (e: ClipboardEvent) => this.handlePaste(e), true);
+  }
+
   mounted() {
     console.log(this.newsForm);
+  }
+
+  unmounted() {
+    // 组件卸载时清理 URL 对象
+    if (this.newsForm.coverImage && this.newsForm.coverImage.startsWith('blob:')) {
+      URL.revokeObjectURL(this.newsForm.coverImage);
+    }
+    this.newsForm.content = ''; // 清空内容，避免内存泄漏
   }
 }
 </script>
 
 <template>
-  <el-dialog :model-value="visible" width="80%" @close="closeDialog" align-center>
+  <el-dialog :model-value="visible" width="80%" @close="closeDialog" align-center class="news-edit-dialog">
     <template #header="{ titleId, titleClass }">
       <h4 :id="titleId" :class="titleClass" style="display: flex; align-items: center; gap: 0.1rem">
         <el-icon><SquarePen /></el-icon>
@@ -182,19 +300,20 @@ export default class NewsEditDialog extends Vue {
     <div class="dialog-content" :model="newsForm">
       <el-form label-width="auto" @submit.prevent="handleSubmmit">
         <el-form-item label="Cover Image">
-          <label class="avatar-wrapper" @click="" for="coverImageInput">
-            <input type="file" style="display: none" @change="handleFileChange" id="coverImageInput" />
-            <el-image :src="newsForm.coverImage" style="height: 3rem" fit="cover">
-              <template #error>
-                <div class="image-viewer-slot image-slot">
-                  <p>Click to upload</p>
-                </div>
-              </template>
-            </el-image>
-            <div class="avatar-overlay">
-              <el-icon :size="24"><Upload /></el-icon>
+          <div class="cover-upload-wrapper">
+            <div class="avatar-wrapper" @click="openCoverSelectDialog">
+              <el-image :src="newsForm.coverImage" style="height: 3rem" fit="cover">
+                <template #error>
+                  <div class="image-viewer-slot image-slot">
+                    <p>Click to select</p>
+                  </div>
+                </template>
+              </el-image>
+              <div class="avatar-overlay">
+                <el-icon :size="24"><Upload /></el-icon>
+              </div>
             </div>
-          </label>
+          </div>
         </el-form-item>
         <el-form-item label="Title">
           <el-input v-model="newsForm.title" />
@@ -205,6 +324,7 @@ export default class NewsEditDialog extends Vue {
         <el-form-item label="Content">
           <div class="editor-container">
             <QuillEditor
+              ref="quillEditorRef"
               v-model:content="newsForm.content"
               content-type="html"
               theme="snow"
@@ -216,6 +336,7 @@ export default class NewsEditDialog extends Vue {
                 ['link', 'image'],
                 ['clean'],
               ]"
+              @ready="onEditorReady"
             />
           </div>
         </el-form-item>
@@ -228,6 +349,23 @@ export default class NewsEditDialog extends Vue {
         </el-form-item>
       </el-form>
     </div>
+
+    <!-- 图片选择对话框 -->
+    <SelectMediaDialog
+      v-model:visible="imageSelectDialogVisible"
+      :media-type="MediaTypeEnum.IMAGE"
+      :show-upload-tab="true"
+      @select="handleImageSelect"
+    />
+
+    <!-- 封面图片选择对话框 -->
+    <SelectMediaDialog
+      v-model:visible="coverSelectDialogVisible"
+      :media-type="MediaTypeEnum.NEWS_COVER"
+      :current-media-url="newsForm.coverImage"
+      :show-upload-tab="true"
+      @select="handleCoverSelect"
+    />
   </el-dialog>
 </template>
 
@@ -275,4 +413,5 @@ export default class NewsEditDialog extends Vue {
   color: #8c939d;
   border: 1px solid #dcdfe6;
 }
+
 </style>

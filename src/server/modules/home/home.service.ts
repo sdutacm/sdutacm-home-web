@@ -21,7 +21,6 @@ export default class HomeService  {
       const newsPreviewRepo = appDataSource.getRepository(HomeNewsPreview);
 
       const globalConfigs = await globalConfigRepo.find({
-        relations: ['logo'],
         take: 1,
       });
 
@@ -48,14 +47,7 @@ export default class HomeService  {
         title: globalConfig.title,
         slogan: globalConfig.slogan,
         description: globalConfig.description,
-        logo: globalConfig.logo ? {
-          id: globalConfig.logo.id,
-          path: globalConfig.logo.path,
-          type: globalConfig.logo.type,
-          alt: globalConfig.logo.alt,
-          active: globalConfig.logo.active,
-          createdAt: globalConfig.logo.createdAt,
-        } : null,
+        logoPath: globalConfig.logoPath || '',
         newsPreview: publishedNewsPreviews.map((preview) => ({
           id: preview.news.id,
           title: preview.news.title,

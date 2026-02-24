@@ -1,4 +1,5 @@
 import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
+import { Inject } from 'bwcx-core';
 import {
   CreateNewsReqDTO,
   UpdateNewsReqDTO,
@@ -13,12 +14,15 @@ import {
 } from '@common/modules/news/news.dto';
 import appDataSource from '@server/db';
 import { News } from '@server/db/entity/news';
+import AuditService from '@server/modules/audit/audit.service';
 
 @Service()
 export default class NewsService {
   public constructor(
     @InjectCtx()
     private readonly ctx: RequestContext,
+    @Inject()
+    private readonly auditService: AuditService,
   ) {}
 
   // 创建新闻
@@ -35,7 +39,17 @@ export default class NewsService {
       updatedBy: this.ctx.session.admin,
     });
 
-    await newsRepo.save(news);
+    const savedNews = await newsRepo.save(news);
+
+    // 记录审计日志和创建版本
+    await this.auditService.logCreate('news', savedNews.id, savedNews.title, {
+      title: savedNews.title,
+      summary: savedNews.summary,
+      content: savedNews.content,
+      coverImage: savedNews.coverImage,
+      isPublished: savedNews.isPublished,
+      publishedAt: savedNews.publishedAt,
+    });
   }
 
   // 更新新闻
@@ -45,6 +59,16 @@ export default class NewsService {
     if (!news) {
       throw new Error('新闻不存在');
     }
+
+    // 保存旧数据用于审计
+    const oldData = {
+      title: news.title,
+      summary: news.summary,
+      content: news.content,
+      coverImage: news.coverImage,
+      isPublished: news.isPublished,
+      publishedAt: news.publishedAt,
+    };
 
     if (data.title !== undefined) news.title = data.title;
     if (data.summary !== undefined) news.summary = data.summary;
@@ -63,6 +87,17 @@ export default class NewsService {
     }
 
     await newsRepo.save(news);
+
+    // 记录审计日志和创建新版本
+    const newData = {
+      title: news.title,
+      summary: news.summary,
+      content: news.content,
+      coverImage: news.coverImage,
+      isPublished: news.isPublished,
+      publishedAt: news.publishedAt,
+    };
+    await this.auditService.logUpdate('news', news.id, news.title, oldData, newData);
   }
 
   // 删除新闻
@@ -72,6 +107,19 @@ export default class NewsService {
     if (!news) {
       throw new Error('新闻不存在');
     }
+
+    // 保存删除前的数据用于审计
+    const oldData = {
+      title: news.title,
+      summary: news.summary,
+      content: news.content,
+      coverImage: news.coverImage,
+      isPublished: news.isPublished,
+      publishedAt: news.publishedAt,
+    };
+
+    // 记录删除日志并标记版本为已删除
+    await this.auditService.logDelete('news', news.id, news.title, oldData);
 
     await newsRepo.remove(news);
   }

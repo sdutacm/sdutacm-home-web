@@ -76,7 +76,7 @@ export default class NewsListContainer extends Vue {
 
   // 分页相关
   currentPage = 1;
-  pageSize = 35;
+  pageSize = 25;
 
   newsForm = {
     title: '',
@@ -203,7 +203,6 @@ export default class NewsListContainer extends Vue {
 
   async mounted() {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
       await this.loadNewsList();
     } finally {
       this.loading = false;
@@ -244,7 +243,7 @@ export default class NewsListContainer extends Vue {
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column prop="title" label="Title" min-width="200" show-overflow-tooltip />
       <el-table-column prop="summary" label="Summary" min-width="150" show-overflow-tooltip />
-      <el-table-column label="Status">
+      <el-table-column label="Status" width="120">
         <template #default="{ row }">
           <el-tag :type="row.isPublished ? 'success' : 'info'">
             {{ row.isPublished ? 'Published' : 'Draft' }}
@@ -266,7 +265,7 @@ export default class NewsListContainer extends Vue {
           {{ formatDate(row.updatedAt) }}
         </template>
       </el-table-column>
-      <el-table-column label="Updated By">
+      <el-table-column label="Updated By" width="150">
         <template #default="{ row }">
           <div v-if="row.updatedBy" class="editor-container">
             <user-avatar :avatarUrl="row.updatedBy.avatar" />
@@ -293,7 +292,7 @@ export default class NewsListContainer extends Vue {
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
-        :page-sizes="[35]"
+        :page-sizes="[25]"
         :total="totalNews"
         layout="total, prev, pager, next"
         @current-change="handlePageChange"

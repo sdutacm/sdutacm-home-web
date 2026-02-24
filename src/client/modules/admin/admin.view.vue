@@ -28,15 +28,16 @@ export default class AdminView extends Vue {
 <template>
   <Head>
     <title>SDUTACM Admin</title>
-    <meta name="description" content="SDUTACM 管理后台">
+    <meta name="description" content="SDUTACM 管理后台" />
   </Head>
+
   <div class="admin-container">
     <div class="admin-tools">
       <AdminTools :userInfo="adminState.userInfo" :currentPage="adminState.currentPage" />
     </div>
     <div class="admin-preview">
       <router-view v-slot="{ Component }">
-          <component :is="Component" />
+        <component :is="Component" />
       </router-view>
     </div>
   </div>

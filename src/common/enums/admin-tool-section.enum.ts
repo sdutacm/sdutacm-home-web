@@ -9,4 +9,5 @@ export enum AdminToolSectionEnum {
   NEWS_MANAGEMENT = 'news',
   PROJECT_MANAGEMENT = 'project',
   USERS = 'users',
+  AUDIT_LOG = 'audit-log',
 }
