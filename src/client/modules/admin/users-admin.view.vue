@@ -27,8 +27,11 @@ import {
   ElDropdown,
   ElDropdownMenu,
   ElDropdownItem,
+  ElSkeleton,
+  ElSkeletonItem,
   vLoading,
 } from 'element-plus';
+import AuditLogContainer from '@client/components/admin/audit-log.vue';
 import { Upload, MoreVertical } from 'lucide-vue-next';
 
 @View('/admin/users')
@@ -53,7 +56,10 @@ import { Upload, MoreVertical } from 'lucide-vue-next';
     ElDropdown,
     ElDropdownMenu,
     ElDropdownItem,
+    ElSkeleton,
+    ElSkeletonItem,
     Upload,
+    AuditLogContainer,
     MoreVertical,
   },
   directives: {
@@ -105,7 +111,6 @@ export default class UsersAdminView extends Vue {
   loadingState = {
     adminList: true,
     adminNews: true,
-    adminProjects: true,
   };
 
   roleOptions = [
@@ -117,11 +122,6 @@ export default class UsersAdminView extends Vue {
   myNewsList: GetNewsDetailResDTO[] = [];
   newsPage = 1;
   newsPageSize = 6;
-
-  // 管理员编辑的项目列表
-  myProjectsList: GetProjectDetailResDTO[] = [];
-  projectsPage = 1;
-  projectsPageSize = 6;
 
   get userAvatar() {
     return this.userInfo?.avatar || this.defaultAvatarUrl;
@@ -366,16 +366,6 @@ export default class UsersAdminView extends Vue {
     return this.filteredNewsList.slice(start, start + this.newsPageSize);
   }
 
-  // 获取当前管理员编辑的项目列表
-  get filteredProjectsList() {
-    return this.myProjectsList.filter((project) => project.updatedBy?.id === this.userInfo?.id);
-  }
-
-  get paginatedProjectsList() {
-    const start = (this.projectsPage - 1) * this.projectsPageSize;
-    return this.filteredProjectsList.slice(start, start + this.projectsPageSize);
-  }
-
   // 加载新闻列表
   async loadMyNews() {
     this.loadingState.adminNews = true;
@@ -386,19 +376,6 @@ export default class UsersAdminView extends Vue {
       console.error('Failed to load news list:', error);
     } finally {
       this.loadingState.adminNews = false;
-    }
-  }
-
-  // 加载项目列表
-  async loadMyProjects() {
-    this.loadingState.adminProjects = true;
-    try {
-      const result = await this.$api.getAllProjects({});
-      this.myProjectsList = result.rows;
-    } catch (error) {
-      console.error('Failed to load projects list:', error);
-    } finally {
-      this.loadingState.adminProjects = false;
     }
   }
 
@@ -413,18 +390,14 @@ export default class UsersAdminView extends Vue {
     this.newsPage = page;
   }
 
-  // 项目分页变化
-  handleProjectsPageChange(page: number) {
-    this.projectsPage = page;
-  }
-
   async mounted() {
     this.userInfo = await this.$api.getSession();
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // 模拟加载延迟
     if (this.isSuperAdmin) {
       await this.loadAdminList();
     }
-    await Promise.all([this.loadMyNews(), this.loadMyProjects()]);
+
+    await Promise.all([this.loadMyNews()]);
   }
 }
 </script>
@@ -469,137 +442,169 @@ export default class UsersAdminView extends Vue {
           <el-button plain @click="openCreateUserDialog" style="padding: 0 1rem;" round> Add New Admin </el-button>
 
           <!-- 所有用户列表 -->
-          <div v-loading="loadingState.adminList" class="admin-cards-container">
-            <el-empty v-if="!loadingState.adminList && adminList.length === 0" description="No admins available" />
-            <el-card v-for="admin in paginatedAdminList" :key="admin.id" class="admin-card" shadow="hover">
-              <div class="admin-card-content">
-                <el-avatar :src="getUserAvatar(admin.avatar)" :size="40" />
-                <div class="admin-info">
-                  <div class="admin-name">{{ admin.username }}</div>
-                  <el-tag :type="getRoleTagType(admin.role)" size="small">
-                    {{ getRoleLabel(admin.role) }}
-                  </el-tag>
-                </div>
-                <!-- 操作下拉菜单 -->
-                <el-dropdown v-if="admin.id !== userInfo.id" trigger="click" class="admin-actions-dropdown">
-                  <el-button text circle size="small">
-                    <el-icon :size="16"><MoreVertical /></el-icon>
-                  </el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item @click="openResetPasswordDialog(admin)"> Reset Password </el-dropdown-item>
-                      <el-dropdown-item @click="handleDeleteAdmin(admin)" divided>
-                        <span style="color: var(--el-color-danger)">Delete Admin</span>
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
+          <div class="admin-cards-container">
+            <!-- 骨架屏 -->
+            <template v-if="loadingState.adminList">
+              <el-card v-for="i in adminPageSize" :key="'skeleton-admin-' + i" class="admin-card admin-skeleton-card" shadow="hover">
+                <el-skeleton :rows="0" animated>
+                  <template #template>
+                    <div class="admin-card-content">
+                      <el-skeleton-item variant="circle" style="width: 40px; height: 40px; flex-shrink: 0;" />
+                      <div class="admin-info">
+                        <el-skeleton-item variant="text" style="width: 70%; height: 14px; margin-bottom: 6px;" />
+                        <el-skeleton-item variant="button" style="width: 60px; height: 22px; border-radius: 4px;" />
+                      </div>
+                      <el-skeleton-item variant="circle" style="width: 24px; height: 24px; flex-shrink: 0;" />
+                    </div>
+                    <el-skeleton-item variant="rect" style="width: 100%; height: 28px; margin-top: 8px; border-radius: 4px;" />
                   </template>
-                </el-dropdown>
-              </div>
-              <div class="admin-card-actions" v-if="admin.id !== userInfo.id">
-                <el-select
-                  :model-value="admin.role"
-                  size="small"
-                  @change="(val: AdminRoleEnum) => handleUpdateRole(admin, val)"
-                  placeholder="Change Role"
-                >
-                  <el-option
-                    v-for="option in roleOptions"
-                    :key="option.value"
-                    :label="option.label"
-                    :value="option.value"
-                  />
-                </el-select>
-              </div>
-              <div class="current-user-tag" v-else>
-                <el-tag type="info" size="small">Current User</el-tag>
-              </div>
-            </el-card>
+                </el-skeleton>
+              </el-card>
+            </template>
+            <!-- 实际内容 -->
+            <template v-else>
+              <el-empty v-if="adminList.length === 0" description="No admins available" />
+              <el-card v-for="admin in paginatedAdminList" :key="admin.id" class="admin-card" shadow="hover">
+                <div class="admin-card-content">
+                  <el-avatar :src="getUserAvatar(admin.avatar)" :size="40" />
+                  <div class="admin-info">
+                    <div class="admin-name">{{ admin.username }}</div>
+                    <el-tag :type="getRoleTagType(admin.role)" size="small">
+                      {{ getRoleLabel(admin.role) }}
+                    </el-tag>
+                  </div>
+                  <!-- 操作下拉菜单 -->
+                  <el-dropdown v-if="admin.id !== userInfo.id" trigger="click" class="admin-actions-dropdown">
+                    <el-button text circle size="small">
+                      <el-icon :size="16"><MoreVertical /></el-icon>
+                    </el-button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item @click="openResetPasswordDialog(admin)"> Reset Password </el-dropdown-item>
+                        <el-dropdown-item @click="handleDeleteAdmin(admin)" divided>
+                          <span style="color: var(--el-color-danger)">Delete Admin</span>
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </div>
+                <div class="admin-card-actions" v-if="admin.id !== userInfo.id">
+                  <el-select
+                    :model-value="admin.role"
+                    size="small"
+                    @change="(val: AdminRoleEnum) => handleUpdateRole(admin, val)"
+                    placeholder="Change Role"
+                  >
+                    <el-option
+                      v-for="option in roleOptions"
+                      :key="option.value"
+                      :label="option.label"
+                      :value="option.value"
+                    />
+                  </el-select>
+                </div>
+                <div class="current-user-tag" v-else>
+                  <el-tag type="info" size="small">Current User</el-tag>
+                </div>
+              </el-card>
+            </template>
+          </div>
+          <!-- 分页器骨架屏 -->
+          <div v-if="loadingState.adminList" class="pagination pagination-skeleton">
+            <el-skeleton :rows="0" animated style="display: flex; gap: 8px; justify-content: center;">
+              <template #template>
+                <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+              </template>
+            </el-skeleton>
           </div>
           <el-pagination
-            v-if="adminList.length > adminPageSize"
+            v-else
             class="pagination"
             :current-page="adminPage"
             :page-size="adminPageSize"
             :total="adminList.length"
-            layout="prev, pager, next"
+            layout="total, prev, pager, next"
             @current-change="handleAdminPageChange"
           />
         </div>
       </el-form-item>
 
       <el-form-item label="My News">
-        <div v-loading="loadingState.adminNews" class="content-cards-container">
-          <el-empty
-            v-if="!loadingState.adminNews && filteredNewsList.length === 0"
-            description="No edited news available"
-          />
-          <template v-else>
+        <div class="content-cards-container">
+          <!-- 骨架屏 -->
+          <template v-if="loadingState.adminNews">
             <div class="preview-cards-grid">
-              <el-card v-for="news in paginatedNewsList" :key="news.id" class="preview-card" shadow="hover">
-                <div class="card-cover">
-                  <el-image v-if="news.coverImage" :src="news.coverImage" fit="cover" class="cover-image" />
-                  <div v-else class="no-cover">
-                    <span>No Cover</span>
-                  </div>
-                </div>
-                <div class="card-content">
-                  <div class="card-title">{{ news.title }}</div>
-                  <div class="card-meta">
-                    <el-tag :type="news.isPublished ? 'success' : 'info'" size="small">
-                      {{ news.isPublished ? 'Published' : 'Draft' }}
-                    </el-tag>
-                    <span class="card-date">{{ formatDate(news.updatedAt) }}</span>
-                  </div>
-                </div>
+              <el-card v-for="i in newsPageSize" :key="'skeleton-news-' + i" class="preview-card news-skeleton-card" shadow="hover">
+                <el-skeleton :rows="0" animated>
+                  <template #template>
+                    <div class="card-cover">
+                      <el-skeleton-item variant="image" style="width: 100%; height: 120px;" />
+                    </div>
+                    <div class="card-content">
+                      <el-skeleton-item variant="h3" style="width: 85%; height: 16px; margin-bottom: 8px;" />
+                      <el-skeleton-item variant="text" style="width: 60%; height: 12px; margin-bottom: 10px;" />
+                      <div class="card-meta">
+                        <el-skeleton-item variant="button" style="width: 58px; height: 22px; border-radius: 4px;" />
+                        <el-skeleton-item variant="text" style="width: 70px; height: 14px;" />
+                      </div>
+                    </div>
+                  </template>
+                </el-skeleton>
               </el-card>
             </div>
-            <el-pagination
-              v-if="filteredNewsList.length > newsPageSize"
-              class="pagination"
-              :current-page="newsPage"
-              :page-size="newsPageSize"
-              :total="filteredNewsList.length"
-              layout="prev, pager, next"
-              @current-change="handleNewsPageChange"
-            />
+            <!-- 分页器骨架屏 -->
+            <div class="pagination pagination-skeleton">
+              <el-skeleton :rows="0" animated style="display: flex; gap: 8px; justify-content: center;">
+                <template #template>
+                  <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                  <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                  <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                  <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                </template>
+              </el-skeleton>
+            </div>
+          </template>
+          <!-- 实际内容 -->
+          <template v-else>
+            <el-empty v-if="filteredNewsList.length === 0" description="No edited news available" />
+            <template v-else>
+              <div class="preview-cards-grid">
+                <el-card v-for="news in paginatedNewsList" :key="news.id" class="preview-card" shadow="hover">
+                  <div class="card-cover">
+                    <el-image v-if="news.coverImage" :src="news.coverImage" fit="cover" class="cover-image" />
+                    <div v-else class="no-cover">
+                      <span>No Cover</span>
+                    </div>
+                  </div>
+                  <div class="card-content">
+                    <div class="card-title">{{ news.title }}</div>
+                    <div class="card-meta">
+                      <el-tag :type="news.isPublished ? 'success' : 'info'" size="small">
+                        {{ news.isPublished ? 'Published' : 'Draft' }}
+                      </el-tag>
+                      <span class="card-date">{{ formatDate(news.updatedAt) }}</span>
+                    </div>
+                  </div>
+                </el-card>
+              </div>
+              <el-pagination
+                class="pagination"
+                :current-page="newsPage"
+                :page-size="newsPageSize"
+                :total="filteredNewsList.length"
+                layout="total, prev, pager, next"
+                @current-change="handleNewsPageChange"
+              />
+            </template>
           </template>
         </div>
       </el-form-item>
 
-      <el-form-item label="My Projects">
-        <div v-loading="loadingState.adminProjects" class="content-cards-container">
-          <el-empty
-            v-if="!loadingState.adminProjects && filteredProjectsList.length === 0"
-            description="No edited projects available"
-          />
-          <template v-else>
-            <div class="preview-cards-grid">
-              <el-card v-for="project in paginatedProjectsList" :key="project.id" class="preview-card" shadow="hover">
-                <div class="card-cover">
-                  <el-image v-if="project.coverImage" :src="project.coverImage" fit="cover" class="cover-image" />
-                  <div v-else class="no-cover">
-                    <span>No Cover</span>
-                  </div>
-                </div>
-                <div class="card-content">
-                  <div class="card-title">{{ project.name }}</div>
-                  <div class="card-meta">
-                    <span class="card-date">{{ formatDate(project.updatedAt) }}</span>
-                  </div>
-                </div>
-              </el-card>
-            </div>
-            <el-pagination
-              v-if="filteredProjectsList.length > projectsPageSize"
-              class="pagination"
-              :current-page="projectsPage"
-              :page-size="projectsPageSize"
-              :total="filteredProjectsList.length"
-              layout="prev, pager, next"
-              @current-change="handleProjectsPageChange"
-            />
-          </template>
-        </div>
+      <el-form-item label="Audit Log">
+        <audit-log-container />
       </el-form-item>
     </el-form>
 
@@ -738,6 +743,7 @@ export default class UsersAdminView extends Vue {
     width: 100%;
 
     .admin-cards-container {
+      width: 100%;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
@@ -784,6 +790,24 @@ export default class UsersAdminView extends Vue {
         .current-user-tag {
           display: flex;
           justify-content: center;
+        }
+      }
+
+      .admin-skeleton-card {
+        :deep(.el-card__body) {
+          padding: 8px;
+        }
+
+        .admin-card-content {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+
+          .admin-info {
+            flex: 1;
+            min-width: 0;
+          }
         }
       }
     }
@@ -853,9 +877,32 @@ export default class UsersAdminView extends Vue {
     }
   }
 
+  .news-skeleton-card {
+    :deep(.el-card__body) {
+      padding: 0;
+    }
+
+    .card-cover {
+      height: 120px;
+      overflow: hidden;
+    }
+
+    .card-content {
+      padding: 12px;
+
+      .card-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+    }
+  }
+
   .pagination {
     margin-top: 16px;
     justify-content: center;
+    margin-bottom: 1.5rem;
   }
 }
 </style>

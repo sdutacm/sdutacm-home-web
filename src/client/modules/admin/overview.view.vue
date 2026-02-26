@@ -2,7 +2,7 @@
 import { Vue, Options } from 'vue-class-component';
 import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import { Head } from '@vueuse/head';
-import { ElSkeleton } from 'element-plus';
+import { ElSkeleton, ElIcon } from 'element-plus';
 import {
   Eye,
   TrendingUp,
@@ -14,9 +14,16 @@ import {
   HardDrive,
   Users,
   UserCheck,
+  Pointer,
 } from 'lucide-vue-next';
-import * as echarts from 'echarts';
-import type { EChartsOption } from 'echarts';
+// import VisitTrendChart from '@/components/admin/charts/VisitTrendChart.vue';
+// import MediaTypePieChart from '@/components/admin/charts/MediaTypePieChart.vue';
+// import NewsStatusBarChart from '@/components/admin/charts/NewsStatusBarChart.vue';
+// import AdminActivityPieChart from '@/components/admin/charts/AdminActivityPieChart.vue';
+import VisitTrendChart from '@client/components/admin/charts/visit-trend-chart.vue';
+import MediaTypePieChart from '@client/components/admin/charts/media-type-pie-chart.vue';
+import NewsStatusBarChart from '@client/components/admin/charts/news-statusbar-chart.vue';
+import AdminActivityPieChart from '@client/components/admin/charts/admin-activity-pie-chart.vue';
 
 @View('/admin/overview')
 @ChildOf('AdminView')
@@ -35,11 +42,15 @@ import type { EChartsOption } from 'echarts';
     HardDrive,
     Users,
     UserCheck,
+    Pointer,
+    VisitTrendChart,
+    MediaTypePieChart,
+    NewsStatusBarChart,
+    AdminActivityPieChart,
   },
 })
 export default class OverviewView extends Vue {
   loading = true;
-  chartInstance: echarts.ECharts | null = null;
 
   stats = {
     totalHomeViews: 0,
@@ -53,6 +64,10 @@ export default class OverviewView extends Vue {
     totalMediaCount: 0,
     activeMediaCount: 0,
     totalMediaSize: 0,
+    logoCount: 0,
+    imageCount: 0,
+    audioCount: 0,
+    videoCount: 0,
     totalAdminCount: 0,
     activeAdminCount: 0,
   };
@@ -70,23 +85,6 @@ export default class OverviewView extends Vue {
 
   async mounted() {
     await this.loadStats();
-    this.$nextTick(() => {
-      this.initChart();
-    });
-    window.addEventListener('resize', this.handleResize);
-  }
-
-  beforeUnmount() {
-    window.removeEventListener('resize', this.handleResize);
-    if (this.chartInstance) {
-      this.chartInstance.dispose();
-    }
-  }
-
-  handleResize() {
-    if (this.chartInstance) {
-      this.chartInstance.resize();
-    }
   }
 
   async loadStats() {
@@ -106,172 +104,36 @@ export default class OverviewView extends Vue {
       this.loading = false;
     }
   }
-
-  get isDarkMode() {
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-  }
-
-  get chartStats() {
-    const views = this.dailyViewData.map((item) => item.viewCount);
-    if (views.length === 0) return { max: 0, min: 0, avg: 0, total: 0 };
-    const max = Math.max(...views);
-    const min = Math.min(...views);
-    const total = views.reduce((a, b) => a + b, 0);
-    const avg = Math.round(total / views.length);
-    return { max, min, avg, total };
-  }
-
-  initChart() {
-    const chartDom = this.$refs.chartRef as HTMLElement;
-    if (!chartDom) return;
-
-    // 根据主题选择 echarts 主题
-    this.chartInstance = echarts.init(chartDom, this.isDarkMode ? 'dark' : undefined);
-
-    const dates = this.dailyViewData.map((item) => item.date);
-    const views = this.dailyViewData.map((item) => item.viewCount);
-    const { avg } = this.chartStats;
-
-    const option: EChartsOption = {
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'line',
-        },
-      },
-      grid: {
-        left: 12,
-        right: 24,
-        bottom: 12,
-        top: 24,
-        containLabel: true,
-      },
-      xAxis: {
-        type: 'category',
-        boundaryGap: false,
-        data: dates,
-        axisLine: { show: false },
-        axisTick: { show: false },
-        axisLabel: {
-          fontSize: 11,
-          color: this.isDarkMode ? '#999' : '#666',
-          formatter: (value: string) => {
-            const date = new Date(value);
-            return `${date.getMonth() + 1}/${date.getDate()}`;
-          },
-          interval: 'auto',
-          rotate: 0,
-        },
-      },
-      yAxis: {
-        type: 'value',
-        minInterval: 1,
-        axisLine: { show: false },
-        axisTick: { show: false },
-        splitLine: {
-          lineStyle: {
-            type: 'dashed',
-            color: this.isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-          },
-        },
-        axisLabel: {
-          fontSize: 11,
-          color: this.isDarkMode ? '#999' : '#666',
-        },
-      },
-      series: [
-        {
-          name: '访问量',
-          type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          showSymbol: false,
-          emphasis: {
-            focus: 'series',
-            scale: true,
-            itemStyle: {
-              shadowBlur: 10,
-              shadowColor: 'rgba(64, 158, 255, 0.5)',
-            },
-          },
-          data: views,
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(64, 158, 255, 0.25)' },
-              { offset: 0.5, color: 'rgba(64, 158, 255, 0.1)' },
-              { offset: 1, color: 'rgba(64, 158, 255, 0.02)' },
-            ]),
-          },
-          lineStyle: {
-            color: '#409eff',
-            width: 2.5,
-          },
-          itemStyle: {
-            color: '#409eff',
-            borderColor: '#fff',
-            borderWidth: 2,
-          },
-          markLine: {
-            silent: true,
-            symbol: 'none',
-            lineStyle: {
-              color: '#e6a23c',
-              type: 'dashed',
-              width: 1,
-              opacity: 0.6,
-            },
-            label: {
-              show: true,
-              position: 'end',
-              fontSize: 10,
-              color: '#e6a23c',
-              formatter: `均值: ${avg}`,
-            },
-            data: [
-              {
-                yAxis: avg,
-              },
-            ],
-          },
-        },
-      ],
-    };
-
-    this.chartInstance.setOption(option);
-  }
 }
 </script>
 
 <template>
   <Head>
     <title>SDUTACM Admin | Overview</title>
-    <meta name="description" content="SDUTACM 管理后台概览">
+    <meta name="description" content="SDUTACM 管理后台概览" />
   </Head>
   <div class="overview-container">
-    <div class="page-header">
-      <h1>数据概览</h1>
-      <p class="subtitle">查看网站各项数据统计</p>
-    </div>
-
     <el-skeleton :loading="loading" animated :rows="6">
       <template #default>
         <div class="stats-grid">
           <!-- 访问统计 -->
           <div class="stats-section">
-            <div class="section-title">访问统计</div>
+            <div class="section-title">
+              <!-- <el-icon size="11"><Pointer /></el-icon> -->
+              <span>Visit Statistics</span>
+            </div>
             <div class="stats-list">
               <div class="stat-item">
                 <div class="stat-label">
                   <Eye class="stat-icon" :size="16" />
-                  <span>总访问量</span>
+                  <span>Total</span>
                 </div>
                 <div class="stat-value">{{ stats.totalHomeViews.toLocaleString() }}</div>
               </div>
               <div class="stat-item">
                 <div class="stat-label">
                   <TrendingUp class="stat-icon" :size="16" />
-                  <span>今日访问</span>
+                  <span>Today</span>
                 </div>
                 <div class="stat-value highlight">{{ stats.todayHomeViews.toLocaleString() }}</div>
               </div>
@@ -280,33 +142,33 @@ export default class OverviewView extends Vue {
 
           <!-- 新闻统计 -->
           <div class="stats-section">
-            <div class="section-title">新闻统计</div>
+            <div class="section-title">News Statistics</div>
             <div class="stats-list">
               <div class="stat-item">
                 <div class="stat-label">
                   <Newspaper class="stat-icon" :size="16" />
-                  <span>新闻总数</span>
+                  <span>Total</span>
                 </div>
                 <div class="stat-value">{{ stats.totalNewsCount }}</div>
               </div>
               <div class="stat-item">
                 <div class="stat-label">
                   <FileText class="stat-icon" :size="16" />
-                  <span>已发布</span>
+                  <span>Published</span>
                 </div>
                 <div class="stat-value">{{ stats.publishedNewsCount }}</div>
               </div>
               <div class="stat-item">
                 <div class="stat-label">
                   <FileText class="stat-icon" :size="16" />
-                  <span>草稿</span>
+                  <span>Draft</span>
                 </div>
                 <div class="stat-value secondary">{{ stats.draftNewsCount }}</div>
               </div>
               <div class="stat-item">
                 <div class="stat-label">
                   <Eye class="stat-icon" :size="16" />
-                  <span>总阅读量</span>
+                  <span>Views</span>
                 </div>
                 <div class="stat-value">{{ stats.totalNewsViews.toLocaleString() }}</div>
               </div>
@@ -315,19 +177,19 @@ export default class OverviewView extends Vue {
 
           <!-- 项目统计 -->
           <div class="stats-section">
-            <div class="section-title">项目统计</div>
+            <div class="section-title">Projects Statistics</div>
             <div class="stats-list">
               <div class="stat-item">
                 <div class="stat-label">
                   <FolderKanban class="stat-icon" :size="16" />
-                  <span>项目总数</span>
+                  <span>Total</span>
                 </div>
                 <div class="stat-value">{{ stats.totalProjectCount }}</div>
               </div>
               <div class="stat-item">
                 <div class="stat-label">
                   <Star class="stat-icon" :size="16" />
-                  <span>首页展示</span>
+                  <span>Featured</span>
                 </div>
                 <div class="stat-value">{{ stats.featuredProjectCount }}</div>
               </div>
@@ -336,26 +198,19 @@ export default class OverviewView extends Vue {
 
           <!-- 媒体统计 -->
           <div class="stats-section">
-            <div class="section-title">媒体统计</div>
+            <div class="section-title">Media Statistics</div>
             <div class="stats-list">
               <div class="stat-item">
                 <div class="stat-label">
                   <Image class="stat-icon" :size="16" />
-                  <span>媒体总数</span>
+                  <span>Total</span>
                 </div>
                 <div class="stat-value">{{ stats.totalMediaCount }}</div>
               </div>
               <div class="stat-item">
                 <div class="stat-label">
-                  <Image class="stat-icon" :size="16" />
-                  <span>已启用</span>
-                </div>
-                <div class="stat-value">{{ stats.activeMediaCount }}</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">
                   <HardDrive class="stat-icon" :size="16" />
-                  <span>存储占用</span>
+                  <span>Storage Usage</span>
                 </div>
                 <div class="stat-value">{{ formattedMediaSize }}</div>
               </div>
@@ -364,19 +219,19 @@ export default class OverviewView extends Vue {
 
           <!-- 管理员统计 -->
           <div class="stats-section">
-            <div class="section-title">管理员统计</div>
+            <div class="section-title">Admin Statistics</div>
             <div class="stats-list">
               <div class="stat-item">
                 <div class="stat-label">
                   <Users class="stat-icon" :size="16" />
-                  <span>管理员总数</span>
+                  <span>Total</span>
                 </div>
                 <div class="stat-value">{{ stats.totalAdminCount }}</div>
               </div>
               <div class="stat-item">
                 <div class="stat-label">
                   <UserCheck class="stat-icon" :size="16" />
-                  <span>活跃管理员</span>
+                  <span>Active Admins</span>
                 </div>
                 <div class="stat-value">{{ stats.activeAdminCount }}</div>
               </div>
@@ -385,33 +240,18 @@ export default class OverviewView extends Vue {
         </div>
 
         <!-- 访问趋势图表 -->
-        <div class="chart-section">
-          <div class="chart-header">
-            <div class="chart-title">
-              <TrendingUp class="chart-icon" :size="16" />
-              <span>访问趋势</span>
-              <span class="chart-subtitle">近30天</span>
-            </div>
-            <div class="chart-stats">
-              <div class="chart-stat-item">
-                <span class="chart-stat-label">总计</span>
-                <span class="chart-stat-value">{{ chartStats.total.toLocaleString() }}</span>
-              </div>
-              <div class="chart-stat-item">
-                <span class="chart-stat-label">日均</span>
-                <span class="chart-stat-value">{{ chartStats.avg.toLocaleString() }}</span>
-              </div>
-              <div class="chart-stat-item">
-                <span class="chart-stat-label">最高</span>
-                <span class="chart-stat-value highlight">{{ chartStats.max.toLocaleString() }}</span>
-              </div>
-              <div class="chart-stat-item">
-                <span class="chart-stat-label">最低</span>
-                <span class="chart-stat-value secondary">{{ chartStats.min.toLocaleString() }}</span>
-              </div>
-            </div>
-          </div>
-          <div ref="chartRef" class="chart-container"></div>
+        <VisitTrendChart :view-data="dailyViewData" />
+
+        <!-- 统计图表区域 -->
+        <div class="charts-row">
+          <MediaTypePieChart
+            :logo-count="stats.logoCount"
+            :image-count="stats.imageCount"
+            :audio-count="stats.audioCount"
+            :video-count="stats.videoCount"
+          />
+          <NewsStatusBarChart :published-count="stats.publishedNewsCount" :draft-count="stats.draftNewsCount" />
+          <AdminActivityPieChart :total-count="stats.totalAdminCount" :active-count="stats.activeAdminCount" />
         </div>
       </template>
     </el-skeleton>
@@ -421,39 +261,31 @@ export default class OverviewView extends Vue {
 <style lang="less" scoped>
 .overview-container {
   padding: 0 24px 24px;
-  max-width: 1200px;
-}
-
-.page-header {
-  margin-bottom: 32px;
-
-  h1 {
-    margin: 0 0 8px;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
-    letter-spacing: -0.02em;
-  }
-
-  .subtitle {
-    margin: 0;
-    font-size: 14px;
-    color: var(--el-text-color-secondary);
-  }
 }
 
 .stats-grid {
+  width: 100%;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 32px;
-  margin-bottom: 48px;
+  gap: 1rem;
+  margin-bottom: 24px;
 }
 
 .stats-section {
+  background: var(--ah-c-background-header);
+  padding: 20px 24px 16px;
+  border-radius: 0.2rem;
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  }
+
   .section-title {
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
+    user-select: none;
     letter-spacing: 0.05em;
     color: var(--el-text-color-secondary);
     margin-bottom: 16px;
@@ -475,6 +307,7 @@ export default class OverviewView extends Vue {
 .stat-label {
   display: flex;
   align-items: center;
+  user-select: none;
   gap: 8px;
   font-size: 14px;
   color: var(--el-text-color-regular);
@@ -500,76 +333,10 @@ export default class OverviewView extends Vue {
   }
 }
 
-.chart-section {
-  background: var(--el-fill-color-light);
-  border-radius: 12px;
-  padding: 20px 24px 16px;
-
-  .chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .chart-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--el-text-color-primary);
-
-    .chart-icon {
-      color: var(--el-color-primary);
-    }
-
-    .chart-subtitle {
-      font-size: 12px;
-      font-weight: 400;
-      color: var(--el-text-color-secondary);
-      margin-left: 4px;
-    }
-  }
-
-  .chart-stats {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-  }
-
-  .chart-stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-
-    .chart-stat-label {
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
-    }
-
-    .chart-stat-value {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--el-text-color-primary);
-      font-variant-numeric: tabular-nums;
-
-      &.highlight {
-        color: var(--el-color-success);
-      }
-
-      &.secondary {
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-
-  .chart-container {
-    width: 100%;
-    height: 260px;
-  }
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
 }
 </style>

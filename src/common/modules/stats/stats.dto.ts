@@ -30,6 +30,11 @@ export class GetOverviewStatsResDTO {
   totalMediaCount: number;
   activeMediaCount: number;
   totalMediaSize: number;
+  // 媒体类型统计
+  logoCount: number;
+  imageCount: number;
+  audioCount: number;
+  videoCount: number;
   // 管理员统计
   totalAdminCount: number;
   activeAdminCount: number;

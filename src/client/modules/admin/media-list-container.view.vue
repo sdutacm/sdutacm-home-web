@@ -1,9 +1,9 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
-import { Prop } from 'vue-property-decorator';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import { GetMediaListResDTO } from '@common/modules/media/media.dto';
 import { View, RenderMethod, RenderMethodKind, ChildOf } from 'bwcx-client-vue3';
+import { MEDIA_TYPE_CONFIG } from '@common/config/media-type-config';
 
 import {
   ElButton,
@@ -16,13 +16,14 @@ import {
   ElEmpty,
   ElPagination,
   ElLoading,
+  ElSkeleton,
+  ElSkeletonItem,
 } from 'element-plus';
-import { Copy, Download, Trash, FilePenLine, CirclePlus, FileVideoCamera, FileMusic } from 'lucide-vue-next';
+import { Copy, Download, Trash2 as Trash, FilePenLine, CirclePlus, FileVideoCamera, FileMusic } from 'lucide-vue-next';
 import MediaDialog, { MediaDialogMode } from '@client/components/admin/media-dialog.vue';
 import { Head } from '@vueuse/head';
 import AddButton from '@client/components/admin/add-button.vue';
 import TipButton from '@client/components/admin/tip-button.vue';
-import { MEDIA_TYPE_CONFIG } from '@common/config/media-type-config';
 
 @View('/admin/media-list/:id')
 @ChildOf('AdminView')
@@ -37,6 +38,8 @@ import { MEDIA_TYPE_CONFIG } from '@common/config/media-type-config';
     Head,
     ElEmpty,
     ElPagination,
+    ElSkeleton,
+    ElSkeletonItem,
     Trash,
     MediaDialog,
     FilePenLine,
@@ -75,13 +78,11 @@ export default class MediaListContainer extends Vue {
   };
 
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 44;
 
   mediaDialogVisible = false;
   mediaDialogMode: MediaDialogMode = 'upload';
   selectedMediaId: number | null = null;
-
-  resizeTimer: number | null = null;
 
   // 请求竞态控制
   reqId = 0;
@@ -97,59 +98,6 @@ export default class MediaListContainer extends Vue {
     this.mediaDialogMode = 'edit';
     this.selectedMediaId = media.id;
     this.mediaDialogVisible = true;
-  }
-
-  // 1. 计算容器最多能放下多少卡片
-  calculatePageSize() {
-    const container = this.$refs.mediaListMain as HTMLElement;
-    if (!container) {
-      console.log('容器未找到');
-      return;
-    }
-
-    const containerHeight = container.clientHeight;
-    const containerWidth = container.clientWidth;
-
-    // 尝试获取实际渲染的卡片
-    const grid = container.querySelector('.media-list-grid') as HTMLElement;
-    const cards = grid?.querySelectorAll('.media-list-card') as NodeListOf<HTMLElement>;
-
-    let cols: number, cardHeight: number;
-
-    if (cards && cards.length > 0) {
-      // 使用实际渲染的列数：检查第一行有多少个卡片
-      const firstCardTop = cards[0].offsetTop;
-      cols = 0;
-      for (let i = 0; i < cards.length; i++) {
-        if (cards[i].offsetTop === firstCardTop) {
-          cols++;
-        } else {
-          break;
-        }
-      }
-
-      // 使用实际渲染的卡片高度 + gap
-      cardHeight = cards[0].offsetHeight + 12;
-      console.log('使用实际布局:', { cols, cardHeight });
-    } else {
-      // 使用估算值
-      const cardMinWidth = 200 + 12;
-      cols = Math.max(Math.floor((containerWidth + 12) / cardMinWidth), 1);
-      // 图片180px + 卡片padding约20px + 描述20px + footer约40px + gap 12px
-      cardHeight = 140 + 20 + 20 + 40 + 12;
-      console.log('使用估算值:', { cols, cardHeight });
-    }
-
-    const rows = Math.max(Math.floor(containerHeight / cardHeight), 1);
-
-    // 修改这一页的卡片数量为 n 的倍数
-    const newPageSize = cols * rows;
-
-    console.log('计算结果:', { containerHeight, cardHeight, cols, rows, newPageSize, currentPageSize: this.pageSize });
-
-    if (newPageSize > 0) {
-      this.pageSize = newPageSize;
-    }
   }
 
   async handleDelete(id: number) {
@@ -176,16 +124,8 @@ export default class MediaListContainer extends Vue {
     await this.fetchMediaList();
   }
 
-  // 2. 向服务端发送网络请求获取当前页的数据
-  async fetchMediaList(isInitialLoad = false) {
+  async fetchMediaList() {
     const currentReqId = ++this.reqId;
-    console.log('开始加载媒体列表:', {
-      mediaType: this.mediaType,
-      page: this.currentPage,
-      pageSize: this.pageSize,
-      reqId: currentReqId,
-      isInitialLoad,
-    });
 
     try {
       this.loading = true;
@@ -197,27 +137,12 @@ export default class MediaListContainer extends Vue {
       });
 
       if (currentReqId !== this.reqId) {
-        console.log('请求已过期，丢弃结果', { currentReqId, latestReqId: this.reqId });
         return;
       }
 
       this.mediaList = result;
-      console.log('媒体列表加载成功:', { count: result.rows.length, total: result.total });
-
-      // 首次加载后，用实际卡片高度重新计算一次
-      if (isInitialLoad && result.rows.length > 0) {
-        await this.$nextTick();
-        const oldPageSize = this.pageSize;
-        this.calculatePageSize();
-        // 如果 pageSize 变化了，重新加载
-        if (this.pageSize !== oldPageSize) {
-          console.log('PageSize 调整:', { from: oldPageSize, to: this.pageSize });
-          await this.fetchMediaList();
-        }
-      }
     } catch (error) {
       if (currentReqId !== this.reqId) {
-        console.log('请求已过期，忽略错误', { currentReqId, latestReqId: this.reqId });
         return;
       }
 
@@ -230,24 +155,13 @@ export default class MediaListContainer extends Vue {
     }
   }
 
-  // 3. 路由切换时触发计算
   async handleMediaTypeChange(newType: MediaTypeEnum) {
-    console.log('切换媒体类型:', { from: this.mediaType, to: newType, oldCurrentPage: this.currentPage });
-
-    // 重置所有状态
     this.mediaType = newType;
     this.currentPage = 1;
-    this.mediaList = { rows: [], total: 0 }; // 清空旧数据
-    this.reqId++; // 让旧请求失效
+    this.mediaList = { rows: [], total: 0 };
+    this.reqId++;
 
-    console.log('重置后 currentPage:', this.currentPage);
-
-    // 先计算再获取，并标记为首次加载
-    await this.$nextTick();
-    this.calculatePageSize();
-    console.log('计算后 currentPage:', this.currentPage);
-    await this.fetchMediaList(true);
-    console.log('加载后 currentPage:', this.currentPage);
+    await this.fetchMediaList();
   }
 
   async updateFileList(newMediaList: GetMediaListResDTO) {
@@ -257,33 +171,8 @@ export default class MediaListContainer extends Vue {
   async mounted(): Promise<void> {
     const type = this.$route.params.id as MediaTypeEnum;
     this.mediaType = type;
-    console.log('组件挂载，媒体类型:', type);
 
-    await this.$nextTick();
-
-    // 先计算再获取，并标记为首次加载
-    this.calculatePageSize();
-    await this.fetchMediaList(true);
-
-    window.addEventListener('resize', this.handleResize);
-  }
-
-  // 3. resize 时触发计算
-  handleResize() {
-    if (!this.$refs.mediaListMain) {
-      return;
-    }
-
-    if (this.resizeTimer) {
-      clearTimeout(this.resizeTimer);
-    }
-
-    this.resizeTimer = window.setTimeout(() => {
-      // 先计算再获取
-      this.calculatePageSize();
-      this.fetchMediaList();
-      this.resizeTimer = null;
-    }, 300);
+    await this.fetchMediaList();
   }
 
   handleCopyMediaURL(path: string) {
@@ -311,12 +200,6 @@ export default class MediaListContainer extends Vue {
     document.body.removeChild(link);
   }
 
-  unmounted() {
-    window.removeEventListener('resize', this.handleResize);
-    if (this.resizeTimer) {
-      clearTimeout(this.resizeTimer);
-    }
-  }
 }
 </script>
 
@@ -411,14 +294,14 @@ export default class MediaListContainer extends Vue {
 
   .media-list-main {
     flex: 1;
-    overflow: hidden;
+    overflow-y: auto;
     padding: 0 8px 8px 8px;
   }
 
   .media-list-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
   }
 
   .media-list-card {

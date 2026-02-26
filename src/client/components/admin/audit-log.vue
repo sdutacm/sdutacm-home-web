@@ -1,7 +1,5 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
-import { Watch } from 'vue-property-decorator';
-import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import {
   AuditLogItemVO,
   DataVersionItemVO,
@@ -33,9 +31,10 @@ import {
   ElTabs,
   ElTabPane,
   ElTooltip,
+  ElSkeleton,
+  ElSkeletonItem,
   vLoading,
 } from 'element-plus';
-import { Head } from '@vueuse/head';
 import {
   Eye,
   RotateCcw,
@@ -47,10 +46,8 @@ import {
   FileText,
 } from 'lucide-vue-next';
 import UserAvatar from '@client/components/user-avatar.vue';
+import { resolve } from 'path';
 
-@View('/admin/audit-log')
-@ChildOf('AdminView')
-@RenderMethod(RenderMethodKind.CSR)
 @Options({
   directives: {
     loading: vLoading,
@@ -78,7 +75,8 @@ import UserAvatar from '@client/components/user-avatar.vue';
     ElTabs,
     ElTabPane,
     ElTooltip,
-    Head,
+    ElSkeleton,
+    ElSkeletonItem,
     Eye,
     RotateCcw,
     Search,
@@ -137,26 +135,27 @@ export default class AuditLogContainer extends Vue {
 
   // 操作类型选项
   actionTypeOptions = [
-    { value: '', label: '全部' },
-    { value: AuditActionType.CREATE, label: '创建' },
-    { value: AuditActionType.UPDATE, label: '更新' },
-    { value: AuditActionType.DELETE, label: '删除' },
-    { value: AuditActionType.LOGIN, label: '登录' },
-    { value: AuditActionType.LOGOUT, label: '登出' },
-    { value: AuditActionType.RESTORE, label: '恢复' },
+    { value: '', label: 'All' },
+    { value: AuditActionType.CREATE, label: 'Create' },
+    { value: AuditActionType.UPDATE, label: 'Update' },
+    { value: AuditActionType.DELETE, label: 'Delete' },
+    { value: AuditActionType.LOGIN, label: 'Login' },
+    { value: AuditActionType.LOGOUT, label: 'Logout' },
+    { value: AuditActionType.RESTORE, label: 'Restore' },
   ];
 
   // 实体类型选项
   entityTypeOptions = [
-    { value: '', label: '全部' },
-    { value: 'news', label: '新闻' },
-    { value: 'project', label: '项目' },
-    { value: 'media', label: '媒体文件' },
-    { value: 'admin', label: '管理员' },
-    { value: 'globalConfig', label: '全局配置' },
+    { value: '', label: 'All' },
+    { value: 'news', label: 'News' },
+    { value: 'project', label: 'Project' },
+    { value: 'media', label: 'Media File' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'globalConfig', label: 'HomePage' },
   ];
 
   async mounted() {
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // 模拟加载延迟
     await this.loadAuditLogs();
     await this.loadStats();
     this.loading = false;
@@ -191,7 +190,7 @@ export default class AuditLogContainer extends Vue {
       this.total = res.total;
     } catch (error) {
       console.error('加载审计日志失败:', error);
-      ElMessage.error('加载审计日志失败');
+      ElMessage.error('Failed to load audit logs');
     }
   }
 
@@ -239,7 +238,7 @@ export default class AuditLogContainer extends Vue {
 
   async viewVersionHistory(log: AuditLogItemVO) {
     if (!log.entityId || !log.entityType) {
-      ElMessage.warning('该操作没有关联的实体');
+      ElMessage.warning('This operation has no associated entity.');
       return;
     }
 
@@ -259,7 +258,7 @@ export default class AuditLogContainer extends Vue {
       this.versionHistory = res.rows;
     } catch (error) {
       console.error('加载版本历史失败:', error);
-      ElMessage.error('加载版本历史失败');
+      ElMessage.error('Failed to load version history');
     } finally {
       this.versionLoading = false;
     }
@@ -273,13 +272,13 @@ export default class AuditLogContainer extends Vue {
 
   async compareWithCurrent(version: DataVersionItemVO) {
     if (version.isCurrent) {
-      ElMessage.info('这已经是当前版本');
+      ElMessage.info('This is already the current version');
       return;
     }
 
     const currentVersion = this.versionHistory.find((v) => v.isCurrent);
     if (!currentVersion) {
-      ElMessage.warning('未找到当前版本');
+      ElMessage.warning('Current version not found');
       return;
     }
 
@@ -295,23 +294,23 @@ export default class AuditLogContainer extends Vue {
       this.versionDetailDialogVisible = true;
     } catch (error) {
       console.error('比较版本失败:', error);
-      ElMessage.error('比较版本失败');
+      ElMessage.error('Failed to compare versions');
     }
   }
 
   async restoreVersion(version: DataVersionItemVO) {
     if (version.isCurrent) {
-      ElMessage.info('这已经是当前版本，无需恢复');
+      ElMessage.info('This is already the current version, no need to restore');
       return;
     }
 
     try {
       await ElMessageBox.confirm(
-        `确定要恢复 "${this.versionEntityName}" 到版本 ${version.version} 吗？这将创建一个新的版本记录。`,
-        '确认恢复',
+        `Are you sure you want to restore "${this.versionEntityName}" to version ${version.version}? This will create a new version record.`,
+        'Confirm',
         {
-          confirmButtonText: '确定恢复',
-          cancelButtonText: '取消',
+          confirmButtonText: 'Confirm',
+          cancelButtonText: 'Cancel',
           type: 'warning',
         },
       );
@@ -334,37 +333,34 @@ export default class AuditLogContainer extends Vue {
     } catch (error) {
       if (error !== 'cancel') {
         console.error('恢复版本失败:', error);
-        ElMessage.error('恢复版本失败');
+        ElMessage.error('Failed to restore version');
       }
     }
   }
 
-  // 格式化操作类型显示
   getActionTypeTag(actionType: AuditActionType) {
     const map: Record<AuditActionType, { type: string; label: string }> = {
-      [AuditActionType.CREATE]: { type: 'success', label: '创建' },
-      [AuditActionType.UPDATE]: { type: 'warning', label: '更新' },
-      [AuditActionType.DELETE]: { type: 'danger', label: '删除' },
-      [AuditActionType.LOGIN]: { type: 'info', label: '登录' },
-      [AuditActionType.LOGOUT]: { type: 'info', label: '登出' },
-      [AuditActionType.RESTORE]: { type: 'primary', label: '恢复' },
+      [AuditActionType.CREATE]: { type: 'success', label: 'Create' },
+      [AuditActionType.UPDATE]: { type: 'warning', label: 'Update' },
+      [AuditActionType.DELETE]: { type: 'danger', label: 'Delete' },
+      [AuditActionType.LOGIN]: { type: 'info', label: 'Login' },
+      [AuditActionType.LOGOUT]: { type: 'info', label: 'Logout' },
+      [AuditActionType.RESTORE]: { type: 'primary', label: 'Restore' },
     };
     return map[actionType] || { type: 'info', label: actionType };
   }
 
-  // 格式化实体类型显示
   getEntityTypeName(entityType: string) {
     const map: Record<string, string> = {
-      news: '新闻',
-      project: '项目',
-      media: '媒体文件',
-      admin: '管理员',
-      globalConfig: '全局配置',
+      news: 'News',
+      project: 'Project',
+      media: 'Media File',
+      admin: 'Admin',
+      globalConfig: 'HomePage',
     };
     return map[entityType] || entityType;
   }
 
-  // 格式化时间
   formatTime(date: Date) {
     if (!date) return '-';
     const d = new Date(date);
@@ -378,7 +374,6 @@ export default class AuditLogContainer extends Vue {
     });
   }
 
-  // 格式化 JSON 数据用于显示
   formatJson(data: any) {
     if (!data) return '-';
     try {
@@ -391,69 +386,154 @@ export default class AuditLogContainer extends Vue {
 </script>
 
 <template>
-  <div class="audit-log-container" v-loading="loading">
-    <Head>
-      <title>审计日志 - 管理后台</title>
-    </Head>
+  <div class="audit-log-container">
+    <!-- 骨架屏 -->
+    <template v-if="loading">
+      <!-- 统计卡片骨架屏 -->
+      <div class="stats-row">
+        <ElCard v-for="i in 4" :key="'stat-skeleton-' + i" class="stat-card" shadow="none">
+          <el-skeleton :rows="0" animated>
+            <template #template>
+              <div class="stat-content">
+                <el-skeleton-item variant="rect" style="width: 48px; height: 48px; border-radius: 8px;" />
+                <div class="stat-info">
+                  <el-skeleton-item variant="h1" style="width: 60px; height: 28px; margin-bottom: 4px;" />
+                  <el-skeleton-item variant="text" style="width: 70px; height: 14px;" />
+                </div>
+              </div>
+            </template>
+          </el-skeleton>
+        </ElCard>
+      </div>
 
-    <div class="page-header">
-      <h2>审计日志</h2>
-      <p class="subtitle">查看所有管理员操作记录和数据变更历史</p>
-    </div>
+      <!-- 筛选区域骨架屏 -->
+      <ElCard class="filter-card" shadow="none">
+        <el-skeleton :rows="0" animated>
+          <template #template>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+              <el-skeleton-item variant="text" style="width: 60px; height: 14px;" />
+              <el-skeleton-item variant="rect" style="width: 120px; height: 32px; border-radius: 4px;" />
+              <el-skeleton-item variant="text" style="width: 60px; height: 14px;" />
+              <el-skeleton-item variant="rect" style="width: 120px; height: 32px; border-radius: 4px;" />
+              <el-skeleton-item variant="text" style="width: 60px; height: 14px;" />
+              <el-skeleton-item variant="rect" style="width: 260px; height: 32px; border-radius: 4px;" />
+              <el-skeleton-item variant="button" style="width: 70px; height: 32px; border-radius: 4px;" />
+              <el-skeleton-item variant="button" style="width: 70px; height: 32px; border-radius: 4px;" />
+            </div>
+          </template>
+        </el-skeleton>
+      </ElCard>
 
-    <!-- 统计卡片 -->
-    <div class="stats-row">
-      <ElCard class="stat-card">
+      <!-- 表格骨架屏 -->
+      <ElCard class="list-card" shadow="hover">
+        <div class="table-skeleton">
+          <el-skeleton :rows="0" animated>
+            <template #template>
+              <!-- 表头骨架 -->
+              <div class="skeleton-table-header">
+                <el-skeleton-item variant="text" style="width: 120px; height: 16px;" />
+                <el-skeleton-item variant="text" style="width: 100px; height: 16px;" />
+                <el-skeleton-item variant="text" style="width: 70px; height: 16px;" />
+                <el-skeleton-item variant="text" style="width: 70px; height: 16px;" />
+                <el-skeleton-item variant="text" style="width: 140px; height: 16px;" />
+                <el-skeleton-item variant="text" style="width: 160px; height: 16px;" />
+                <el-skeleton-item variant="text" style="width: 120px; height: 16px;" />
+              </div>
+              <!-- 表格行骨架 -->
+              <div v-for="i in 10" :key="'table-skeleton-row-' + i" class="skeleton-table-row">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <el-skeleton-item variant="circle" style="width: 14px; height: 14px;" />
+                  <el-skeleton-item variant="text" style="width: 100px; height: 14px;" />
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <el-skeleton-item variant="circle" style="width: 24px; height: 24px;" />
+                  <el-skeleton-item variant="text" style="width: 60px; height: 14px;" />
+                </div>
+                <el-skeleton-item variant="button" style="width: 50px; height: 22px; border-radius: 4px;" />
+                <el-skeleton-item variant="text" style="width: 50px; height: 14px;" />
+                <el-skeleton-item variant="text" style="width: 120px; height: 14px;" />
+                <el-skeleton-item variant="text" style="width: 140px; height: 14px;" />
+                <div style="display: flex; gap: 8px;">
+                  <el-skeleton-item variant="text" style="width: 40px; height: 14px;" />
+                  <el-skeleton-item variant="text" style="width: 40px; height: 14px;" />
+                </div>
+              </div>
+            </template>
+          </el-skeleton>
+        </div>
+
+        <!-- 分页器骨架屏 -->
+        <div class="pagination-container">
+          <el-skeleton :rows="0" animated style="display: flex; gap: 8px; justify-content: flex-end;">
+            <template #template>
+              <el-skeleton-item variant="text" style="width: 60px; height: 28px;" />
+              <el-skeleton-item variant="rect" style="width: 100px; height: 28px; border-radius: 4px;" />
+              <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+              <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+              <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+              <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+              <el-skeleton-item variant="rect" style="width: 100px; height: 28px; border-radius: 4px;" />
+            </template>
+          </el-skeleton>
+        </div>
+      </ElCard>
+    </template>
+
+    <!-- 实际内容 -->
+    <template v-else>
+      <!-- 统计卡片 -->
+      <div class="stats-row">
+      <ElCard class="stat-card" shadow="hover">
         <div class="stat-content">
           <div class="stat-icon">
             <FileText :size="24" />
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.totalLogs }}</div>
-            <div class="stat-label">总操作记录</div>
+            <div class="stat-label">All</div>
           </div>
         </div>
       </ElCard>
-      <ElCard class="stat-card">
+      <ElCard class="stat-card" shadow="hover">
         <div class="stat-content">
           <div class="stat-icon create">
             <FileText :size="24" />
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.actionTypeCounts?.CREATE || 0 }}</div>
-            <div class="stat-label">创建操作</div>
+            <div class="stat-label">Create</div>
           </div>
         </div>
       </ElCard>
-      <ElCard class="stat-card">
+      <ElCard class="stat-card" shadow="hover">
         <div class="stat-content">
           <div class="stat-icon update">
             <RefreshCw :size="24" />
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.actionTypeCounts?.UPDATE || 0 }}</div>
-            <div class="stat-label">更新操作</div>
+            <div class="stat-label">Update</div>
           </div>
         </div>
       </ElCard>
-      <ElCard class="stat-card">
+      <ElCard class="stat-card" shadow="hover">
         <div class="stat-content">
           <div class="stat-icon delete">
             <FileText :size="24" />
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.actionTypeCounts?.DELETE || 0 }}</div>
-            <div class="stat-label">删除操作</div>
+            <div class="stat-label">Delete</div>
           </div>
         </div>
       </ElCard>
     </div>
 
     <!-- 筛选区域 -->
-    <ElCard class="filter-card">
+    <ElCard class="filter-card" shadow="hover">
       <ElForm :inline="true" :model="filterForm" class="filter-form">
-        <ElFormItem label="操作类型">
-          <ElSelect v-model="filterForm.actionType" placeholder="选择操作类型" clearable style="width: 120px">
+        <ElFormItem label="Operate Type">
+          <ElSelect v-model="filterForm.actionType" clearable style="width: 120px">
             <ElOption
               v-for="item in actionTypeOptions"
               :key="item.value"
@@ -462,8 +542,8 @@ export default class AuditLogContainer extends Vue {
             />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="实体类型">
-          <ElSelect v-model="filterForm.entityType" placeholder="选择实体类型" clearable style="width: 120px">
+        <ElFormItem label="Entity Type">
+          <ElSelect v-model="filterForm.entityType" clearable style="width: 120px">
             <ElOption
               v-for="item in entityTypeOptions"
               :key="item.value"
@@ -472,33 +552,33 @@ export default class AuditLogContainer extends Vue {
             />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="时间范围">
+        <ElFormItem label="Time Range">
           <ElDatePicker
             v-model="filterForm.dateRange"
             type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
+            range-separator="-"
+            start-placeholder="Start Date"
+            end-placeholder="End Date"
             style="width: 260px"
           />
         </ElFormItem>
         <ElFormItem>
           <ElButton type="primary" @click="handleSearch">
             <ElIcon><Search :size="16" /></ElIcon>
-            搜索
+            <span>Search</span>
           </ElButton>
           <ElButton @click="handleReset">
             <ElIcon><RefreshCw :size="16" /></ElIcon>
-            重置
+            <span>Reset</span>
           </ElButton>
         </ElFormItem>
       </ElForm>
     </ElCard>
 
     <!-- 日志列表 -->
-    <ElCard class="list-card">
+    <ElCard class="list-card" shadow="hover">
       <ElTable :data="auditLogs" style="width: 100%" stripe>
-        <ElTableColumn label="时间" width="180">
+        <ElTableColumn label="Time" width="180">
           <template #default="{ row }">
             <div class="time-cell">
               <ElIcon><Clock :size="14" /></ElIcon>
@@ -506,7 +586,7 @@ export default class AuditLogContainer extends Vue {
             </div>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="操作者" width="140">
+        <ElTableColumn label="Operator" width="150">
           <template #default="{ row }">
             <div class="admin-cell">
               <UserAvatar
@@ -515,37 +595,37 @@ export default class AuditLogContainer extends Vue {
                 :size="24"
               />
               <ElIcon v-else><User :size="20" /></ElIcon>
-              <span>{{ row.adminUsername || '系统' }}</span>
+              <span>{{ row.adminUsername || 'System' }}</span>
             </div>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="操作类型" width="100">
+        <ElTableColumn label="Operate Type" width="150">
           <template #default="{ row }">
             <ElTag :type="getActionTypeTag(row.actionType).type" size="small">
               {{ getActionTypeTag(row.actionType).label }}
             </ElTag>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="实体类型" width="100">
+        <ElTableColumn label="Entity Type" width="100">
           <template #default="{ row }">
             <span>{{ getEntityTypeName(row.entityType) }}</span>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="实体名称" min-width="180">
+        <ElTableColumn label="Entity Name" min-width="180">
           <template #default="{ row }">
             <span class="entity-name">{{ row.entityName || '-' }}</span>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="描述" min-width="200">
+        <ElTableColumn label="Description" min-width="250">
           <template #default="{ row }">
             <span class="description">{{ row.description || '-' }}</span>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="操作" width="180" fixed="right">
+        <ElTableColumn label="Actions" width="180" fixed="right">
           <template #default="{ row }">
             <ElButton type="primary" link size="small" @click="viewLogDetail(row)">
               <ElIcon><Eye :size="14" /></ElIcon>
-              详情
+              <span>Det.</span>
             </ElButton>
             <ElButton
               v-if="row.entityId && ['news', 'project', 'media', 'admin', 'globalConfig'].includes(row.entityType)"
@@ -555,7 +635,7 @@ export default class AuditLogContainer extends Vue {
               @click="viewVersionHistory(row)"
             >
               <ElIcon><History :size="14" /></ElIcon>
-              版本
+              <span>Ver.</span>
             </ElButton>
           </template>
         </ElTableColumn>
@@ -565,9 +645,8 @@ export default class AuditLogContainer extends Vue {
         <ElPagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
           :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
+          layout="total, prev, pager, next"
           @current-change="handlePageChange"
           @size-change="handleSizeChange"
         />
@@ -577,36 +656,36 @@ export default class AuditLogContainer extends Vue {
     <!-- 日志详情对话框 -->
     <ElDialog
       v-model="detailDialogVisible"
-      title="审计日志详情"
+      title="Details"
       width="700px"
       destroy-on-close
     >
       <template v-if="currentLog">
         <ElDescriptions :column="2" border>
-          <ElDescriptionsItem label="操作时间" :span="2">
+          <ElDescriptionsItem label="Operation Time" :span="2">
             {{ formatTime(currentLog.createdAt) }}
           </ElDescriptionsItem>
-          <ElDescriptionsItem label="操作者">
-            {{ currentLog.adminUsername || '系统' }}
+          <ElDescriptionsItem label="Operator">
+            {{ currentLog.adminUsername || 'System' }}
           </ElDescriptionsItem>
-          <ElDescriptionsItem label="IP 地址">
+          <ElDescriptionsItem label="IP Address">
             {{ currentLog.ipAddress || '-' }}
           </ElDescriptionsItem>
-          <ElDescriptionsItem label="操作类型">
+          <ElDescriptionsItem label="Operation Type">
             <ElTag :type="getActionTypeTag(currentLog.actionType).type">
               {{ getActionTypeTag(currentLog.actionType).label }}
             </ElTag>
           </ElDescriptionsItem>
-          <ElDescriptionsItem label="实体类型">
+          <ElDescriptionsItem label="Entity Type">
             {{ getEntityTypeName(currentLog.entityType) }}
           </ElDescriptionsItem>
-          <ElDescriptionsItem label="实体 ID">
+          <ElDescriptionsItem label="Entity ID">
             {{ currentLog.entityId || '-' }}
           </ElDescriptionsItem>
-          <ElDescriptionsItem label="实体名称">
+          <ElDescriptionsItem label="Entity Name">
             {{ currentLog.entityName || '-' }}
           </ElDescriptionsItem>
-          <ElDescriptionsItem label="操作描述" :span="2">
+          <ElDescriptionsItem label="Operation Description" :span="2">
             {{ currentLog.description || '-' }}
           </ElDescriptionsItem>
           <ElDescriptionsItem label="User Agent" :span="2">
@@ -615,10 +694,10 @@ export default class AuditLogContainer extends Vue {
         </ElDescriptions>
 
         <ElTabs v-if="currentLog.oldData || currentLog.newData" style="margin-top: 16px">
-          <ElTabPane label="变更前数据" v-if="currentLog.oldData">
+          <ElTabPane label="Old Data" v-if="currentLog.oldData">
             <pre class="json-data">{{ formatJson(currentLog.oldData) }}</pre>
           </ElTabPane>
-          <ElTabPane label="变更后数据" v-if="currentLog.newData">
+          <ElTabPane label="New Data" v-if="currentLog.newData">
             <pre class="json-data">{{ formatJson(currentLog.newData) }}</pre>
           </ElTabPane>
         </ElTabs>
@@ -628,12 +707,12 @@ export default class AuditLogContainer extends Vue {
     <!-- 版本历史对话框 -->
     <ElDialog
       v-model="versionDialogVisible"
-      :title="`版本历史 - ${versionEntityName}`"
+      :title="`Version History - ${versionEntityName}`"
       width="800px"
       destroy-on-close
     >
       <div v-loading="versionLoading">
-        <ElEmpty v-if="versionHistory.length === 0" description="暂无版本历史" />
+        <ElEmpty v-if="versionHistory.length === 0" description="No version history available" />
 
         <ElTimeline v-else>
           <ElTimelineItem
@@ -644,22 +723,22 @@ export default class AuditLogContainer extends Vue {
           >
             <div class="version-item">
               <div class="version-header">
-                <span class="version-number">版本 {{ version.version }}</span>
-                <ElTag v-if="version.isCurrent" type="success" size="small">当前版本</ElTag>
-                <ElTag v-if="version.isDeleted" type="danger" size="small">已删除</ElTag>
+                <span class="version-number">Version {{ version.version }}</span>
+                <ElTag v-if="version.isCurrent" type="success" size="small">Current Version</ElTag>
+                <ElTag v-if="version.isDeleted" type="danger" size="small">Deleted</ElTag>
                 <span class="version-time">{{ formatTime(version.createdAt) }}</span>
               </div>
               <div class="version-info">
-                <span class="change-summary">{{ version.changeSummary || '无变更说明' }}</span>
+                <span class="change-summary">{{ version.changeSummary || 'No Change Summary' }}</span>
                 <span class="version-admin">
                   <ElIcon><User :size="12" /></ElIcon>
-                  {{ version.adminUsername || '系统' }}
+                  {{ version.adminUsername || 'System' }}
                 </span>
               </div>
               <div class="version-actions">
                 <ElButton type="primary" link size="small" @click="viewVersionDetail(version)">
                   <ElIcon><Eye :size="14" /></ElIcon>
-                  查看
+                  <span>View</span>
                 </ElButton>
                 <ElButton
                   v-if="!version.isCurrent"
@@ -668,7 +747,7 @@ export default class AuditLogContainer extends Vue {
                   size="small"
                   @click="compareWithCurrent(version)"
                 >
-                  对比
+                  <span>Compare</span>
                 </ElButton>
                 <ElButton
                   v-if="!version.isCurrent"
@@ -678,7 +757,7 @@ export default class AuditLogContainer extends Vue {
                   @click="restoreVersion(version)"
                 >
                   <ElIcon><RotateCcw :size="14" /></ElIcon>
-                  恢复
+                  <span>Restore</span>
                 </ElButton>
               </div>
             </div>
@@ -690,33 +769,33 @@ export default class AuditLogContainer extends Vue {
     <!-- 版本详情/对比对话框 -->
     <ElDialog
       v-model="versionDetailDialogVisible"
-      :title="compareMode ? '版本对比' : '版本详情'"
+      :title="compareMode ? 'Version Comparison' : 'Version Details'"
       width="900px"
       destroy-on-close
     >
       <template v-if="currentVersion">
         <div v-if="!compareMode">
           <ElDescriptions :column="2" border>
-            <ElDescriptionsItem label="版本号">
+            <ElDescriptionsItem label="Version Number">
               {{ currentVersion.version }}
             </ElDescriptionsItem>
-            <ElDescriptionsItem label="创建时间">
+            <ElDescriptionsItem label="Created At">
               {{ formatTime(currentVersion.createdAt) }}
             </ElDescriptionsItem>
-            <ElDescriptionsItem label="操作者">
-              {{ currentVersion.adminUsername || '系统' }}
+            <ElDescriptionsItem label="Operator">
+              {{ currentVersion.adminUsername || 'System' }}
             </ElDescriptionsItem>
-            <ElDescriptionsItem label="状态">
-              <ElTag v-if="currentVersion.isCurrent" type="success">当前版本</ElTag>
-              <ElTag v-else-if="currentVersion.isDeleted" type="danger">已删除</ElTag>
-              <ElTag v-else type="info">历史版本</ElTag>
+            <ElDescriptionsItem label="Status">
+              <ElTag v-if="currentVersion.isCurrent" type="success">Current Version</ElTag>
+              <ElTag v-else-if="currentVersion.isDeleted" type="danger">Deleted</ElTag>
+              <ElTag v-else type="info">Historical Version</ElTag>
             </ElDescriptionsItem>
-            <ElDescriptionsItem label="变更说明" :span="2">
+            <ElDescriptionsItem label="Change Summary" :span="2">
               {{ currentVersion.changeSummary || '-' }}
             </ElDescriptionsItem>
           </ElDescriptions>
           <div class="version-data">
-            <h4>快照数据</h4>
+            <h4>Snapshot</h4>
             <pre class="json-data">{{ formatJson(currentVersion.snapshotData) }}</pre>
           </div>
         </div>
@@ -724,10 +803,10 @@ export default class AuditLogContainer extends Vue {
         <div v-else class="compare-container">
           <div class="compare-header">
             <div class="compare-col">
-              <h4>版本 {{ currentVersion.version }} ({{ formatTime(currentVersion.createdAt) }})</h4>
+              <h4>Version {{ currentVersion.version }} ({{ formatTime(currentVersion.createdAt) }})</h4>
             </div>
             <div class="compare-col">
-              <h4 v-if="compareVersion">版本 {{ compareVersion.version }} (当前版本)</h4>
+              <h4 v-if="compareVersion">Version {{ compareVersion.version }} (Current Version)</h4>
             </div>
           </div>
 
@@ -736,27 +815,27 @@ export default class AuditLogContainer extends Vue {
               <div class="diff-key">{{ key }}</div>
               <div class="diff-values">
                 <div class="diff-old">
-                  <span class="diff-label">旧值:</span>
+                  <span class="diff-label">Old Data:</span>
                   <pre>{{ formatJson(diff.old) }}</pre>
                 </div>
                 <div class="diff-new">
-                  <span class="diff-label">新值:</span>
+                  <span class="diff-label">New Data:</span>
                   <pre>{{ formatJson(diff.new) }}</pre>
                 </div>
               </div>
             </div>
           </div>
-          <ElEmpty v-else description="两个版本数据相同" />
+          <ElEmpty v-else description="Two versions have identical data" />
         </div>
       </template>
     </ElDialog>
+    </template>
   </div>
 </template>
 
 <style lang="less" scoped>
 .audit-log-container {
-  padding: 20px;
-
+  width: 100%;
   .page-header {
     margin-bottom: 20px;
 
@@ -791,22 +870,19 @@ export default class AuditLogContainer extends Vue {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #f0f2f5;
+          background: var(--ah-c-background-bg);
           border-radius: 8px;
           color: #409eff;
 
           &.create {
-            background: #e8f5e9;
             color: #67c23a;
           }
 
           &.update {
-            background: #fff3e0;
             color: #e6a23c;
           }
 
           &.delete {
-            background: #ffebee;
             color: #f56c6c;
           }
         }
@@ -815,7 +891,6 @@ export default class AuditLogContainer extends Vue {
           .stat-value {
             font-size: 24px;
             font-weight: 600;
-            color: #303133;
           }
 
           .stat-label {
@@ -860,12 +935,41 @@ export default class AuditLogContainer extends Vue {
       color: #606266;
       font-size: 13px;
     }
+
+    .table-skeleton {
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: 4px;
+
+      .skeleton-table-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 16px;
+        background: var(--el-fill-color-light);
+        border-bottom: 1px solid var(--el-border-color-lighter);
+      }
+
+      .skeleton-table-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--el-border-color-lighter);
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:nth-child(odd) {
+          background: var(--el-fill-color-lighter);
+        }
+      }
+    }
   }
 
   .pagination-container {
     display: flex;
     justify-content: flex-end;
-    margin-top: 16px;
   }
 }
 

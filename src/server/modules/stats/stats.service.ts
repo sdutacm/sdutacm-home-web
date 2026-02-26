@@ -7,6 +7,7 @@ import { Project } from '@server/db/entity/project';
 import { Media } from '@server/db/entity/media';
 import { Admin } from '@server/db/entity/admin';
 import { GetOverviewStatsResDTO } from '@common/modules/stats/stats.dto';
+import { MediaTypeEnum } from '@common/enums/media-type.enum';
 
 @Service()
 export default class StatsService {
@@ -161,6 +162,12 @@ export default class StatsService {
     const mediaSizeResult = await mediaRepo.createQueryBuilder('media').select('SUM(media.size)', 'total').getRawOne();
     const totalMediaSize = parseInt(mediaSizeResult?.total || '0', 10);
 
+    // 获取媒体类型统计
+    const logoCount = await mediaRepo.count({ where: { type: MediaTypeEnum.LOGO } });
+    const imageCount = await mediaRepo.count({ where: { type: MediaTypeEnum.IMAGE } });
+    const audioCount = await mediaRepo.count({ where: { type: MediaTypeEnum.AUDIO } });
+    const videoCount = await mediaRepo.count({ where: { type: MediaTypeEnum.VIDEO } });
+
     // 获取管理员统计
     const totalAdminCount = await adminRepo.count();
     const activeAdminCount = await adminRepo.count({ where: { active: true } });
@@ -177,6 +184,10 @@ export default class StatsService {
       totalMediaCount,
       activeMediaCount,
       totalMediaSize,
+      logoCount,
+      imageCount,
+      audioCount,
+      videoCount,
       totalAdminCount,
       activeAdminCount,
     };

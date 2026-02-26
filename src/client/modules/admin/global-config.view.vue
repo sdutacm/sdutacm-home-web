@@ -8,9 +8,10 @@ import {
   ElImage,
   ElButton,
   ElMessage,
-  ElLoading,
   ElTransfer,
-  vLoading,
+  ElLoading,
+  ElSkeleton,
+  ElSkeletonItem,
 } from 'element-plus';
 import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
 import { Head } from '@vueuse/head';
@@ -49,9 +50,8 @@ interface TransferItem {
     ElMessage,
     SelectMediaDialog,
     ElTransfer,
-  },
-  directives: {
-    loading: vLoading,
+    ElSkeleton,
+    ElSkeletonItem,
   },
 })
 export default class GlobalConfigView extends Vue {
@@ -145,7 +145,7 @@ export default class GlobalConfigView extends Vue {
       const res = await this.$api.getAllNews({});
       this.allNews = res.rows;
     } catch (error) {
-      console.error('加载新闻列表失败:', error);
+      console.error('Failed to load news list:', error);
     }
   }
 
@@ -154,22 +154,22 @@ export default class GlobalConfigView extends Vue {
       const res = await this.$api.getAllProjects({});
       this.allProjects = res.rows;
     } catch (error) {
-      console.error('加载项目列表失败:', error);
+      console.error('Failed to load projects list:', error);
     }
   }
 
   async saveConfig() {
     if (this.selectedNewsIds.length !== 5) {
-      ElMessage.warning('首页新闻预览必须选择恰好5条');
+      ElMessage.warning('The homepage news preview must select exactly 5 items.');
       return;
     }
 
     if (this.selectedProjectIds.length !== 3) {
-      ElMessage.warning('首页项目预览必须选择恰好3个');
+      ElMessage.warning('The homepage projects preview must select exactly 3 items.');
       return;
     }
 
-    const loading = ElLoading.service({ fullscreen: true, text: '保存中...' });
+    const loading = ElLoading.service({ fullscreen: true, text: 'Saving...' });
     try {
       const updateData: any = {
         title: this.globalConfigState.title,
@@ -193,10 +193,10 @@ export default class GlobalConfigView extends Vue {
       this.originalNewsIds = [...this.selectedNewsIds];
       this.originalProjectIds = [...this.selectedProjectIds];
 
-      ElMessage.success('配置保存成功');
+      ElMessage.success('Configuration saved successfully');
     } catch (e) {
-      console.error('保存全局配置失败:', e);
-      ElMessage.error('配置保存失败，请重试');
+      console.error('Failed to save global config:', e);
+      ElMessage.error('Failed to save configuration, please try again');
     } finally {
       loading.close();
     }
@@ -228,7 +228,7 @@ export default class GlobalConfigView extends Vue {
 
   beforeRouteLeave(to: any, from: any, next: any) {
     if (this.hasUnsavedChanges) {
-      const answer = window.confirm('您有未保存的更改，确定要离开吗？');
+      const answer = window.confirm('You have unsaved changes, are you sure you want to leave?');
       if (answer) {
         next();
       } else {
@@ -246,8 +246,92 @@ export default class GlobalConfigView extends Vue {
     <title>SDUTACM Admin | Homepage Config</title>
     <meta name="description" content="SDUTACM 管理后台首页配置" />
   </Head>
-  <div class="global-config-container" v-loading="loading">
-    <div class="config-layout" v-show="!loading">
+
+  <div class="global-config-container">
+    <!-- 骨架屏 -->
+    <div v-if="loading" class="config-layout">
+      <!-- 左侧骨架 -->
+      <div class="config-left">
+        <el-skeleton :rows="0" animated>
+          <template #template>
+            <div class="section-title-skeleton">
+              <el-skeleton-item variant="text" style="width: 100px; height: 14px;" />
+            </div>
+            <!-- Logo -->
+            <div class="form-item-skeleton">
+              <el-skeleton-item variant="text" style="width: 40px; height: 14px; margin-bottom: 8px;" />
+              <div style="display: flex; align-items: center; gap: 20px;">
+                <el-skeleton-item variant="rect" style="width: 80px; height: 80px; border-radius: 10px;" />
+                <el-skeleton-item variant="button" style="width: 90px; height: 32px; border-radius: 4px;" />
+              </div>
+            </div>
+            <!-- Title -->
+            <div class="form-item-skeleton">
+              <el-skeleton-item variant="text" style="width: 35px; height: 14px; margin-bottom: 8px;" />
+              <el-skeleton-item variant="rect" style="width: 100%; height: 32px; border-radius: 4px;" />
+            </div>
+            <!-- Slogan -->
+            <div class="form-item-skeleton">
+              <el-skeleton-item variant="text" style="width: 50px; height: 14px; margin-bottom: 8px;" />
+              <el-skeleton-item variant="rect" style="width: 100%; height: 32px; border-radius: 4px;" />
+            </div>
+            <!-- Description -->
+            <div class="form-item-skeleton" style="flex: 1;">
+              <el-skeleton-item variant="text" style="width: 75px; height: 14px; margin-bottom: 8px;" />
+              <el-skeleton-item variant="rect" style="width: 100%; height: 120px; border-radius: 4px;" />
+            </div>
+            <!-- Save Button -->
+            <div style="margin-top: auto; padding-top: 16px;">
+              <el-skeleton-item variant="button" style="width: 70px; height: 32px; border-radius: 4px;" />
+            </div>
+          </template>
+        </el-skeleton>
+      </div>
+      <!-- 右侧骨架 -->
+      <div class="config-right">
+        <!-- News Transfer Skeleton -->
+        <div class="transfer-section">
+          <el-skeleton :rows="0" animated>
+            <template #template>
+              <div class="section-title-skeleton">
+                <el-skeleton-item variant="text" style="width: 100px; height: 14px;" />
+              </div>
+              <div class="transfer-skeleton">
+                <el-skeleton-item variant="rect" style="width: 280px; height: 280px; border-radius: 4px;" />
+                <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 16px;">
+                  <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                  <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                </div>
+                <el-skeleton-item variant="rect" style="width: 280px; height: 280px; border-radius: 4px;" />
+              </div>
+              <el-skeleton-item variant="text" style="width: 280px; height: 12px; margin-top: 12px;" />
+            </template>
+          </el-skeleton>
+        </div>
+        <!-- Projects Transfer Skeleton -->
+        <div class="transfer-section">
+          <el-skeleton :rows="0" animated>
+            <template #template>
+              <div class="section-title-skeleton">
+                <el-skeleton-item variant="text" style="width: 120px; height: 14px;" />
+              </div>
+              <div class="transfer-skeleton">
+                <el-skeleton-item variant="rect" style="width: 280px; height: 280px; border-radius: 4px;" />
+                <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 16px;">
+                  <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                  <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+                </div>
+                <el-skeleton-item variant="rect" style="width: 280px; height: 280px; border-radius: 4px;" />
+              </div>
+              <el-skeleton-item variant="text" style="width: 200px; height: 12px; margin-top: 12px;" />
+            </template>
+          </el-skeleton>
+        </div>
+      </div>
+    </div>
+
+    <!-- 实际内容 -->
+    <div class="config-layout" v-else>
       <!-- 左侧：基础配置 -->
       <div class="config-left">
         <div class="section-title">Basic Settings</div>
@@ -328,6 +412,19 @@ export default class GlobalConfigView extends Vue {
   padding: 0 32px 32px;
   overflow: hidden;
   user-select: none;
+
+  .section-title-skeleton {
+    margin-bottom: 20px;
+  }
+
+  .form-item-skeleton {
+    margin-bottom: 28px;
+  }
+
+  .transfer-skeleton {
+    display: flex;
+    align-items: center;
+  }
 }
 
 .config-layout {

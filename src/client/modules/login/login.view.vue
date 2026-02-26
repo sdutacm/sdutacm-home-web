@@ -44,7 +44,7 @@ export default class LoginView extends Vue {
     </header>
     <main class="login-main">
       <h1 class="slogan">Hi, SDUTACMer ! 🌻</h1>
-      <el-form class="login-form" size="large">
+      <el-form class="login-form" size="large" :model="loginState" @submit.prevent="login">
         <el-form-item label="username">
           <el-input v-model="loginState.username" placeholder="Please enter username"></el-input>
         </el-form-item>
@@ -52,7 +52,7 @@ export default class LoginView extends Vue {
           <el-input v-model="loginState.password" type="password" placeholder="Please enter password"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" plain @click="login">Login</el-button>
+          <el-button type="primary" plain @click="login" >Login</el-button>
         </el-form-item>
       </el-form>
     </main>

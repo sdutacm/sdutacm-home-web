@@ -19,7 +19,7 @@ export default class TipButton extends Vue {
 </script>
 
 <template>
-  <el-icon size="24" @click="showDialog = true" style="cursor: pointer;"><circle-question-mark /></el-icon>
+  <el-icon size="20" @click="showDialog = true" style="cursor: pointer;"><circle-question-mark /></el-icon>
 
   <el-dialog v-model="showDialog" title="Tips" width="500px">
     <template #header="{ titleId, titleClass }">

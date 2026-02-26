@@ -23,6 +23,8 @@ import {
   ElSelect,
   ElOption,
   ElPagination,
+  ElSkeleton,
+  ElSkeletonItem,
   vLoading,
 } from 'element-plus';
 import { Head } from '@vueuse/head';
@@ -57,6 +59,8 @@ import TipButton from '@client/components/admin/tip-button.vue';
     ElSelect,
     ElOption,
     ElPagination,
+    ElSkeleton,
+    ElSkeletonItem,
     Edit,
     Delete,
     NewsEditDialog,
@@ -203,6 +207,7 @@ export default class NewsListContainer extends Vue {
 
   async mounted() {
     try {
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // 模拟加载延迟
       await this.loadNewsList();
     } finally {
       this.loading = false;
@@ -234,12 +239,51 @@ export default class NewsListContainer extends Vue {
       </div>
     </div>
 
-    <el-table
-      :data="paginatedNewsList"
-      style="width: 100%; margin-top: 16px; user-select: none"
-      stripe
-      v-loading="loading"
-    >
+    <div class="table-wrapper">
+      <!-- 骨架屏 -->
+      <div v-if="loading" class="table-skeleton">
+        <el-skeleton :rows="0" animated>
+        <template #template>
+          <!-- 表头骨架 -->
+          <div class="skeleton-table-header">
+            <el-skeleton-item variant="text" style="width: 40px; height: 16px;" />
+            <el-skeleton-item variant="text" style="width: 150px; height: 16px;" />
+            <el-skeleton-item variant="text" style="width: 100px; height: 16px;" />
+            <el-skeleton-item variant="text" style="width: 70px; height: 16px;" />
+            <el-skeleton-item variant="text" style="width: 120px; height: 16px;" />
+            <el-skeleton-item variant="text" style="width: 120px; height: 16px;" />
+            <el-skeleton-item variant="text" style="width: 120px; height: 16px;" />
+            <el-skeleton-item variant="text" style="width: 100px; height: 16px;" />
+            <el-skeleton-item variant="text" style="width: 100px; height: 16px;" />
+          </div>
+          <!-- 表格行骨架 -->
+          <div v-for="i in 10" :key="'skeleton-row-' + i" class="skeleton-table-row">
+            <el-skeleton-item variant="text" style="width: 30px; height: 14px;" />
+            <el-skeleton-item variant="text" style="width: 140px; height: 14px;" />
+            <el-skeleton-item variant="text" style="width: 90px; height: 14px;" />
+            <el-skeleton-item variant="button" style="width: 60px; height: 22px; border-radius: 4px;" />
+            <el-skeleton-item variant="text" style="width: 110px; height: 14px;" />
+            <el-skeleton-item variant="text" style="width: 110px; height: 14px;" />
+            <el-skeleton-item variant="text" style="width: 110px; height: 14px;" />
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <el-skeleton-item variant="circle" style="width: 24px; height: 24px;" />
+              <el-skeleton-item variant="text" style="width: 60px; height: 14px;" />
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <el-skeleton-item variant="text" style="width: 40px; height: 14px;" />
+              <el-skeleton-item variant="text" style="width: 50px; height: 14px;" />
+            </div>
+          </div>
+        </template>
+        </el-skeleton>
+      </div>
+      <!-- 实际表格 -->
+      <el-table
+        v-else
+        :data="paginatedNewsList"
+        style="width: 100%; user-select: none"
+        stripe
+      >
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column prop="title" label="Title" min-width="200" show-overflow-tooltip />
       <el-table-column prop="summary" label="Summary" min-width="150" show-overflow-tooltip />
@@ -285,10 +329,23 @@ export default class NewsListContainer extends Vue {
             <span>Delete</span>
           </el-button>
         </template>
-      </el-table-column>
-    </el-table>
+        </el-table-column>
+      </el-table>
+    </div>
 
-    <div class="pagination-wrapper" v-show="totalNews > 0">
+    <!-- 分页器骨架屏 -->
+    <div v-if="loading" class="pagination-wrapper">
+      <el-skeleton :rows="0" animated style="display: flex; gap: 8px; justify-content: flex-end;">
+        <template #template>
+          <el-skeleton-item variant="text" style="width: 60px; height: 28px;" />
+          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+        </template>
+      </el-skeleton>
+    </div>
+    <div class="pagination-wrapper" v-else>
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
@@ -321,9 +378,8 @@ export default class NewsListContainer extends Vue {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  justify-content: start;
-  overflow-x: auto;
-  position: relative;
+  height: 100%;
+  overflow: hidden;
 
   .toolbar {
     width: 100%;
@@ -334,9 +390,46 @@ export default class NewsListContainer extends Vue {
 
   .pagination-wrapper {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 16px;
+    justify-content: center;
     padding: 12px 0;
+    flex-shrink: 0;
+  }
+
+  .table-wrapper {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+    margin-top: 16px;
+  }
+
+  .table-skeleton {
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 4px;
+
+    .skeleton-table-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      background: var(--el-fill-color-light);
+      border-bottom: 1px solid var(--el-border-color-lighter);
+    }
+
+    .skeleton-table-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--el-border-color-lighter);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:nth-child(odd) {
+        background: var(--el-fill-color-lighter);
+      }
+    }
   }
 
   .cover-upload-wrapper {

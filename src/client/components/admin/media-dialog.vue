@@ -165,7 +165,6 @@ export default class MediaDialog extends Vue {
   async uploadFileInChunks(file: File, type: MediaTypeEnum, alt?: string): Promise<MediaDetailResDTO> {
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    // 1. 初始化分片上传
     const initRes = await this.$api.initChunkUpload({
       filename: file.name,
       fileSize: file.size,
@@ -176,7 +175,6 @@ export default class MediaDialog extends Vue {
 
     const { uploadId, chunkSize } = initRes;
 
-    // 2. 上传各分片
     for (let i = 0; i < totalChunks; i++) {
       const start = i * chunkSize;
       const end = Math.min(start + chunkSize, file.size);
@@ -184,15 +182,13 @@ export default class MediaDialog extends Vue {
 
       await this.$api.uploadChunk({
         uploadId,
-        chunkIndex: i,
+        chunkIndex: String(i),
         chunk,
       });
 
-      // 更新进度
       this.uploadProgress = Math.round(((i + 1) / totalChunks) * 100);
     }
 
-    // 3. 完成上传
     const result = await this.$api.completeChunkUpload({ uploadId });
     return result;
   }
@@ -353,7 +349,7 @@ export default class MediaDialog extends Vue {
     <template #header="{ titleId, titleClass }">
       <h4 :id="titleId" :class="titleClass" style="line-height: normal">{{ dialogTitle }}</h4>
     </template>
-    <div v-loading="loading" class="dialog-content">
+    <div v-loading="loading && !isLargeFileType" class="dialog-content">
       <!-- 上传模式 -->
       <template v-if="mode === 'upload'">
         <el-form :model="uploadFormData" label-width="80px">

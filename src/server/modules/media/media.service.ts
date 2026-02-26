@@ -2,7 +2,6 @@ import { Service, InjectCtx, RequestContext } from 'bwcx-ljsm';
 import { Inject } from 'bwcx-core';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import {
-  GetMediaListReqDTO,
   GetMediaListResDTO,
   UploadMediaReqDTO,
   MediaDetailResDTO,
@@ -61,7 +60,7 @@ export default class MediaService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         order: {
-          createdAt: 'DESC',
+          createdAt: 'ASC',
         },
       });
 
@@ -395,9 +394,13 @@ export default class MediaService {
       writeStream.on('error', reject);
     });
 
-    // 更新数据库记录的路径
+    // 获取实际文件大小
+    const actualFileSize = fs.statSync(finalPath).size;
+
+    // 更新数据库记录的路径和实际文件大小
     const relativePath = `/${state.type}/${fileName}`;
     media.path = relativePath;
+    media.size = actualFileSize;
     await mediaRepo.save(media);
 
     // 清理临时文件
