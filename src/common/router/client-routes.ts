@@ -20,6 +20,7 @@ export const clientRoutesMap = new Map<string, { path: string; routeProps: Newab
   ['DemoDetail', { path: '/demo/detail/:id', routeProps: DemoDetailRPO, renderMethod: RenderMethodKind.SSR }],
   ['HomeView', { path: '/', routeProps: undefined, renderMethod: RenderMethodKind.SSR }],
   ['LoginView', { path: '/login', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
+  ['NewsCategoryView', { path: '/news/category/:id', routeProps: undefined, renderMethod: RenderMethodKind.SSR }],
   ['NewsDetailView', { path: '/news/:id', routeProps: undefined, renderMethod: RenderMethodKind.SSR }],
   ['NewsListView', { path: '/news/overview', routeProps: undefined, renderMethod: RenderMethodKind.SSR }],
   ['NewsView', { path: '/news', routeProps: undefined, renderMethod: RenderMethodKind.SSR }],

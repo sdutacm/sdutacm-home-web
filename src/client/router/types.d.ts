@@ -22,6 +22,7 @@ declare module '@vue/runtime-core' {
       to(target: 'DemoDetail'): BwcxVueRouterActions<R.DemoDetailRPO>;
       to(target: 'HomeView'): BwcxVueRouterActions;
       to(target: 'LoginView'): BwcxVueRouterActions;
+      to(target: 'NewsCategoryView'): BwcxVueRouterActions;
       to(target: 'NewsDetailView'): BwcxVueRouterActions;
       to(target: 'NewsListView'): BwcxVueRouterActions;
       to(target: 'NewsView'): BwcxVueRouterActions;

@@ -2,13 +2,15 @@
 import { Vue, Options } from 'vue-class-component';
 import { throttle } from '@client/utils';
 import { Prop } from 'vue-property-decorator';
-
+import { fastlinks } from '@client/data/fastlinks';
 import IconMenu from './icon/icon-menu.vue';
+import { ElIcon } from 'element-plus';
 import { ArrowRight as Right } from 'lucide-vue-next';
 
 @Options({
   components: {
     IconMenu,
+    ElIcon,
     Right,
   },
 })
@@ -17,11 +19,13 @@ export default class NavigationBar extends Vue {
   isFastLinkHover = false;
   isDropDownHover = false;
   fastlinkShowIndex = 1;
+  fastlinks = fastlinks;
 
   sdutacmLinks = [
     { title: '最新动态', link: '/news/overview' },
     { title: '光锥实验室', link: 'https://lcl.sdutacm.cn' },
     { title: 'SDUT OJ', link: 'https://oj.sdutacm.cn/' },
+    { title: 'RankLand', link: 'https://rl.algoux.cn'}
   ];
 
   @Prop()
@@ -57,7 +61,7 @@ export default class NavigationBar extends Vue {
           <span>{{ link.title }}</span>
         </a>
       </div>
-      <!-- <div
+      <div
         class="nav-item"
         :class="{ 'is-show': isFastLinkShow }"
         ref="pcFastLinkElement"
@@ -69,7 +73,7 @@ export default class NavigationBar extends Vue {
         "
       >
         <span>快速链接</span>
-      </div> -->
+      </div>
     </div>
     <!-- 切换主题(居右显示) -->
     <!-- <ToggleThemeButton /> -->
@@ -115,7 +119,7 @@ export default class NavigationBar extends Vue {
     <!-- 外部快速链接 -->
     <div class="outside">
       <!-- 外部容器 -->
-      <!-- <div
+      <div
         v-for="groups in fastlinks"
         :key="groups.index"
         class="container"
@@ -146,7 +150,7 @@ export default class NavigationBar extends Vue {
             </div>
           </a>
         </div>
-      </div> -->
+      </div>
     </div>
   </div>
 </template>

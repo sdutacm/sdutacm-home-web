@@ -139,6 +139,16 @@ const clientRoutes = parseRoutes([
     renderMethod: RenderMethodKind.SSR,
     children: [
       {
+        name: 'NewsCategoryView',
+        path: '/news/category/:id',
+        fullPath: '/news/category/:id',
+        component: () => import(/* webpackChunkName: "NewsCategoryView" */ '../modules/news/news-category.view.vue'),
+        routeProps: undefined,
+        priority: undefined,
+        renderMethod: RenderMethodKind.SSR,
+        otherOptions: undefined,
+      },
+      {
         name: 'NewsDetailView',
         path: '/news/:id',
         fullPath: '/news/:id',

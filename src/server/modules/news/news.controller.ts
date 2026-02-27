@@ -15,6 +15,20 @@ import {
   GetPublishedNewsListResDTO,
   GetAllNewsReqDTO,
   GetAllNewsResDTO,
+  CreateNewsCategoryReqDTO,
+  UpdateNewsCategoryReqDTO,
+  DeleteNewsCategoryReqDTO,
+  GetNewsCategoryReqDTO,
+  GetNewsCategoryResDTO,
+  GetAllNewsCategoriesResDTO,
+  GetVisibleNewsCategoriesResDTO,
+  SetNewsCategoryReqDTO,
+  BatchSetNewsCategoryReqDTO,
+  GetNewsByCategoryReqDTO,
+  GetNewsByCategoryResDTO,
+  GetCategoryPreviewReqDTO,
+  GetCategoryPreviewResDTO,
+  GetAllCategoriesPreviewResDTO,
 } from '@common/modules/news/news.dto';
 
 @ApiController()
@@ -78,5 +92,91 @@ export default class NewsController {
   @Contract(GetPublishedNewsListReqDTO, GetPublishedNewsListResDTO)
   public async getPublishedNewsList(@Data() data: GetPublishedNewsListReqDTO): Promise<GetPublishedNewsListResDTO> {
     return await this.newsService.getPublishedNewsList(data);
+  }
+
+  // ==================== 栏目管理接口 ====================
+
+  @Api.Summary('创建新闻栏目')
+  @Post('/createCategory')
+  @Contract(CreateNewsCategoryReqDTO, null)
+  @UseGuards(LoginGuard)
+  public async createCategory(@Data() data: CreateNewsCategoryReqDTO): Promise<void> {
+    await this.newsService.createCategory(data);
+  }
+
+  @Api.Summary('更新新闻栏目')
+  @Post('/updateCategory')
+  @Contract(UpdateNewsCategoryReqDTO, null)
+  @UseGuards(LoginGuard)
+  public async updateCategory(@Data() data: UpdateNewsCategoryReqDTO): Promise<void> {
+    await this.newsService.updateCategory(data);
+  }
+
+  @Api.Summary('删除新闻栏目')
+  @Post('/deleteCategory')
+  @Contract(DeleteNewsCategoryReqDTO, null)
+  @UseGuards(LoginGuard)
+  public async deleteCategory(@Data() data: DeleteNewsCategoryReqDTO): Promise<void> {
+    await this.newsService.deleteCategory(data);
+  }
+
+  @Api.Summary('获取单个新闻栏目（管理员用）')
+  @Post('/getCategory')
+  @Contract(GetNewsCategoryReqDTO, GetNewsCategoryResDTO)
+  @UseGuards(LoginGuard)
+  public async getCategory(@Data() data: GetNewsCategoryReqDTO): Promise<GetNewsCategoryResDTO> {
+    return await this.newsService.getCategory(data);
+  }
+
+  @Api.Summary('获取所有新闻栏目列表（管理员用）')
+  @Post('/getAllCategories')
+  @Contract(null, GetAllNewsCategoriesResDTO)
+  @UseGuards(LoginGuard)
+  public async getAllCategories(): Promise<GetAllNewsCategoriesResDTO> {
+    return await this.newsService.getAllCategories();
+  }
+
+  @Api.Summary('获取可见新闻栏目列表（前台用）')
+  @Post('/getVisibleCategories')
+  @Contract(null, GetVisibleNewsCategoriesResDTO)
+  public async getVisibleCategories(): Promise<GetVisibleNewsCategoriesResDTO> {
+    return await this.newsService.getVisibleCategories();
+  }
+
+  @Api.Summary('设置新闻栏目')
+  @Post('/setNewsCategory')
+  @Contract(SetNewsCategoryReqDTO, null)
+  @UseGuards(LoginGuard)
+  public async setNewsCategory(@Data() data: SetNewsCategoryReqDTO): Promise<void> {
+    await this.newsService.setNewsCategory(data);
+  }
+
+  @Api.Summary('批量设置新闻栏目')
+  @Post('/batchSetNewsCategory')
+  @Contract(BatchSetNewsCategoryReqDTO, null)
+  @UseGuards(LoginGuard)
+  public async batchSetNewsCategory(@Data() data: BatchSetNewsCategoryReqDTO): Promise<void> {
+    await this.newsService.batchSetNewsCategory(data);
+  }
+
+  @Api.Summary('按栏目获取新闻列表')
+  @Post('/getNewsByCategory')
+  @Contract(GetNewsByCategoryReqDTO, GetNewsByCategoryResDTO)
+  public async getNewsByCategory(@Data() data: GetNewsByCategoryReqDTO): Promise<GetNewsByCategoryResDTO> {
+    return await this.newsService.getNewsByCategory(data);
+  }
+
+  @Api.Summary('获取栏目预览数据（前台大卡片用）')
+  @Post('/getCategoryPreview')
+  @Contract(GetCategoryPreviewReqDTO, GetCategoryPreviewResDTO)
+  public async getCategoryPreview(@Data() data: GetCategoryPreviewReqDTO): Promise<GetCategoryPreviewResDTO> {
+    return await this.newsService.getCategoryPreview(data);
+  }
+
+  @Api.Summary('获取所有栏目预览数据（首页用）')
+  @Post('/getAllCategoriesPreview')
+  @Contract(null, GetAllCategoriesPreviewResDTO)
+  public async getAllCategoriesPreview(): Promise<GetAllCategoriesPreviewResDTO> {
+    return await this.newsService.getAllCategoriesPreview();
   }
 }

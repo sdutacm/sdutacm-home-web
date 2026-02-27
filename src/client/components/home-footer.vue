@@ -25,6 +25,10 @@ export default class HomeFooter extends Vue {
       behavior: 'smooth',
     });
   }
+
+  get year() {
+    return new Date().getFullYear();
+  }
 }
 </script>
 
@@ -44,7 +48,7 @@ export default class HomeFooter extends Vue {
       <client-only><el-divider></el-divider></client-only>
       <div class="cpr-links">
         <div class="info">
-          <span>Copyright © 2026 SDUTACM. All rights reserved.</span>
+          <span>Copyright © {{ year }} SDUTACM. All rights reserved.</span>
         </div>
         <div class="links">
           <span>关注我们</span>

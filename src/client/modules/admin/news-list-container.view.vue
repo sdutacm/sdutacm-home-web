@@ -2,7 +2,7 @@
 import { Vue, Options } from 'vue-class-component';
 import { Watch } from 'vue-property-decorator';
 import { View, ChildOf, RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
-import { NewsItemVO } from '@common/modules/news/news.dto';
+import { NewsItemVO, NewsCategoryVO } from '@common/modules/news/news.dto';
 
 import {
   ElMessage,
@@ -25,10 +25,13 @@ import {
   ElPagination,
   ElSkeleton,
   ElSkeletonItem,
+  ElPopover,
+  ElScrollbar,
   vLoading,
+  ClickOutside,
 } from 'element-plus';
 import { Head } from '@vueuse/head';
-import { Edit, Trash2 as Delete, Plus } from 'lucide-vue-next';
+import { Edit, Trash2 as Delete, Plus, Check, X } from 'lucide-vue-next';
 import NewsEditDialog from '@client/components/admin/news-edit-dialog.vue';
 import UserAvatar from '@client/components/user-avatar.vue';
 import AddButton from '@client/components/admin/add-button.vue';
@@ -40,6 +43,7 @@ import TipButton from '@client/components/admin/tip-button.vue';
 @Options({
   directives: {
     loading: vLoading,
+    clickOutside: ClickOutside,
   },
   components: {
     ElIcon,
@@ -61,12 +65,16 @@ import TipButton from '@client/components/admin/tip-button.vue';
     ElPagination,
     ElSkeleton,
     ElSkeletonItem,
+    ElPopover,
+    ElScrollbar,
     Edit,
     Delete,
     NewsEditDialog,
     UserAvatar,
     TipButton,
     Plus,
+    Check,
+    X,
   },
 })
 export default class NewsListContainer extends Vue {
@@ -82,6 +90,15 @@ export default class NewsListContainer extends Vue {
   currentPage = 1;
   pageSize = 25;
 
+  // 栏目管理相关
+  categories: NewsCategoryVO[] = [];
+  categoryInputValue = '';
+  showCategoryDropdown = false;
+  editingCategoryId: number | null = null;
+  editingCategoryName = '';
+  categoryLoading = false;
+  filterCategoryId: number | null = null; // 栏目筛选
+
   newsForm = {
     title: '',
     summary: '',
@@ -89,16 +106,28 @@ export default class NewsListContainer extends Vue {
     coverImage: '',
     updatedBy: null,
     isPublished: false,
+    categoryId: null as number | null,
   };
 
   coverImageFile: any = null;
   uploadingCover = false;
 
   get filteredNewsList() {
-    if (this.filterStatus === 'all') return this.newsList;
-    if (this.filterStatus === 'published') return this.newsList.filter((n) => n.isPublished);
-    if (this.filterStatus === 'draft') return this.newsList.filter((n) => !n.isPublished);
-    return this.newsList;
+    let list = this.newsList;
+
+    // 栏目筛选
+    if (this.filterCategoryId !== null) {
+      list = list.filter((n) => n.categoryId === this.filterCategoryId);
+    }
+
+    // 发布状态筛选
+    if (this.filterStatus === 'published') {
+      list = list.filter((n) => n.isPublished);
+    } else if (this.filterStatus === 'draft') {
+      list = list.filter((n) => !n.isPublished);
+    }
+
+    return list;
   }
 
   get paginatedNewsList() {
@@ -125,6 +154,11 @@ export default class NewsListContainer extends Vue {
     this.currentPage = 1;
   }
 
+  @Watch('filterCategoryId')
+  onFilterCategoryIdChange() {
+    this.currentPage = 1;
+  }
+
   async loadNewsList() {
     try {
       const res = await this.$api.getAllNews({});
@@ -147,6 +181,7 @@ export default class NewsListContainer extends Vue {
       coverImage: '',
       isPublished: false,
       updatedBy: null,
+      categoryId: null,
     };
     this.coverImageFile = null;
     this.dialogVisible = true;
@@ -163,6 +198,7 @@ export default class NewsListContainer extends Vue {
       coverImage: news.coverImage || '',
       updatedBy: news.updatedBy || null,
       isPublished: news.isPublished,
+      categoryId: news.categoryId || null,
     };
     this.coverImageFile = null;
     this.dialogVisible = true;
@@ -201,8 +237,139 @@ export default class NewsListContainer extends Vue {
       coverImage: '',
       updatedBy: null,
       isPublished: false,
+      categoryId: null,
     };
     this.coverImageFile = null;
+  }
+
+  // ==================== 栏目管理方法 ====================
+
+  async loadCategories() {
+    try {
+      this.categoryLoading = true;
+      const res = await this.$api.getAllCategories();
+      this.categories = res.rows;
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      ElMessage.error('加载栏目列表失败');
+    } finally {
+      this.categoryLoading = false;
+    }
+  }
+
+  handleCategoryInputFocus() {
+    this.showCategoryDropdown = true;
+    // 每次 focus 时重新加载栏目列表
+    this.loadCategories();
+  }
+
+  handleCategoryDropdownClose() {
+    this.showCategoryDropdown = false;
+    this.editingCategoryId = null;
+    this.editingCategoryName = '';
+  }
+
+  // 点击栏目进行筛选
+  handleCategoryClick(category: NewsCategoryVO) {
+    // 如果点击的是当前已选中的栏目，则取消筛选
+    if (this.filterCategoryId === category.id) {
+      this.filterCategoryId = null;
+    } else {
+      this.filterCategoryId = category.id;
+    }
+    this.showCategoryDropdown = false;
+  }
+
+  // 清除栏目筛选
+  clearCategoryFilter() {
+    this.filterCategoryId = null;
+  }
+
+  // 获取当前筛选的栏目名称
+  get filterCategoryName() {
+    if (this.filterCategoryId === null) return null;
+    const category = this.categories.find((c) => c.id === this.filterCategoryId);
+    return category?.name || null;
+  }
+
+  async handleCategoryInputEnter() {
+    const name = this.categoryInputValue.trim();
+    if (!name) return;
+
+    // 检查是否已存在同名栏目
+    if (this.categories.some((c) => c.name === name)) {
+      ElMessage.warning('该栏目名称已存在');
+      return;
+    }
+
+    try {
+      await this.$api.createCategory({ name });
+      ElMessage.success('栏目创建成功');
+      this.categoryInputValue = '';
+      await this.loadCategories();
+    } catch (error) {
+      console.error('Failed to create category:', error);
+      ElMessage.error('创建栏目失败');
+    }
+  }
+
+  startEditCategory(category: NewsCategoryVO) {
+    this.editingCategoryId = category.id;
+    this.editingCategoryName = category.name;
+  }
+
+  cancelEditCategory() {
+    this.editingCategoryId = null;
+    this.editingCategoryName = '';
+  }
+
+  async saveEditCategory() {
+    if (!this.editingCategoryId) return;
+    const name = this.editingCategoryName.trim();
+    if (!name) {
+      ElMessage.warning('栏目名称不能为空');
+      return;
+    }
+
+    // 检查是否已存在同名栏目（排除当前编辑的栏目）
+    if (this.categories.some((c) => c.name === name && c.id !== this.editingCategoryId)) {
+      ElMessage.warning('该栏目名称已存在');
+      return;
+    }
+
+    try {
+      await this.$api.updateCategory({ id: this.editingCategoryId, name });
+      ElMessage.success('栏目更新成功');
+      this.editingCategoryId = null;
+      this.editingCategoryName = '';
+      await this.loadCategories();
+    } catch (error) {
+      console.error('Failed to update category:', error);
+      ElMessage.error('更新栏目失败');
+    }
+  }
+
+  async handleDeleteCategory(category: NewsCategoryVO) {
+    try {
+      await ElMessageBox.confirm(
+        `确定要删除栏目「${category.name}」吗？该栏目下的新闻将不再属于任何栏目。`,
+        '确认删除',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        },
+      );
+
+      await this.$api.deleteCategory({ id: category.id });
+      ElMessage.success('栏目删除成功');
+      await this.loadCategories();
+    } catch (error) {
+      if (error !== 'cancel') {
+        console.error('Failed to delete category:', error);
+        ElMessage.error('删除栏目失败');
+      }
+    }
   }
 
   async mounted() {
@@ -225,17 +392,97 @@ export default class NewsListContainer extends Vue {
   <div class="news-list-container">
     <div class="toolbar">
       <add-button content="News" @click="showCreateDialog"></add-button>
-      <div style="display: flex; align-items: center; gap: .2rem;">
+      <div style="display: flex; align-items: center; gap: 0.2rem">
+        <!-- 栏目筛选标签 -->
+        <el-tag v-if="filterCategoryName" closable type="primary" @close="clearCategoryFilter" style="margin-left: 8px">
+          栏目: {{ filterCategoryName }}
+        </el-tag>
+        <!-- 栏目管理输入框 -->
+        <div class="category-manager" v-click-outside="handleCategoryDropdownClose">
+          <el-input
+            v-model="categoryInputValue"
+            placeholder="输入栏目名称并回车创建"
+            style="width: 220px"
+            @focus="handleCategoryInputFocus"
+            @keyup.enter="handleCategoryInputEnter"
+            clearable
+          >
+            <template #prefix>
+              <el-icon><Plus /></el-icon>
+            </template>
+          </el-input>
+          <!-- 栏目列表下拉面板 -->
+          <div v-show="showCategoryDropdown" class="category-dropdown">
+            <!-- <div class="category-dropdown-header">
+              <span>栏目管理</span>
+              <span class="category-count">共 {{ categories.length }} 个栏目</span>
+            </div> -->
+            <el-scrollbar max-height="300px">
+              <div v-if="categoryLoading" class="category-loading">
+                <el-skeleton :rows="3" animated />
+              </div>
+              <div v-else-if="categories.length === 0" class="category-empty">暂无栏目，请输入名称并回车创建</div>
+              <div v-else class="category-list">
+                <div
+                  v-for="category in categories"
+                  :key="category.id"
+                  class="category-item"
+                  :class="{ 'is-active': filterCategoryId === category.id }"
+                >
+                  <!-- 编辑模式 -->
+                  <template v-if="editingCategoryId === category.id">
+                    <el-input
+                      v-model="editingCategoryName"
+                      size="small"
+                      style="flex: 1"
+                      @keyup.enter="saveEditCategory"
+                      @keyup.escape="cancelEditCategory"
+                      autofocus
+                    />
+                    <div class="category-item-actions">
+                      <el-button type="success" size="small" link @click="saveEditCategory">
+                        <el-icon><Check /></el-icon>
+                      </el-button>
+                      <el-button type="info" size="small" link @click="cancelEditCategory">
+                        <el-icon><X /></el-icon>
+                      </el-button>
+                    </div>
+                  </template>
+                  <!-- 展示模式 -->
+                  <template v-else>
+                    <div class="category-item-info" @click="handleCategoryClick(category)">
+                      <span class="category-name">{{ category.name }}</span>
+                      <span class="category-news-count">{{ category.newsCount || 0 }} 篇新闻</span>
+                    </div>
+                    <div class="category-item-actions">
+                      <el-button type="primary" size="small" link @click.stop="startEditCategory(category)">
+                        <el-icon><Edit /></el-icon>
+                      </el-button>
+                      <el-button type="danger" size="small" link @click.stop="handleDeleteCategory(category)">
+                        <el-icon><Delete /></el-icon>
+                      </el-button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </el-scrollbar>
+          </div>
+        </div>
+
         <el-select v-model="filterStatus" placeholder="Select State" style="width: 120px; margin-left: 12px">
           <el-option label="All" value="all" />
           <el-option label="Published" value="published" />
           <el-option label="Draft" value="draft" />
         </el-select>
-        <tip-button :content="[
-          'Filter news by status: All, Published, or Draft.',
-          'Click 「Add News」 to create a new news item.',
-          'Use the Edit and Delete buttons to manage existing news items.',
-        ]"></tip-button>
+        <tip-button
+          :content="[
+            'Filter news by status: All, Published, or Draft.',
+            'Click 「Add News」 to create a new news item.',
+            'Use the Edit and Delete buttons to manage existing news items.',
+            '在栏目管理输入框中输入名称并回车可快速创建栏目。',
+            '点击栏目名称可筛选该栏目下的新闻。',
+          ]"
+        ></tip-button>
       </div>
     </div>
 
@@ -243,105 +490,100 @@ export default class NewsListContainer extends Vue {
       <!-- 骨架屏 -->
       <div v-if="loading" class="table-skeleton">
         <el-skeleton :rows="0" animated>
-        <template #template>
-          <!-- 表头骨架 -->
-          <div class="skeleton-table-header">
-            <el-skeleton-item variant="text" style="width: 40px; height: 16px;" />
-            <el-skeleton-item variant="text" style="width: 150px; height: 16px;" />
-            <el-skeleton-item variant="text" style="width: 100px; height: 16px;" />
-            <el-skeleton-item variant="text" style="width: 70px; height: 16px;" />
-            <el-skeleton-item variant="text" style="width: 120px; height: 16px;" />
-            <el-skeleton-item variant="text" style="width: 120px; height: 16px;" />
-            <el-skeleton-item variant="text" style="width: 120px; height: 16px;" />
-            <el-skeleton-item variant="text" style="width: 100px; height: 16px;" />
-            <el-skeleton-item variant="text" style="width: 100px; height: 16px;" />
-          </div>
-          <!-- 表格行骨架 -->
-          <div v-for="i in 10" :key="'skeleton-row-' + i" class="skeleton-table-row">
-            <el-skeleton-item variant="text" style="width: 30px; height: 14px;" />
-            <el-skeleton-item variant="text" style="width: 140px; height: 14px;" />
-            <el-skeleton-item variant="text" style="width: 90px; height: 14px;" />
-            <el-skeleton-item variant="button" style="width: 60px; height: 22px; border-radius: 4px;" />
-            <el-skeleton-item variant="text" style="width: 110px; height: 14px;" />
-            <el-skeleton-item variant="text" style="width: 110px; height: 14px;" />
-            <el-skeleton-item variant="text" style="width: 110px; height: 14px;" />
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <el-skeleton-item variant="circle" style="width: 24px; height: 24px;" />
-              <el-skeleton-item variant="text" style="width: 60px; height: 14px;" />
+          <template #template>
+            <!-- 表头骨架 -->
+            <div class="skeleton-table-header">
+              <el-skeleton-item variant="text" style="width: 40px; height: 16px" />
+              <el-skeleton-item variant="text" style="width: 150px; height: 16px" />
+              <el-skeleton-item variant="text" style="width: 100px; height: 16px" />
+              <el-skeleton-item variant="text" style="width: 70px; height: 16px" />
+              <el-skeleton-item variant="text" style="width: 120px; height: 16px" />
+              <el-skeleton-item variant="text" style="width: 120px; height: 16px" />
+              <el-skeleton-item variant="text" style="width: 120px; height: 16px" />
+              <el-skeleton-item variant="text" style="width: 100px; height: 16px" />
+              <el-skeleton-item variant="text" style="width: 100px; height: 16px" />
             </div>
-            <div style="display: flex; gap: 8px;">
-              <el-skeleton-item variant="text" style="width: 40px; height: 14px;" />
-              <el-skeleton-item variant="text" style="width: 50px; height: 14px;" />
+            <!-- 表格行骨架 -->
+            <div v-for="i in 10" :key="'skeleton-row-' + i" class="skeleton-table-row">
+              <el-skeleton-item variant="text" style="width: 30px; height: 14px" />
+              <el-skeleton-item variant="text" style="width: 140px; height: 14px" />
+              <el-skeleton-item variant="text" style="width: 90px; height: 14px" />
+              <el-skeleton-item variant="button" style="width: 60px; height: 22px; border-radius: 4px" />
+              <el-skeleton-item variant="text" style="width: 110px; height: 14px" />
+              <el-skeleton-item variant="text" style="width: 110px; height: 14px" />
+              <el-skeleton-item variant="text" style="width: 110px; height: 14px" />
+              <div style="display: flex; align-items: center; gap: 6px">
+                <el-skeleton-item variant="circle" style="width: 24px; height: 24px" />
+                <el-skeleton-item variant="text" style="width: 60px; height: 14px" />
+              </div>
+              <div style="display: flex; gap: 8px">
+                <el-skeleton-item variant="text" style="width: 40px; height: 14px" />
+                <el-skeleton-item variant="text" style="width: 50px; height: 14px" />
+              </div>
             </div>
-          </div>
-        </template>
+          </template>
         </el-skeleton>
       </div>
       <!-- 实际表格 -->
-      <el-table
-        v-else
-        :data="paginatedNewsList"
-        style="width: 100%; user-select: none"
-        stripe
-      >
-      <el-table-column prop="id" label="ID" width="60" />
-      <el-table-column prop="title" label="Title" min-width="200" show-overflow-tooltip />
-      <el-table-column prop="summary" label="Summary" min-width="150" show-overflow-tooltip />
-      <el-table-column label="Status" width="120">
-        <template #default="{ row }">
-          <el-tag :type="row.isPublished ? 'success' : 'info'">
-            {{ row.isPublished ? 'Published' : 'Draft' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="PublishedAt" width="180">
-        <template #default="{ row }">
-          {{ formatDate(row.publishedAt) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="CreatedAt" width="180">
-        <template #default="{ row }">
-          {{ formatDate(row.createdAt) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="UpdatedAt" width="180">
-        <template #default="{ row }">
-          {{ formatDate(row.updatedAt) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="Updated By" width="150">
-        <template #default="{ row }">
-          <div v-if="row.updatedBy" class="editor-container">
-            <user-avatar :avatarUrl="row.updatedBy.avatar" />
-            <span>{{ row.updatedBy.username }}</span>
-          </div>
-          <div v-else>-</div>
-        </template>
-      </el-table-column>
-      <el-table-column label="Operate" width="150" fixed="right">
-        <template #default="{ row }">
-          <el-button type="primary" size="small" @click="showEditDialog(row)" link>
-            <el-icon><Edit /></el-icon>
-            <span>Edit</span>
-          </el-button>
-          <el-button type="danger" size="small" @click="handleDelete(row)" link>
-            <el-icon><Delete /></el-icon>
-            <span>Delete</span>
-          </el-button>
-        </template>
+      <el-table v-else :data="paginatedNewsList" style="width: 100%; user-select: none" stripe>
+        <el-table-column prop="id" label="ID" width="60" />
+        <el-table-column prop="title" label="Title" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="summary" label="Summary" min-width="150" show-overflow-tooltip />
+        <el-table-column label="Status" width="120">
+          <template #default="{ row }">
+            <el-tag :type="row.isPublished ? 'success' : 'info'">
+              {{ row.isPublished ? 'Published' : 'Draft' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="PublishedAt" width="180">
+          <template #default="{ row }">
+            {{ formatDate(row.publishedAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="CreatedAt" width="180">
+          <template #default="{ row }">
+            {{ formatDate(row.createdAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="UpdatedAt" width="180">
+          <template #default="{ row }">
+            {{ formatDate(row.updatedAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="Updated By" width="150">
+          <template #default="{ row }">
+            <div v-if="row.updatedBy" class="editor-container">
+              <user-avatar :avatarUrl="row.updatedBy.avatar" />
+              <span>{{ row.updatedBy.username }}</span>
+            </div>
+            <div v-else>-</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="Operate" width="150" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" size="small" @click="showEditDialog(row)" link>
+              <el-icon><Edit /></el-icon>
+              <span>Edit</span>
+            </el-button>
+            <el-button type="danger" size="small" @click="handleDelete(row)" link>
+              <el-icon><Delete /></el-icon>
+              <span>Delete</span>
+            </el-button>
+          </template>
         </el-table-column>
       </el-table>
     </div>
 
     <!-- 分页器骨架屏 -->
     <div v-if="loading" class="pagination-wrapper">
-      <el-skeleton :rows="0" animated style="display: flex; gap: 8px; justify-content: flex-end;">
+      <el-skeleton :rows="0" animated style="display: flex; gap: 8px; justify-content: center">
         <template #template>
-          <el-skeleton-item variant="text" style="width: 60px; height: 28px;" />
-          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
-          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
-          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
-          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />
+          <el-skeleton-item variant="text" style="width: 60px; height: 28px" />
+          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px" />
+          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px" />
+          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px" />
+          <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px" />
         </template>
       </el-skeleton>
     </div>
@@ -386,6 +628,97 @@ export default class NewsListContainer extends Vue {
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+
+  // 栏目管理样式
+  .category-manager {
+    display: flex;
+    position: relative;
+
+    .category-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 320px;
+      background: var(--el-bg-color);
+      border: 1px solid var(--el-border-color-light);
+      border-radius: 8px;
+      box-shadow: var(--el-box-shadow-light);
+      z-index: 1000;
+
+      .category-dropdown-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        // padding: 12px 16px;
+        border-bottom: 1px solid var(--el-border-color-lighter);
+        font-weight: 500;
+
+        .category-count {
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
+          font-weight: normal;
+        }
+      }
+
+      .category-loading,
+      .category-empty {
+        padding: 24px 16px;
+        text-align: center;
+        color: var(--el-text-color-secondary);
+        font-size: 14px;
+      }
+
+      .category-list {
+        padding: 8px 0;
+
+        .category-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 16px;
+          gap: 8px;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background-color: var(--el-fill-color-light);
+          }
+
+          &.is-active {
+            background-color: var(--el-color-primary-light-9);
+            border-left: 3px solid var(--el-color-primary);
+            padding-left: 13px;
+          }
+
+          .category-item-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+            cursor: pointer;
+
+            .category-name {
+              font-size: 14px;
+              color: var(--el-text-color-primary);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
+            .category-news-count {
+              font-size: 12px;
+              color: var(--el-text-color-secondary);
+            }
+          }
+
+          .category-item-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+          }
+        }
+      }
+    }
   }
 
   .pagination-wrapper {

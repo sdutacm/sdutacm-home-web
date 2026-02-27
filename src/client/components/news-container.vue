@@ -65,7 +65,7 @@ export default class NewsContainer extends Vue {
 <template>
   <div class="news-preview-container" v-loading="showLoading" v-if="!newsLoadedFailed">
     <header class="news-preview-header" v-if="newsInfo.id">
-      <div class="news-preview-img-wrapper">
+      <div class="news-preview-img-wrapper" v-if="newsInfo.coverImage">
         <el-image v-if="newsInfo.coverImage" :src="newsInfo.coverImage" fit="cover" style="width: 100%; height: 100%" />
       </div>
       <div class="news-preview-dexc-group">
@@ -82,18 +82,6 @@ export default class NewsContainer extends Vue {
           <el-icon><Eye /></el-icon>
           <span>{{ newsInfo.viewCount }}</span>
         </div>
-        <!-- <div class="admin-info">
-          <div class="admin-avatar-container">
-            <user-avatar
-              :src="newsInfo.updatedBy.avatar"
-              v-if="newsInfo.updatedBy.id"
-              style="width: 2rem; height: 2rem; border: 2px solid var(--ah-c-background-header)"
-            />
-          </div>
-          <div class="admin-details" v-if="newsInfo.updatedBy.username">
-            <span>编辑 {{ newsInfo.updatedBy.username }}</span>
-          </div>
-        </div> -->
       </div>
     </header>
     <div class="share-button" @click="copyLink" v-if="newsInfo.id">

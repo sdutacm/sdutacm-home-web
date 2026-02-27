@@ -33,6 +33,10 @@ export default class LoginView extends Vue {
     } finally {
     }
   }
+
+  get year() {
+    return new Date().getFullYear();
+  }
 }
 </script>
 
@@ -46,17 +50,17 @@ export default class LoginView extends Vue {
       <h1 class="slogan">Hi, SDUTACMer ! 🌻</h1>
       <el-form class="login-form" size="large" :model="loginState" @submit.prevent="login">
         <el-form-item label="username">
-          <el-input v-model="loginState.username" placeholder="Please enter username"></el-input>
+          <el-input v-model="loginState.username"></el-input>
         </el-form-item>
         <el-form-item label="password">
-          <el-input v-model="loginState.password" type="password" placeholder="Please enter password"></el-input>
+          <el-input v-model="loginState.password" type="password"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" plain @click="login" >Login</el-button>
         </el-form-item>
       </el-form>
     </main>
-    <footer class="login-footer">© 2026 SDUTACM All Rights Reserved.</footer>
+    <footer class="login-footer">© {{ year }} SDUTACM All Rights Reserved.</footer>
   </div>
 </template>
 
@@ -125,6 +129,7 @@ export default class LoginView extends Vue {
   & .login-footer {
     font-size: 0.3rem;
     color: gray;
+    padding-bottom: .5rem;
   }
 }
 </style>

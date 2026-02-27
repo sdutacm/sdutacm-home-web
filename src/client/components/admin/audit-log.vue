@@ -974,7 +974,6 @@ export default class AuditLogContainer extends Vue {
 }
 
 .json-data {
-  background: #f5f7fa;
   padding: 12px;
   border-radius: 4px;
   font-size: 12px;
@@ -1058,24 +1057,23 @@ export default class AuditLogContainer extends Vue {
       font-size: 14px;
       font-weight: 600;
       padding: 12px;
-      background: #f5f7fa;
       border-radius: 4px;
     }
   }
 
   .diff-list {
     .diff-item {
-      border: 1px solid #ebeef5;
+      border: 1px solid var(--el-border-color);
       border-radius: 4px;
       margin-bottom: 12px;
       overflow: hidden;
 
       .diff-key {
-        background: #f5f7fa;
+        // background: #f5f7fa;
         padding: 8px 12px;
         font-weight: 600;
         font-size: 13px;
-        border-bottom: 1px solid #ebeef5;
+        border-bottom: 1px solid var(--el-border-color);
       }
 
       .diff-values {
@@ -1089,7 +1087,7 @@ export default class AuditLogContainer extends Vue {
           .diff-label {
             display: block;
             font-size: 12px;
-            color: #909399;
+            color: var(--el-text-color-secondary);
             margin-bottom: 4px;
           }
 
@@ -1098,16 +1096,25 @@ export default class AuditLogContainer extends Vue {
             font-size: 12px;
             white-space: pre-wrap;
             word-break: break-all;
+            color: var(--el-text-color-primary);
           }
         }
 
         .diff-old {
-          background: #fef0f0;
-          border-right: 1px solid #ebeef5;
+          background: var(--el-color-danger-light-9);
+          border-right: 1px solid var(--el-border-color);
+
+          pre {
+            color: var(--el-color-danger);
+          }
         }
 
         .diff-new {
-          background: #f0f9eb;
+          background: var(--el-color-success-light-9);
+
+          pre {
+            color: var(--el-color-success);
+          }
         }
       }
     }

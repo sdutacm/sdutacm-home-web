@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
-import { Prop } from 'vue-property-decorator';
-import { NewsItemVO } from '@common/modules/news/news.dto';
+import { Prop, Watch } from 'vue-property-decorator';
+import { NewsItemVO, NewsCategoryVO } from '@common/modules/news/news.dto';
 import {
   ElDialog,
   ElForm,
@@ -14,6 +14,8 @@ import {
   ElIcon,
   ElSwitch,
   ElMessage,
+  ElSelect,
+  ElOption,
 } from 'element-plus';
 import { Upload, Image as IconPicture, Eye, SquarePen } from 'lucide-vue-next';
 import { defineAsyncComponent } from 'vue';
@@ -38,6 +40,8 @@ const QuillEditor = defineAsyncComponent(() =>
     ElFormItem,
     ElInput,
     ElIcon,
+    ElSelect,
+    ElOption,
     Upload,
     IconPicture,
     ElMessage,
@@ -57,7 +61,10 @@ export default class NewsEditDialog extends Vue {
 
   // 暴露 MediaTypeEnum 给模板使用
   MediaTypeEnum = MediaTypeEnum;
-
+  // 栏目列表
+  categories: NewsCategoryVO[] = [];
+  selectedCategoryId: number | null = null;
+  categoryLoading = false;
   @Prop({ type: Boolean, default: false }) visible!: boolean;
   @Prop() closeDialog!: () => void;
   @Prop({ required: true }) newsId!: number;
@@ -71,6 +78,31 @@ export default class NewsEditDialog extends Vue {
   // 存储从媒体库选择的封面图片路径
   selectedCoverPath: string | null = null;
 
+  @Watch('visible')
+  onVisibleChange(newVal: boolean) {
+    if (newVal) {
+      this.loadCategories();
+      // 如果是编辑模式，设置当前选中的栏目
+      if (this.dialogType === 'edit' && this.newsForm.categoryId) {
+        this.selectedCategoryId = this.newsForm.categoryId;
+      } else {
+        this.selectedCategoryId = null;
+      }
+    }
+  }
+
+  async loadCategories() {
+    try {
+      this.categoryLoading = true;
+      const res = await this.$api.getAllCategories();
+      this.categories = res.rows;
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    } finally {
+      this.categoryLoading = false;
+    }
+  }
+
   async handleSubmmit() {
     if (this.dialogType === 'create') {
       await this.handleCreateNews(
@@ -79,6 +111,7 @@ export default class NewsEditDialog extends Vue {
         this.newsForm.content,
         this.selectedCoverFile,
         this.newsForm.isPublished,
+        this.selectedCategoryId,
       );
     } else {
       await this.handleUpdateNews(
@@ -88,6 +121,7 @@ export default class NewsEditDialog extends Vue {
         this.newsForm.content,
         this.selectedCoverFile,
         this.newsForm.isPublished,
+        this.selectedCategoryId,
       );
     }
     await this.fetchNewsList();
@@ -103,6 +137,7 @@ export default class NewsEditDialog extends Vue {
     content: string,
     coverImageFile: File | null,
     isPublished: boolean,
+    categoryId: number | null,
   ) {
     try {
       let coverImagePath = '';
@@ -126,6 +161,7 @@ export default class NewsEditDialog extends Vue {
         content,
         coverImage: coverImagePath,
         isPublished,
+        categoryId: categoryId || undefined,
       });
       ElMessage.success('News created successfully');
       this.closeDialog();
@@ -142,6 +178,7 @@ export default class NewsEditDialog extends Vue {
     content: string,
     coverImageFile: File | null,
     isPublished: boolean,
+    categoryId: number | null,
   ) {
     try {
       let coverImagePath: string | undefined = undefined;
@@ -165,6 +202,7 @@ export default class NewsEditDialog extends Vue {
         content,
         coverImage: coverImagePath,
         isPublished,
+        categoryId: categoryId ?? 0, // 0 表示移除栏目
       });
       ElMessage.success('News updated successfully');
       this.closeDialog();
@@ -317,6 +355,22 @@ export default class NewsEditDialog extends Vue {
         </el-form-item>
         <el-form-item label="Title">
           <el-input v-model="newsForm.title" />
+        </el-form-item>
+        <el-form-item label="Category">
+          <el-select
+            v-model="selectedCategoryId"
+            placeholder="选择栏目（可选）"
+            clearable
+            style="width: 100%"
+            :loading="categoryLoading"
+          >
+            <el-option
+              v-for="category in categories"
+              :key="category.id"
+              :label="category.name"
+              :value="category.id"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="Summary">
           <el-input v-model="newsForm.summary" />

@@ -5,12 +5,14 @@ import {
   OneToOne,
   OneToMany,
   ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { HomeNewsPreview } from './home-news-preview';
 import { Media } from './media';
 import { Admin } from './admin';
+import { NewsCategory } from './news-category';
 
 @Entity('news')
 export class News {
@@ -46,6 +48,13 @@ export class News {
 
   @ManyToOne(() => Admin, (admin) => admin.news, { onDelete: 'SET NULL', nullable: true })
   updatedBy?: Admin;
+
+  @Column({ name: 'category_id', nullable: true })
+  categoryId?: number;
+
+  @ManyToOne(() => NewsCategory, (category) => category.news, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'category_id' })
+  category?: NewsCategory;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
