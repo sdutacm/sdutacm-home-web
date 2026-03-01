@@ -4,6 +4,7 @@ import { AuditLog, AuditActionType } from '@server/db/entity/audit-log';
 import { DataVersion } from '@server/db/entity/data-version';
 import { Admin } from '@server/db/entity/admin';
 import { News } from '@server/db/entity/news';
+import { NewsCategory } from '@server/db/entity/news-category';
 import { Project } from '@server/db/entity/project';
 import { Media } from '@server/db/entity/media';
 import { GlobalConfig } from '@server/db/entity/global-config';
@@ -30,6 +31,7 @@ import { Between, Like, In } from 'typeorm';
 // 支持版本控制的实体类型映射
 const ENTITY_REPOSITORY_MAP: Record<string, any> = {
   news: News,
+  news_category: NewsCategory,
   project: Project,
   media: Media,
   admin: Admin,
@@ -588,7 +590,7 @@ export default class AuditService {
     }
 
     // 按实体类型统计
-    const entityTypes = ['news', 'project', 'media', 'admin'];
+    const entityTypes = ['news', 'news_category', 'project', 'media', 'admin'];
     const entityTypeCounts: Record<string, number> = {};
     for (const type of entityTypes) {
       const count = await auditLogRepo.count({
@@ -675,6 +677,7 @@ export default class AuditService {
   private getEntityTypeName(entityType: string): string {
     const names: Record<string, string> = {
       news: '新闻',
+      news_category: '新闻栏目',
       project: '项目',
       media: '媒体文件',
       admin: '管理员',
@@ -691,6 +694,7 @@ export default class AuditService {
     const excludeProperties: Record<string, string[]> = {
       globalConfig: ['homeNewsPreviewIds', 'homeProjectsPreviewIds', 'createdAt', 'updatedAt'],
       news: ['createdAt', 'updatedAt'],
+      news_category: ['createdAt', 'updatedAt'],
       project: ['createdAt', 'updatedAt'],
       media: ['createdAt', 'updatedAt'],
       admin: ['createdAt', 'updatedAt', 'password'],

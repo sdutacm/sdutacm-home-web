@@ -5,6 +5,7 @@ import { View, RenderMethod, RenderMethodKind, ChildOf } from 'bwcx-client-vue3'
 import { ElTimeline, ElTimelineItem, ElImage, ElSkeleton, ElSkeletonItem, ElEmpty, ElPagination } from 'element-plus';
 import { ArrowLeft } from 'lucide-vue-next';
 import { GetNewsByCategoryResDTO, NewsCategoryVO, GetNewsDetailResDTO } from '@common/modules/news/news.dto';
+import { Head } from '@vueuse/head';
 
 interface NewsGroup {
   year: number;
@@ -16,10 +17,10 @@ interface NewsGroup {
 @RenderMethod(RenderMethodKind.SSR)
 @ChildOf('NewsView')
 @Options({
-  name: 'NewsCategoryView',
   components: {
     ElImage,
     ElTimeline,
+    Head,
     ElTimelineItem,
     ElSkeleton,
     ElSkeletonItem,
@@ -109,12 +110,18 @@ export default class NewsCategoryView extends Vue {
   }
 
   async created() {
+    window.scrollTo({ top: 0});
     await this.loadCategory();
   }
 }
 </script>
 
 <template>
+  <Head>
+    <title>{{ category ? `SDUTACM News | ${category.name}` : 'SDUTACM News' }}</title>
+    <meta v-if="category" name="description" :content="category.description || ''" />
+  </Head>
+
   <div class="news-category-container">
     <!-- 返回按钮和标题 -->
     <div class="category-header">

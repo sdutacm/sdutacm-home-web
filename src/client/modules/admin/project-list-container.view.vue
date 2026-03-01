@@ -393,7 +393,7 @@ export default class ProjectListContainer extends Vue {
 
     <!-- 分页器骨架屏 -->
     <div v-if="loading" class="pagination-wrapper">
-      <el-skeleton :rows="0" animated style="display: flex; gap: 8px; justify-content: flex-end;">
+      <el-skeleton :rows="0" animated style="display: flex; gap: 8px; justify-content: center;">
         <template #template>
           <el-skeleton-item variant="text" style="width: 60px; height: 28px;" />
           <el-skeleton-item variant="button" style="width: 32px; height: 32px; border-radius: 4px;" />

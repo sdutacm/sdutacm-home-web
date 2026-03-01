@@ -16,6 +16,7 @@ import {
   ElMessage,
   ElSelect,
   ElOption,
+  ElDatePicker,
 } from 'element-plus';
 import { Upload, Image as IconPicture, Eye, SquarePen } from 'lucide-vue-next';
 import { defineAsyncComponent } from 'vue';
@@ -42,6 +43,7 @@ const QuillEditor = defineAsyncComponent(() =>
     ElIcon,
     ElSelect,
     ElOption,
+    ElDatePicker,
     Upload,
     IconPicture,
     ElMessage,
@@ -78,15 +80,21 @@ export default class NewsEditDialog extends Vue {
   // 存储从媒体库选择的封面图片路径
   selectedCoverPath: string | null = null;
 
+  // 发布时间
+  publishedAt: Date | string | null = null;
+
   @Watch('visible')
   onVisibleChange(newVal: boolean) {
     if (newVal) {
       this.loadCategories();
-      // 如果是编辑模式，设置当前选中的栏目
-      if (this.dialogType === 'edit' && this.newsForm.categoryId) {
-        this.selectedCategoryId = this.newsForm.categoryId;
+      // 如果是编辑模式，设置当前选中的栏目和发布时间
+      if (this.dialogType === 'edit') {
+        this.selectedCategoryId = this.newsForm.categoryId || null;
+        this.publishedAt = this.newsForm.publishedAt ? new Date(this.newsForm.publishedAt) : null;
       } else {
         this.selectedCategoryId = null;
+        // 创建模式默认使用当前时间
+        this.publishedAt = new Date();
       }
     }
   }
@@ -112,6 +120,7 @@ export default class NewsEditDialog extends Vue {
         this.selectedCoverFile,
         this.newsForm.isPublished,
         this.selectedCategoryId,
+        this.publishedAt,
       );
     } else {
       await this.handleUpdateNews(
@@ -122,6 +131,7 @@ export default class NewsEditDialog extends Vue {
         this.selectedCoverFile,
         this.newsForm.isPublished,
         this.selectedCategoryId,
+        this.publishedAt,
       );
     }
     await this.fetchNewsList();
@@ -138,6 +148,7 @@ export default class NewsEditDialog extends Vue {
     coverImageFile: File | null,
     isPublished: boolean,
     categoryId: number | null,
+    publishedAt: Date | string | null,
   ) {
     try {
       let coverImagePath = '';
@@ -162,6 +173,7 @@ export default class NewsEditDialog extends Vue {
         coverImage: coverImagePath,
         isPublished,
         categoryId: categoryId || undefined,
+        publishedAt: publishedAt ? (publishedAt instanceof Date ? publishedAt.toISOString() : new Date(publishedAt).toISOString()) : undefined,
       });
       ElMessage.success('News created successfully');
       this.closeDialog();
@@ -179,6 +191,7 @@ export default class NewsEditDialog extends Vue {
     coverImageFile: File | null,
     isPublished: boolean,
     categoryId: number | null,
+    publishedAt: Date | string | null,
   ) {
     try {
       let coverImagePath: string | undefined = undefined;
@@ -203,6 +216,7 @@ export default class NewsEditDialog extends Vue {
         coverImage: coverImagePath,
         isPublished,
         categoryId: categoryId ?? 0, // 0 表示移除栏目
+        publishedAt: publishedAt ? (publishedAt instanceof Date ? publishedAt.toISOString() : new Date(publishedAt).toISOString()) : undefined,
       });
       ElMessage.success('News updated successfully');
       this.closeDialog();
@@ -306,7 +320,6 @@ export default class NewsEditDialog extends Vue {
       toolbar.addHandler('image', () => this.customImageHandler());
     }
 
-    // 监听粘贴事件
     quill.root.addEventListener('paste', (e: ClipboardEvent) => this.handlePaste(e), true);
   }
 
@@ -315,13 +328,13 @@ export default class NewsEditDialog extends Vue {
   }
 
   unmounted() {
-    // 组件卸载时清理 URL 对象
     if (this.newsForm.coverImage && this.newsForm.coverImage.startsWith('blob:')) {
       URL.revokeObjectURL(this.newsForm.coverImage);
     }
-    this.newsForm.content = ''; // 清空内容，避免内存泄漏
+    this.newsForm.content = '';
   }
 }
+
 </script>
 
 <template>
@@ -359,7 +372,6 @@ export default class NewsEditDialog extends Vue {
         <el-form-item label="Category">
           <el-select
             v-model="selectedCategoryId"
-            placeholder="选择栏目（可选）"
             clearable
             style="width: 100%"
             :loading="categoryLoading"
@@ -396,6 +408,16 @@ export default class NewsEditDialog extends Vue {
         </el-form-item>
         <el-form-item label="isPublished">
           <el-switch v-model="newsForm.isPublished"></el-switch>
+        </el-form-item>
+        <el-form-item label="publishedAt">
+          <el-date-picker
+            v-model="publishedAt"
+            type="datetime"
+            placeholder="Select date and time"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item>
           <el-button @click="closeDialog">Cancel</el-button>

@@ -14,7 +14,6 @@ import IconWechat from './homepage/icon/icon-wechat.vue';
   },
 })
 export default class HomeFooter extends Vue {
-
   goHome() {
     this.$router.push('/');
   }
@@ -54,15 +53,19 @@ export default class HomeFooter extends Vue {
           <span>关注我们</span>
           <div class="link-item">
             <a href="https://space.bilibili.com/1479542015" target="_blank" rel="noopener">
-              <IconBilibili style="width: .6rem; height: .6rem" />
+              <IconBilibili style="width: 0.6rem; height: 0.6rem" />
             </a>
             <div class="qr-popup">
               <img src="../assets/images/qr_bilibili.png" alt="Bilibili 二维码" />
             </div>
           </div>
           <div class="link-item">
-            <a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzA3NDg0NjEwOA==&scene=124#wechat_redirect" target="_blank" rel="noopener">
-              <IconWechat style="width: .6rem; height: .6rem" />
+            <a
+              href="https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzA3NDg0NjEwOA==&scene=124#wechat_redirect"
+              target="_blank"
+              rel="noopener"
+            >
+              <IconWechat style="width: 0.6rem; height: 0.6rem" />
             </a>
             <div class="qr-popup">
               <img src="../assets/images/qr_wx.png" alt="微信公众号二维码" />
@@ -86,8 +89,13 @@ export default class HomeFooter extends Vue {
   position: relative;
   user-select: none;
 
+  --footer-container-width: 60%;
+  @media screen and (max-width: 1024px) {
+    --footer-container-width: 90%;
+  }
+
   & .footer-container {
-    width: 60%;
+    width: var(--footer-container-width);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -181,6 +189,9 @@ export default class HomeFooter extends Vue {
             margin-bottom: 0.3rem;
             height: fit-content;
             padding: 0.3rem;
+            @media screen and (max-width: 1000px) {
+              padding: .1rem;
+            }
             background: #fff;
             border-radius: 0.2rem;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);

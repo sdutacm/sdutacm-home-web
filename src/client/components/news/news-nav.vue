@@ -22,8 +22,12 @@ export default class NewsNav extends Vue {
   searchQuery = '';
   allNews: GetNewsDetailResDTO[] = [];
   fuse: Fuse<GetNewsDetailResDTO> | null = null;
+    isMobile: boolean = false;
 
   async mounted() {
+    if (window.innerWidth <= 1100) {
+      this.isMobile = true;
+    }
     await this.loadAllNews();
     this.initFuse();
   }
@@ -93,6 +97,7 @@ export default class NewsNav extends Vue {
             :fetch-suggestions="querySearch"
             placeholder="搜索新闻..."
             clearable
+            :style="{ width: isMobile ? '100px' : '250px', display: 'flex', alignItems: 'center' }"
             @select="handleSelect"
             class="search-input"
           >
@@ -113,6 +118,7 @@ export default class NewsNav extends Vue {
   z-index: 100;
   display: flex;
   justify-content: center;
+  align-items: center;
   width: 100%;
   height: 1.6rem;
   background-color: var(--ah-c-background-header);
@@ -125,6 +131,10 @@ export default class NewsNav extends Vue {
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    @media screen and (max-width: 1000px) {
+      width: 90%;
+    }
     & .news-nav-title {
       display: flex;
       align-items: center;
@@ -139,14 +149,29 @@ export default class NewsNav extends Vue {
         width: 1rem;
         height: 1rem;
       }
+
       & h1 {
-        font-size: 0.6rem;
+        font-size: 0.64rem;
+
         font-weight: 700;
+      }
+
+      @media screen and (max-width: 1100px) {
+        & h1 {
+          font-size: 0.48rem;
+        }
+
+        & img {
+          width: 0.75rem;
+          // height: 0.8rem;
+        }
       }
     }
 
     & .search-input {
-      width: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
   }
 }

@@ -148,6 +148,7 @@ export default class AuditLogContainer extends Vue {
   entityTypeOptions = [
     { value: '', label: 'All' },
     { value: 'news', label: 'News' },
+    { value: 'news_category', label: 'News Category' },
     { value: 'project', label: 'Project' },
     { value: 'media', label: 'Media File' },
     { value: 'admin', label: 'Admin' },
@@ -353,6 +354,7 @@ export default class AuditLogContainer extends Vue {
   getEntityTypeName(entityType: string) {
     const map: Record<string, string> = {
       news: 'News',
+      news_category: 'News Category',
       project: 'Project',
       media: 'Media File',
       admin: 'Admin',
@@ -628,7 +630,7 @@ export default class AuditLogContainer extends Vue {
               <span>Det.</span>
             </ElButton>
             <ElButton
-              v-if="row.entityId && ['news', 'project', 'media', 'admin', 'globalConfig'].includes(row.entityType)"
+              v-if="row.entityId && ['news', 'news_category', 'project', 'media', 'admin', 'globalConfig'].includes(row.entityType)"
               type="primary"
               link
               size="small"

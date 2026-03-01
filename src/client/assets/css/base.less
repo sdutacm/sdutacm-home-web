@@ -2,6 +2,13 @@
 html {
   font-size: 50px;
   background-color: var(--ah-c-background-bg);
+  @media screen and (max-width: 1024px) {
+    font-size: 45px;
+  }
+
+  @media screen and (max-width: 768px) {
+    font-size: 40px;
+  }
 }
 
 /* ----- 默认配置 ----- */
@@ -16,7 +23,7 @@ html {
   /* 基础颜色 */
   --ah-c-white: #ffffff;
   --ah-c-black: #000000;
-  --ah-c-light-1: #f5f5f5;
+  --ah-c-light-1: #f7f7f7;
   --ah-c-light-2: #e8e8e8;
   --ah-c-light-3: #d0d0d0;
   --ah-c-gray-1: #a0a0a0;

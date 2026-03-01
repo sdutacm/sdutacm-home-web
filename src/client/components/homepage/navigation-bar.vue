@@ -94,19 +94,16 @@ export default class NavigationBar extends Vue {
   >
     <!-- 内部快速链接 -->
     <div class="inside">
-      <span class="dropdown-title">我们的项目</span>
-      <!-- <div class="dropdown-group">
+      <span class="dropdown-title">导航</span>
+      <div class="dropdown-group">
         <a
-          v-for="item in sdutlinks"
+          v-for="item in sdutacmLinks"
           :key="item.link"
           :href="item.link"
           class="dropdown-item"
           target="_blank"
           rel="noopener noreferrer"
         >
-          <div class="dropdown-icon">
-            <img :src="item.icon" alt="" />
-          </div>
           <div class="dropdown-content">
             <span class="dropdown-content-title">{{ item.title }}</span>
             <el-icon>
@@ -114,7 +111,7 @@ export default class NavigationBar extends Vue {
             </el-icon>
           </div>
         </a>
-      </div> -->
+      </div>
     </div>
     <!-- 外部快速链接 -->
     <div class="outside">

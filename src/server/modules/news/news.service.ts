@@ -46,13 +46,21 @@ export default class NewsService {
   public async createNews(data: CreateNewsReqDTO): Promise<void> {
     const newsRepo = appDataSource.getRepository(News);
 
+    // 处理发布时间：优先使用传入的publishedAt，否则在isPublished为true时使用当前时间
+    let publishedAt: Date | null = null;
+    if (data.publishedAt) {
+      publishedAt = new Date(data.publishedAt);
+    } else if (data.isPublished) {
+      publishedAt = new Date();
+    }
+
     const news = newsRepo.create({
       title: data.title,
       summary: data.summary,
       content: data.content,
       coverImage: data.coverImage || '',
       isPublished: data.isPublished || false,
-      publishedAt: data.isPublished ? new Date() : null,
+      publishedAt,
       updatedBy: this.ctx.session.admin,
       categoryId: data.categoryId || null,
     });
@@ -107,9 +115,13 @@ export default class NewsService {
     // 设置更新人
     news.updatedBy = this.ctx.session.admin;
 
-    // 如果从未发布变为发布，设置发布时间
+    // 处理发布时间和发布状态
+    if (data.publishedAt !== undefined) {
+      news.publishedAt = new Date(data.publishedAt);
+    }
     if (data.isPublished !== undefined) {
-      if (data.isPublished && !news.isPublished) {
+      // 如果从未发布变为发布，且没有传入publishedAt，则设置发布时间为当前时间
+      if (data.isPublished && !news.isPublished && data.publishedAt === undefined) {
         news.publishedAt = new Date();
       }
       news.isPublished = data.isPublished;
@@ -643,7 +655,7 @@ export default class NewsService {
     const categoryRepo = appDataSource.getRepository(NewsCategory);
     const categories = await categoryRepo.find({
       where: { isVisible: true },
-      order: { order: 'ASC', createdAt: 'DESC' },
+      order: { order: 'ASC', createdAt: 'ASC' },
     });
 
     const previews: GetCategoryPreviewResDTO[] = [];

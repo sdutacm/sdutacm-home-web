@@ -251,7 +251,7 @@ export default class NewsListContainer extends Vue {
       this.categories = res.rows;
     } catch (error) {
       console.error('Failed to load categories:', error);
-      ElMessage.error('加载栏目列表失败');
+      ElMessage.error('Failed to load categories');
     } finally {
       this.categoryLoading = false;
     }
@@ -298,18 +298,18 @@ export default class NewsListContainer extends Vue {
 
     // 检查是否已存在同名栏目
     if (this.categories.some((c) => c.name === name)) {
-      ElMessage.warning('该栏目名称已存在');
+      ElMessage.warning('A column with the same name already exists');
       return;
     }
 
     try {
       await this.$api.createCategory({ name });
-      ElMessage.success('栏目创建成功');
+      ElMessage.success('Category created successfully');
       this.categoryInputValue = '';
       await this.loadCategories();
     } catch (error) {
       console.error('Failed to create category:', error);
-      ElMessage.error('创建栏目失败');
+      ElMessage.error('Failed to create category');
     }
   }
 
@@ -327,54 +327,54 @@ export default class NewsListContainer extends Vue {
     if (!this.editingCategoryId) return;
     const name = this.editingCategoryName.trim();
     if (!name) {
-      ElMessage.warning('栏目名称不能为空');
+      ElMessage.warning('The column name cannot be empty.');
       return;
     }
 
     // 检查是否已存在同名栏目（排除当前编辑的栏目）
     if (this.categories.some((c) => c.name === name && c.id !== this.editingCategoryId)) {
-      ElMessage.warning('该栏目名称已存在');
+      ElMessage.warning('A column with the same name already exists.');
       return;
     }
 
     try {
       await this.$api.updateCategory({ id: this.editingCategoryId, name });
-      ElMessage.success('栏目更新成功');
+      ElMessage.success('Category updated successfully');
       this.editingCategoryId = null;
       this.editingCategoryName = '';
       await this.loadCategories();
     } catch (error) {
       console.error('Failed to update category:', error);
-      ElMessage.error('更新栏目失败');
+      ElMessage.error('Failed to update category');
     }
   }
 
   async handleDeleteCategory(category: NewsCategoryVO) {
     try {
       await ElMessageBox.confirm(
-        `确定要删除栏目「${category.name}」吗？该栏目下的新闻将不再属于任何栏目。`,
-        '确认删除',
+        `Are you sure you want to delete the category "${category.name}"? The news under this category will no longer belong to any category.`,
+        'Confirm',
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: 'Confirm',
+          cancelButtonText: 'Cancel',
           type: 'warning',
         },
       );
 
       await this.$api.deleteCategory({ id: category.id });
-      ElMessage.success('栏目删除成功');
+      ElMessage.success('Category deleted successfully');
       await this.loadCategories();
     } catch (error) {
       if (error !== 'cancel') {
         console.error('Failed to delete category:', error);
-        ElMessage.error('删除栏目失败');
+        ElMessage.error('Failed to delete category');
       }
     }
   }
 
   async mounted() {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // 模拟加载延迟
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       await this.loadNewsList();
     } finally {
       this.loading = false;
@@ -401,7 +401,7 @@ export default class NewsListContainer extends Vue {
         <div class="category-manager" v-click-outside="handleCategoryDropdownClose">
           <el-input
             v-model="categoryInputValue"
-            placeholder="输入栏目名称并回车创建"
+            placeholder="Add News Category"
             style="width: 220px"
             @focus="handleCategoryInputFocus"
             @keyup.enter="handleCategoryInputEnter"
@@ -421,7 +421,7 @@ export default class NewsListContainer extends Vue {
               <div v-if="categoryLoading" class="category-loading">
                 <el-skeleton :rows="3" animated />
               </div>
-              <div v-else-if="categories.length === 0" class="category-empty">暂无栏目，请输入名称并回车创建</div>
+              <div v-else-if="categories.length === 0" class="category-empty">There is no category yet. Please enter a name and press Enter to create one.</div>
               <div v-else class="category-list">
                 <div
                   v-for="category in categories"
@@ -479,8 +479,8 @@ export default class NewsListContainer extends Vue {
             'Filter news by status: All, Published, or Draft.',
             'Click 「Add News」 to create a new news item.',
             'Use the Edit and Delete buttons to manage existing news items.',
-            '在栏目管理输入框中输入名称并回车可快速创建栏目。',
-            '点击栏目名称可筛选该栏目下的新闻。',
+            'In the category management input box, enter a name and press Enter to quickly create a category.',
+            'Click on a category name to filter news under that category.',
           ]"
         ></tip-button>
       </div>

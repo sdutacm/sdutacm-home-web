@@ -108,6 +108,11 @@ export default class NewsContainer extends Vue {
   width: 100%;
   min-height: 100vh;
   align-items: center;
+
+  --news-container-width: 60%;
+  @media screen and (max-width: 1000px) {
+    --news-container-width: 90%;
+  }
   & .news-preview-header {
     width: 100%;
     display: flex;
@@ -118,11 +123,15 @@ export default class NewsContainer extends Vue {
     & .news-preview-img-wrapper {
       width: 100%;
       height: 500px;
+
+      @media screen and (max-width: 1000px) {
+        height: 300px;
+      }
       position: relative;
     }
 
     & .news-preview-dexc-group {
-      width: 60%;
+      width: var(--news-container-width);
       min-width: 300px;
       display: flex;
       flex-direction: column;
@@ -180,7 +189,7 @@ export default class NewsContainer extends Vue {
   }
 
   & .news-preview-main {
-    width: 60%;
+    width: var(--news-container-width);
     flex: 1;
     min-width: 300px;
     padding: 1rem;
@@ -219,7 +228,7 @@ export default class NewsContainer extends Vue {
 }
 
 .divider-container {
-  width: 60%;
+  width: var(--news-container-width);
   background-color: var(--ah-c-background-header);
   padding: 0 1rem;
 }
@@ -297,7 +306,7 @@ export default class NewsContainer extends Vue {
 }
 
 .aside-info {
-  width: 60%;
+  width: var(--news-container-width);
   height: fit-content;
   background-color: var(--ah-c-background-header);
   text-align: left;

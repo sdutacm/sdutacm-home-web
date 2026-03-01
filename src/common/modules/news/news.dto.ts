@@ -1,6 +1,6 @@
 import { UpdatedAdmin } from './../admin/admin.dto';
 import { FromBody } from "bwcx-common";
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsDateString } from "class-validator";
 
 export interface NewsItemVO {
   id: number;
@@ -63,6 +63,11 @@ export class CreateNewsReqDTO {
   @IsOptional()
   @IsNumber()
   categoryId?: number;
+
+  @FromBody()
+  @IsOptional()
+  @IsDateString()
+  publishedAt?: string;
 }
 
 // 更新新闻
@@ -101,6 +106,11 @@ export class UpdateNewsReqDTO {
   @IsOptional()
   @IsNumber()
   categoryId?: number;
+
+  @FromBody()
+  @IsOptional()
+  @IsDateString()
+  publishedAt?: string;
 }
 
 // 删除新闻

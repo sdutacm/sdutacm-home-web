@@ -1259,6 +1259,7 @@ export class ApiClient<T = undefined> {
           coverImage: req.coverImage,
           isPublished: req.isPublished,
           categoryId: req.categoryId,
+          publishedAt: req.publishedAt,
         },
         extraOpts: opts,
         metadata: {
@@ -1285,6 +1286,7 @@ export class ApiClient<T = undefined> {
           coverImage: req.coverImage,
           isPublished: req.isPublished,
           categoryId: req.categoryId,
+          publishedAt: req.publishedAt,
         },
         extraOpts: opts,
         metadata: {

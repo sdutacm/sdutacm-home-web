@@ -530,14 +530,17 @@ export default class GlobalConfigView extends Vue {
       flex: 1;
       max-width: 280px;
       min-height: 240px;
+      max-height: 400px;
       height: auto;
 
       .el-transfer-panel__body {
         height: calc(100% - 40px);
+        overflow: hidden;
       }
 
       .el-transfer-panel__list {
-        height: calc(100% - 40px);
+        max-height: 300px;
+        overflow-y: auto;
       }
     }
 

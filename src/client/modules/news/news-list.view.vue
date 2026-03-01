@@ -26,6 +26,7 @@ export default class NewsListView extends Vue {
   latestNewsList: GetHomeNewsResDTO = {
     rows: [],
   };
+  isMobile: boolean = false;
 
   // 栏目预览数据
   categoryPreviews: GetCategoryPreviewResDTO[] = [];
@@ -48,18 +49,17 @@ export default class NewsListView extends Vue {
   }
 
   async mounted() {
+    if (window.innerWidth <= 1000) {
+      this.isMobile = true;
+    }
     try {
       this.loading = true;
-      // 并行加载首页精选和栏目预览
       const [homeNews, categoriesPreview] = await Promise.all([
         this.$api.getHomeNews(),
         this.$api.getAllCategoriesPreview(),
       ]);
       this.latestNewsList = homeNews;
-      // 过滤掉没有新闻的栏目
-      this.categoryPreviews = categoriesPreview.categories.filter(
-        (c) => c.totalNewsCount >= 1
-      );
+      this.categoryPreviews = categoriesPreview.categories.filter((c) => c.totalNewsCount >= 1);
     } catch (error) {
       console.error('Failed to load news data:', error);
     } finally {
@@ -80,8 +80,29 @@ export default class NewsListView extends Vue {
       <span>动态精选</span>
     </h2>
 
-    <div class="news-latest-carousel">
-      <el-carousel trigger="click" height="450px" indicator-position="outside" type="card">
+    <!-- 轮播图骨架屏 -->
+    <template v-if="loading">
+      <div
+        class="carousel-skeleton"
+        :class="isMobile ? 'carousel-skeleton-small' : 'carousel-skeleton-card'"
+      >
+        <el-skeleton :rows="0" animated>
+          <template #template>
+            <div class="skeleton-carousel-wrapper">
+              <el-skeleton-item variant="image" class="skeleton-carousel-image" />
+              <div class="skeleton-carousel-content">
+                <el-skeleton-item variant="h3" style="width: 60%" />
+                <el-skeleton-item variant="text" style="width: 100%" />
+                <el-skeleton-item variant="text" style="width: 40%" />
+              </div>
+            </div>
+          </template>
+        </el-skeleton>
+      </div>
+    </template>
+
+    <div v-else :class="isMobile ? 'news-latest-carousel-small' : 'news-latest-carousel'">
+      <el-carousel trigger="click" height="450px" indicator-position="outside" :type="isMobile ? 'default' : 'card'">
         <el-carousel-item
           v-for="item in latestNewsList.rows"
           :key="item.id"
@@ -127,19 +148,13 @@ export default class NewsListView extends Vue {
     </template>
 
     <template v-else>
-      <div
-        v-for="preview in categoryPreviews"
-        :key="preview.category.id"
-        class="category-section"
-      >
+      <div v-for="preview in categoryPreviews" :key="preview.category.id" class="category-section">
         <h2 class="news-divide-title">
           <span>{{ preview.category.name }}</span>
         </h2>
 
         <div class="category-card">
-          <!-- 左侧 70%：新闻卡片（1大2小布局） -->
           <div class="category-card-left">
-            <!-- 左侧大卡片 -->
             <div
               v-if="preview.cardNews[0]"
               class="news-card news-card-large"
@@ -154,7 +169,6 @@ export default class NewsListView extends Vue {
                 <p class="news-card-date">{{ parseDate(preview.cardNews[0].publishedAt) }}</p>
               </div>
             </div>
-            <!-- 右侧2个小卡片 -->
             <div class="news-card-small-group">
               <div
                 v-if="preview.cardNews[1]"
@@ -185,7 +199,6 @@ export default class NewsListView extends Vue {
             </div>
           </div>
 
-          <!-- 右侧 30%：新闻列表 -->
           <div class="category-card-right">
             <div class="news-list-simple">
               <div
@@ -199,8 +212,8 @@ export default class NewsListView extends Vue {
               </div>
             </div>
             <div class="view-more" @click="goToCategoryDetail(preview.category.id)">
-              <span>查看更多 {{ preview.category.name }}</span>
-              <ArrowRight :size="16" />
+              <span>查看更多</span>
+              <ArrowRight class="arrow-right" :size="16" />
             </div>
           </div>
         </div>
@@ -210,6 +223,59 @@ export default class NewsListView extends Vue {
 </template>
 
 <style scoped lang="less">
+// 轮播图骨架屏
+.carousel-skeleton {
+  width: 90%;
+  min-width: 350px;
+  padding: 0.5rem 0;
+
+  &.carousel-skeleton-small {
+    width: 100%;
+  }
+
+  .skeleton-carousel-wrapper {
+    height: 450px;
+    background: var(--ah-c-background-header);
+    border-radius: 0.3rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .skeleton-carousel-image {
+      width: 100%;
+      height: 70%;
+    }
+
+    .skeleton-carousel-content {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+}
+
+.news-latest-carousel-small {
+  width: 100%;
+  height: fit-content;
+  min-width: 350px;
+  padding: 0.5rem 0;
+  position: relative;
+
+  & .carousel-item {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .carousel-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
 .news-list-container {
   display: flex;
   flex-direction: column;
@@ -322,7 +388,7 @@ export default class NewsListView extends Vue {
     .category-card-left {
       flex: 8;
       display: flex;
-      gap: .5rem;
+      gap: 0.5rem;
       height: var(--card-height);
 
       // 左侧大卡片
@@ -455,6 +521,12 @@ export default class NewsListView extends Vue {
         flex-direction: column;
         gap: 0.1rem;
 
+        @media screen and (max-width: 1000px) {
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+
         .news-list-item {
           display: flex;
           flex-direction: column;
@@ -487,9 +559,10 @@ export default class NewsListView extends Vue {
       .view-more {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: start;
         gap: 0.1rem;
         margin-top: 0.5rem;
+        margin-left: 0.2rem;
         border-radius: 0.15rem;
         cursor: pointer;
         color: var(--ah-c-brand);
@@ -497,8 +570,16 @@ export default class NewsListView extends Vue {
         transition: background-color 0.2s;
         flex-shrink: 0;
 
+        & .arrow-right {
+          transition: transform 0.3s ease;
+        }
+
         &:hover {
           background-color: var(--ah-c-background-soft);
+
+          & .arrow-right {
+            transform: translateX(0.2rem);
+          }
         }
       }
 
@@ -600,6 +681,11 @@ export default class NewsListView extends Vue {
   color: #fff;
   border-bottom-left-radius: 0.3rem;
   border-bottom-right-radius: 0.3rem;
+
+  @media screen and (max-width: 1000px) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
 
   & .title {
     font-size: 0.48rem;
