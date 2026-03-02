@@ -2,7 +2,7 @@
 
 > SDUTACM 官网及其管理系统，项目根据 SDUTACM 旧版官网重构。
 > 
-> 旧版官网仓库地址：https://github.com/sdutacm/oj-competition-side-client
+> 旧版官网仓库地址：https://github.com/sdutacm/sdutacm-homepage
 
 ## 技术栈
 
