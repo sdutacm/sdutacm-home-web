@@ -41,14 +41,6 @@ export default class SectionProject extends Vue {
       <div class="project-bubble"></div>
       <span class="project-title">{{ project.name }}</span>
       <div class="project-external-links">
-        <a v-if="project.repoUrl" class="external-link" :href="project.repoUrl" target="_blank" @click.stop>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"
-            />
-          </svg>
-          <span>仓库</span>
-        </a>
         <a v-if="project.websiteUrl" class="external-link" :href="project.websiteUrl" target="_blank" @click.stop>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -57,92 +49,19 @@ export default class SectionProject extends Vue {
           </svg>
           <span>官网</span>
         </a>
+        <a v-if="project.repoUrl" class="external-link" :href="project.repoUrl" target="_blank" @click.stop>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+          <span>仓库</span>
+        </a>
       </div>
       <p class="project-summary">
         <span v-for="(line, lineIndex) in splitDescription(project.description)" :key="lineIndex">{{ line }}</span>
       </p>
     </div>
-    <!-- <div class="project-item1 project-item" :class="{ active: acitveProject === 1 }" @click="() => this.clickProject(1)">
-      <div class="project-bubble"></div>
-      <span class="project-title">SDUT OJ 3</span>
-      <p class="project-summary">
-        <span>Online Judge 3，自研第三代在线评测系统，2018 年内测，2019 年正式上线。</span>
-        <span>使用全栈同构技术栈开发，结合自研的次时代 Top 0 性能的评测姬，轻松服务近千人的大型比赛。</span>
-      </p>
-      <div class="project-links">
-        <div class="link-item">
-          <div class="img" id="img-1-1"></div>
-          <a class="link" target="_blank" href="https://acm.sdut.edu.cn/onlinejudge3/">前往</a>
-        </div>
-        <div class="link-item">
-          <div class="img" id="img-1-2"></div>
-          <a class="link" target="_blank" href="https://acm.sdut.edu.cn/onlinejudge3/contests">竞赛</a>
-        </div>
-        <div class="link-item">
-          <div class="img" id="img-1-3"></div>
-          <a class="link" target="_blank" href="https://acm.sdut.edu.cn/onlinejudge3/users">排名</a>
-        </div>
-        <div class="link-item">
-          <div class="img" id="img-1-4"></div>
-          <a class="link" target="_blank" href="https://github.com/sdutacm/onlinejudge3">源码</a>
-        </div>
-      </div>
-    </div>
-    <div class="project-item2 project-item" :class="{ active: acitveProject === 2 }" @click="() => this.clickProject(2)">
-      <div class="project-bubble"></div>
-      <span class="project-title">RankLand</span>
-      <p class="project-summary">
-        <span
-          >RankLand，由我们的开源组织 algoUX
-          开发、算法竞赛爱好者们自发维护的、专注于托管和分享任何竞赛榜单的宝地。</span
-        >
-        <span>轻松查阅 ICPC、CCPC 等赛事的历史榜单。</span>
-      </p>
-      <div class="project-links">
-        <div class="link-item">
-          <div class="img" id="img-2-1"></div>
-          <a class="link" target="_blank" href="https://rl.algoux.cn/">前往</a>
-        </div>
-        <div class="link-item">
-          <div class="img" id="img-2-2"></div>
-          <a class="link" target="_blank" href="https://rl.algoux.cn/search?kw=ICPC">探索</a>
-        </div>
-        <div class="link-item">
-          <div class="img" id="img-2-3"></div>
-          <a class="link" target="_blank" href="https://rl.algoux.cn/collection/official">榜单合集</a>
-        </div>
-        <div class="link-item">
-          <div class="img" id="img-2-4"></div>
-          <a class="link" target="_blank" href="https://rl.algoux.cn/playground">游乐场</a>
-        </div>
-      </div>
-    </div>
-    <div class="project-item3 project-item" :class="{ active: acitveProject === 3 }" @click="() => this.clickProject(3)">
-      <div class="project-bubble"></div>
-      <span class="project-title">光之魔法书</span>
-      <p class="project-summary">
-        <span>光之魔法书，集前后端、数据库、爬虫、服务器等知识于一体的学习实践指北。</span>
-        <span>作为光锥实验室的入门魔法指南，你需要通过学习、实践、总结进而对web魔法体系有一个清晰的概念。</span>
-      </p>
-      <div class="project-links">
-        <div class="link-item">
-          <div class="img" id="img-3-1"></div>
-          <a class="link" target="_blank" href="https://lcl-magicbook.sdutacm.cn/">前往</a>
-        </div>
-        <div class="link-item">
-          <div class="img" id="img-3-2"></div>
-          <a class="link" target="_blank" href="https://lcl-magicbook.sdutacm.cn/missions">见习任务</a>
-        </div>
-        <div class="link-item">
-          <div class="img" id="img-3-3"></div>
-          <a class="link" target="_blank" href="https://lcl-magicbook.sdutacm.cn/catalog">魔法目录</a>
-        </div>
-        <div class="link-item">
-          <div class="img" id="img-3-4"></div>
-          <a class="link" target="_blank" href="https://lcl-magicbook.sdutacm.cn/pleasant-gallery">古怪展馆</a>
-        </div>
-      </div>
-    </div> -->
   </div>
 </template>
 

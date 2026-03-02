@@ -37,19 +37,6 @@ export default class NewsDetailView extends Vue {
     },
   };
 
-  async mounted() {
-    this.id = parseInt(this.$route.params.id as string);
-    console.log('NewsPreviewView mounted with id:', this.id);
-    try {
-      this.newsInfo = await this.$api.getPublishedNews({ id: this.id });
-    } catch (error) {
-      console.error('Failed to fetch news detail:', error);
-      this.newsLoadedFailed = true;
-    } finally {
-      this.showLoading = false;
-    }
-  }
-
   copyLink() {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(
@@ -58,6 +45,23 @@ export default class NewsDetailView extends Vue {
         console.error('Failed to copy link:', err);
       },
     );
+  }
+
+  async mounted() {
+    this.id = parseInt(this.$route.params.id as string);
+    console.log('NewsDetailView mounted with id:', this.id);
+    try {
+      this.newsInfo = await this.$api.getPublishedNews({ id: this.id });
+      // 增加阅览数（客户端路由跳转时触发）
+      this.$api.incrementNewsViewCount({ id: this.id }).catch((err) => {
+        console.error('Failed to increment news view count:', err);
+      });
+    } catch (error) {
+      console.error('Failed to fetch news detail:', error);
+      this.newsLoadedFailed = true;
+    } finally {
+      this.showLoading = false;
+    }
   }
 }
 </script>

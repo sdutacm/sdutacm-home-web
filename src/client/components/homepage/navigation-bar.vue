@@ -6,11 +6,13 @@ import { fastlinks } from '@client/data/fastlinks';
 import IconMenu from './icon/icon-menu.vue';
 import { ElIcon } from 'element-plus';
 import { ArrowRight as Right } from 'lucide-vue-next';
+import ThemeButton from './theme-button.vue';
 
 @Options({
   components: {
     IconMenu,
     ElIcon,
+    ThemeButton,
     Right,
   },
 })
@@ -75,8 +77,7 @@ export default class NavigationBar extends Vue {
         <span>快速链接</span>
       </div>
     </div>
-    <!-- 切换主题(居右显示) -->
-    <!-- <ToggleThemeButton /> -->
+    <ThemeButton />
   </header>
 
   <!-- 下拉窗口 -->

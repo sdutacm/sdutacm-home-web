@@ -79,6 +79,13 @@ export default class NewsController {
     return await this.newsService.getPublishedNews(data);
   }
 
+  @Api.Summary('增加新闻阅览数')
+  @Post('/incrementNewsViewCount')
+  @Contract(GetNewsReqDTO, null)
+  public async incrementNewsViewCount(@Data() data: GetNewsReqDTO): Promise<void> {
+    await this.newsService.incrementViewCount(data.id);
+  }
+
   @Api.Summary('获取所有新闻列表（管理员用）')
   @Post('/getAllNews')
   @Contract(GetAllNewsReqDTO, GetAllNewsResDTO)

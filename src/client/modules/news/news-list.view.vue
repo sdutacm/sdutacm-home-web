@@ -2,8 +2,8 @@
 import { Vue, Options } from 'vue-class-component';
 import { View, RenderMethod, RenderMethodKind, ChildOf } from 'bwcx-client-vue3';
 
-import { ElCarousel, ElCarouselItem, ElImage, ElSkeleton, ElSkeletonItem, ElEmpty } from 'element-plus';
-import { ArrowRight } from 'lucide-vue-next';
+import { ElCarousel, ElCarouselItem, ElImage, ElSkeleton, ElSkeletonItem, ElEmpty, ElIcon } from 'element-plus';
+import { ArrowRight, TextAlignEnd, TextAlignStart, Eye } from 'lucide-vue-next';
 import { GetHomeNewsResDTO } from '@common/modules/home/home.dto';
 import { GetCategoryPreviewResDTO } from '@common/modules/news/news.dto';
 
@@ -14,12 +14,16 @@ import { GetCategoryPreviewResDTO } from '@common/modules/news/news.dto';
   name: 'NewsListView',
   components: {
     ElImage,
+    Eye,
     ElCarousel,
     ElCarouselItem,
     ElSkeleton,
     ElSkeletonItem,
     ElEmpty,
     ArrowRight,
+    TextAlignEnd,
+    TextAlignStart,
+    ElIcon,
   },
 })
 export default class NewsListView extends Vue {
@@ -49,7 +53,7 @@ export default class NewsListView extends Vue {
   }
 
   async mounted() {
-    if (window.innerWidth <= 1000) {
+    if (window.innerWidth < 768) {
       this.isMobile = true;
     }
     try {
@@ -77,15 +81,14 @@ export default class NewsListView extends Vue {
 
   <div class="news-list-container">
     <h2 class="news-divide-title">
+      <el-icon><text-align-end /></el-icon>
       <span>动态精选</span>
+      <el-icon><TextAlignStart /></el-icon>
     </h2>
 
     <!-- 轮播图骨架屏 -->
     <template v-if="loading">
-      <div
-        class="carousel-skeleton"
-        :class="isMobile ? 'carousel-skeleton-small' : 'carousel-skeleton-card'"
-      >
+      <div class="carousel-skeleton" :class="isMobile ? 'carousel-skeleton-small' : 'carousel-skeleton-card'">
         <el-skeleton :rows="0" animated>
           <template #template>
             <div class="skeleton-carousel-wrapper">
@@ -102,7 +105,12 @@ export default class NewsListView extends Vue {
     </template>
 
     <div v-else :class="isMobile ? 'news-latest-carousel-small' : 'news-latest-carousel'">
-      <el-carousel trigger="click" height="450px" indicator-position="outside" :type="isMobile ? 'default' : 'card'">
+      <el-carousel
+        trigger="click"
+        :height="isMobile ? '200px' : '450px'"
+        indicator-position="outside"
+        :type="isMobile ? 'default' : 'card'"
+      >
         <el-carousel-item
           v-for="item in latestNewsList.rows"
           :key="item.id"
@@ -166,7 +174,13 @@ export default class NewsListView extends Vue {
               <div class="news-card-content">
                 <h3 class="news-card-title">{{ preview.cardNews[0].title }}</h3>
                 <p class="news-card-summary">{{ preview.cardNews[0].summary }}</p>
-                <p class="news-card-date">{{ parseDate(preview.cardNews[0].publishedAt) }}</p>
+                <div class="news-card-date">
+                  <span>{{ parseDate(preview.cardNews[0].publishedAt) }}</span>
+                  <div class="view-icon-wrapper">
+                    <el-icon class="view-count-icon"><Eye /></el-icon>
+                    <span>{{ preview.cardNews[0].viewCount }}</span>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="news-card-small-group">
@@ -180,7 +194,13 @@ export default class NewsListView extends Vue {
                 </div>
                 <div class="news-card-content">
                   <h3 class="news-card-title">{{ preview.cardNews[1].title }}</h3>
-                  <p class="news-card-date">{{ parseDate(preview.cardNews[1].publishedAt) }}</p>
+                  <div class="news-card-date">
+                    <span>{{ parseDate(preview.cardNews[1].publishedAt) }}</span>
+                    <div class="view-icon-wrapper">
+                      <el-icon class="view-count-icon"><Eye /></el-icon>
+                      <span>{{ preview.cardNews[1].viewCount }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div
@@ -193,7 +213,13 @@ export default class NewsListView extends Vue {
                 </div>
                 <div class="news-card-content">
                   <h3 class="news-card-title">{{ preview.cardNews[2].title }}</h3>
-                  <p class="news-card-date">{{ parseDate(preview.cardNews[2].publishedAt) }}</p>
+                  <div class="news-card-date">
+                    <span>{{ parseDate(preview.cardNews[2].publishedAt) }}</span>
+                    <div class="view-icon-wrapper">
+                      <el-icon class="view-count-icon"><Eye /></el-icon>
+                      <span>{{ preview.cardNews[2].viewCount }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -369,19 +395,19 @@ export default class NewsListView extends Vue {
     max-width: 1400px;
   }
 
-  // 栏目大卡片
   .category-card {
     width: 100%;
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     background: var(--ah-c-background-header);
     border-radius: 0.3rem;
     padding: 1rem;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     --card-height: 450px;
 
-    @media (max-width: 1024px) {
+    @media screen and (max-width: 768px) {
+      //
       flex-direction: column;
+      padding: 0.5rem;
     }
 
     // 左侧新闻卡片（1大2小布局）
@@ -397,6 +423,8 @@ export default class NewsListView extends Vue {
         height: var(--card-height);
 
         .news-card-cover {
+          width: 100%;
+          position: relative;
           height: 70%;
         }
 
@@ -451,35 +479,7 @@ export default class NewsListView extends Vue {
         }
       }
 
-      @media (max-width: 1024px) {
-        flex-direction: column;
-        min-height: auto;
-
-        .news-card-large {
-          min-height: 320px;
-
-          .news-card-cover {
-            height: 200px;
-          }
-        }
-
-        .news-card-small-group {
-          flex-direction: row;
-          min-height: auto;
-
-          .news-card-small {
-            flex-direction: column;
-            min-height: 220px;
-
-            .news-card-cover {
-              width: 100%;
-              height: 140px;
-            }
-          }
-        }
-      }
-
-      @media (max-width: 1000px) {
+      @media screen and (max-width: 768px) {
         .category-card-left {
           width: 100%;
         }
@@ -521,22 +521,24 @@ export default class NewsListView extends Vue {
         flex-direction: column;
         gap: 0.1rem;
 
-        @media screen and (max-width: 1000px) {
-          flex-direction: row;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-        }
+        // @media screen and (max-width: 1020px) {
+        //   flex-direction: row;
+        //   flex-wrap: wrap;
+        //   gap: 0.5rem;
+        // }
 
         .news-list-item {
           display: flex;
           flex-direction: column;
-          padding: 0.2rem;
-          border-radius: 0.15rem;
+          width: 100%;
           cursor: pointer;
           transition: background-color 0.2s;
+          position: relative;
+          padding: 0.1rem;
+          border-radius: 0.05rem;
 
           &:hover {
-            background-color: var(--ah-c-background-soft);
+            background-color: rgba(0, 0, 0, 0.05);
           }
 
           .news-date {
@@ -565,10 +567,28 @@ export default class NewsListView extends Vue {
         margin-left: 0.2rem;
         border-radius: 0.15rem;
         cursor: pointer;
+        width: fit-content;
         color: var(--ah-c-brand);
         font-size: 0.32rem;
         transition: background-color 0.2s;
         flex-shrink: 0;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          width: 0;
+          height: 0.04rem;
+          background-color: var(--ah-c-text2);
+          transition: width var(--ah-t-short), left var(--ah-t-short);
+        }
+
+        &:hover::after {
+          left: 0;
+          width: 100%;
+        }
 
         & .arrow-right {
           transition: transform 0.3s ease;
@@ -578,14 +598,67 @@ export default class NewsListView extends Vue {
           background-color: var(--ah-c-background-soft);
 
           & .arrow-right {
-            transform: translateX(0.2rem);
+            transform: translateX(0.1rem);
           }
         }
       }
 
-      @media (max-width: 1024px) {
-        min-height: auto;
-        flex-direction: row;
+      // 移动端隐藏新闻列表
+      @media (max-width: 768px) {
+        .news-list-simple {
+          display: none;
+        }
+
+        .view-more {
+          margin-top: 0;
+          justify-content: center;
+        }
+      }
+    }
+
+    // 移动端卡片等宽布局
+    @media (max-width: 768px) {
+      flex-direction: column;
+
+      .category-card-left {
+        flex-direction: column;
+        height: auto;
+
+        .news-card-large,
+        .news-card-small-group .news-card-small {
+          flex: none;
+          height: auto;
+          min-height: auto;
+
+          .news-card-cover {
+            height: 3.6rem;
+          }
+
+          .news-card-content {
+            height: auto;
+            padding: 0.25rem;
+
+            .news-card-title {
+              font-size: 0.32rem;
+              -webkit-line-clamp: 2;
+            }
+
+            .news-card-summary {
+              display: none;
+            }
+          }
+        }
+
+        .news-card-small-group {
+          flex-direction: column;
+          height: auto;
+          gap: 0.5rem;
+        }
+      }
+
+      .category-card-right {
+        flex-direction: column;
+        height: auto;
       }
     }
   }
@@ -596,7 +669,7 @@ export default class NewsListView extends Vue {
     flex-direction: column;
     border-radius: 0.2rem;
     overflow: hidden;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    // box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     background-color: var(--ah-c-background);
@@ -661,6 +734,9 @@ export default class NewsListView extends Vue {
         margin: 0;
         margin-top: auto;
         color: var(--ah-c-text3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
     }
   }
@@ -682,13 +758,20 @@ export default class NewsListView extends Vue {
   border-bottom-left-radius: 0.3rem;
   border-bottom-right-radius: 0.3rem;
 
-  @media screen and (max-width: 1000px) {
+  @media screen and (max-width: 768px) {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+    height: 2rem;
+    padding: 0.2rem 0.4rem;
   }
 
   & .title {
     font-size: 0.48rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
     font-weight: 700;
     color: #fff;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -696,6 +779,11 @@ export default class NewsListView extends Vue {
 
   & p {
     font-size: 0.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
     color: rgba(255, 255, 255, 0.9);
   }
 
@@ -717,8 +805,30 @@ export default class NewsListView extends Vue {
   margin: 0.5rem 0;
   font-size: 0.78rem;
 
+  @media screen and (max-width: 768px) {
+    font-size: 0.64rem;
+    margin: 0.1rem 0;
+  }
+
   & span {
     font-weight: 700;
   }
+}
+
+.my-carousel {
+  height: 450px;
+
+  @media screen and (max-width: 768px) {
+    height: 200px;
+  }
+}
+
+.view-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.24rem;
+  gap: 0.08rem;
+  color: var(--ah-c-text3);
 }
 </style>

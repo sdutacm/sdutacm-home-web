@@ -12,30 +12,9 @@ import { BwcxClientRouterPlugin } from 'bwcx-client-vue3';
 import { clientRoutesMap } from '@common/router/client-routes';
 import { ApiClientPlugin } from './plugins/api-client.plugin';
 import type { ApiType, ApiClientType } from './api';
+import { initTheme } from './utils/theme';
 
 Vue.registerHooks(['setup', 'beforeRouteEnter', 'beforeRouteUpdate', 'beforeRouteLeave', 'asyncData']);
-
-// 系统主题监听和切换
-function initThemeListener() {
-  if (typeof window === 'undefined') return;
-
-  const html = document.documentElement;
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-  // 应用主题
-  const applyTheme = (isDark: boolean) => {
-    html.classList.remove('light', 'dark');
-    html.classList.add(isDark ? 'dark' : 'light');
-  };
-
-  // 初始化主题
-  applyTheme(mediaQuery.matches);
-
-  // 监听系统主题变化
-  mediaQuery.addEventListener('change', (e) => {
-    applyTheme(e.matches);
-  });
-}
 
 export function mainEntry({
   app,
@@ -56,9 +35,9 @@ export function mainEntry({
   app.component(Head.name, Head);
   app.component(ClientOnly.name, ClientOnly);
 
-  // 初始化主题监听（仅客户端）
+  // 初始化主题（仅客户端）
   if (isClient) {
-    initThemeListener();
+    initTheme();
   }
 
   app.config.errorHandler = (err, vm, info) => {

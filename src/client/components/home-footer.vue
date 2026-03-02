@@ -36,7 +36,7 @@ export default class HomeFooter extends Vue {
     <div class="footer-container">
       <div class="display">
         <a class="logo-section" href="/" target="_parent">
-          <SdutacmLogoPure style="width: 1.2rem; height: 1.2rem" />
+          <SdutacmLogoPure />
           <span>SDUTACM</span>
         </a>
         <div class="slogan-section">
@@ -83,6 +83,10 @@ export default class HomeFooter extends Vue {
   height: fit-content;
   background-color: var(--ah-c-background-header);
   padding: 1rem 0;
+
+  @media screen and (max-width: 768px) {
+    padding: 0.5rem 0;
+  }
   display: flex;
   justify-content: center;
   margin-top: 1rem;
@@ -109,6 +113,10 @@ export default class HomeFooter extends Vue {
       height: fit-content;
       margin-bottom: 1rem;
 
+      @media  screen and (max-width: 768px) {
+        margin-bottom: 0;
+      }
+
       & .logo-section {
         display: flex;
         align-items: start;
@@ -120,6 +128,13 @@ export default class HomeFooter extends Vue {
         & span {
           font-size: 0.8rem;
           font-weight: 700;
+        }
+
+        @media screen and (max-width: 768px) {
+          & span {
+            font-size: 0.5rem;
+            line-height: 0.8rem;
+          }
         }
       }
 
@@ -138,6 +153,16 @@ export default class HomeFooter extends Vue {
           font-size: 0.3rem;
           font-weight: 200;
         }
+
+        @media screen and (max-width: 768px) {
+          & p {
+            font-size: 0.5rem;
+          }
+
+          & small {
+            font-size: 0.24rem;
+          }
+        }
       }
     }
 
@@ -146,6 +171,11 @@ export default class HomeFooter extends Vue {
       display: flex;
       justify-content: space-between;
       align-items: center;
+
+      @media screen and (max-width: 768px) {
+        flex-direction: column-reverse;
+        gap: 0.4rem;
+      }
 
       & .info {
         font-size: 0.32rem;
@@ -190,7 +220,7 @@ export default class HomeFooter extends Vue {
             height: fit-content;
             padding: 0.3rem;
             @media screen and (max-width: 1000px) {
-              padding: .1rem;
+              padding: 0.1rem;
             }
             background: #fff;
             border-radius: 0.2rem;

@@ -5,6 +5,8 @@ dist/
 app/
 coverage/
 npm-debug.log
+.env
+.env.local
 tsconfig.tsbuildinfo
 temp/
 public/img/*

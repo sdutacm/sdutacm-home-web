@@ -4,6 +4,7 @@ import { ElAutocomplete, ElIcon, ElButton } from 'element-plus';
 import { Search } from 'lucide-vue-next';
 import Fuse from 'fuse.js';
 import { GetNewsDetailResDTO } from '@common/modules/news/news.dto';
+import ThemeButton from '../homepage/theme-button.vue';
 
 interface SuggestionItem {
   value: string;
@@ -16,13 +17,14 @@ interface SuggestionItem {
     ElIcon,
     Search,
     ElButton,
+    ThemeButton
   },
 })
 export default class NewsNav extends Vue {
   searchQuery = '';
   allNews: GetNewsDetailResDTO[] = [];
   fuse: Fuse<GetNewsDetailResDTO> | null = null;
-    isMobile: boolean = false;
+  isMobile: boolean = false;
 
   async mounted() {
     if (window.innerWidth <= 1100) {
@@ -90,6 +92,7 @@ export default class NewsNav extends Vue {
         <img src="../../assets/images/sdutacm_logo_colorful.svg" alt="" />
         <h1>SDUTACM News</h1>
       </div>
+
       <div class="news-nav-tools">
         <client-only>
           <el-autocomplete
@@ -106,6 +109,7 @@ export default class NewsNav extends Vue {
             </template>
           </el-autocomplete>
         </client-only>
+        <theme-button />
       </div>
     </div>
   </div>
@@ -125,16 +129,12 @@ export default class NewsNav extends Vue {
   box-shadow: var(--ah-s-shadow-2);
 
   .news-nav-container {
-    width: 60%;
+    width: 90%;
     height: 100%;
     min-width: var(--ah-breakpoint-xs);
     display: flex;
     justify-content: space-between;
     align-items: center;
-
-    @media screen and (max-width: 1000px) {
-      width: 90%;
-    }
     & .news-nav-title {
       display: flex;
       align-items: center;
@@ -163,7 +163,6 @@ export default class NewsNav extends Vue {
 
         & img {
           width: 0.75rem;
-          // height: 0.8rem;
         }
       }
     }
@@ -172,7 +171,17 @@ export default class NewsNav extends Vue {
       display: flex;
       justify-content: center;
       align-items: center;
+
+      @media screen and (max-width: 768px) {
+        display: none !important;
+      }
     }
   }
+}
+
+.news-nav-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 </style>

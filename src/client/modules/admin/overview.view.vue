@@ -16,10 +16,6 @@ import {
   UserCheck,
   Pointer,
 } from 'lucide-vue-next';
-// import VisitTrendChart from '@/components/admin/charts/VisitTrendChart.vue';
-// import MediaTypePieChart from '@/components/admin/charts/MediaTypePieChart.vue';
-// import NewsStatusBarChart from '@/components/admin/charts/NewsStatusBarChart.vue';
-// import AdminActivityPieChart from '@/components/admin/charts/AdminActivityPieChart.vue';
 import VisitTrendChart from '@client/components/admin/charts/visit-trend-chart.vue';
 import MediaTypePieChart from '@client/components/admin/charts/media-type-pie-chart.vue';
 import NewsStatusBarChart from '@client/components/admin/charts/news-statusbar-chart.vue';
@@ -267,7 +263,7 @@ export default class OverviewView extends Vue {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: .5rem;
   margin-bottom: 24px;
 }
 
@@ -336,7 +332,7 @@ export default class OverviewView extends Vue {
 .charts-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  margin-top: 24px;
+  gap: .5rem;
+  margin-top: .5rem;
 }
 </style>

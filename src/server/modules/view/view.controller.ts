@@ -5,7 +5,6 @@ import { RenderMethodKind } from 'bwcx-client-vue';
 import ViewService from './view.service';
 import { HtmlResponse } from '@server/response-handlers/html.response-handler';
 import LoginGuard from '@server/guards/login';
-import NewsService from '@server/modules/news/news.service';
 import StatsService from '@server/modules/stats/stats.service';
 
 @Controller('', { priority: -100 })
@@ -14,8 +13,6 @@ export default class ViewController {
   public constructor(
     @Inject()
     private readonly service: ViewService,
-    @Inject()
-    private readonly newsService: NewsService,
     @Inject()
     private readonly statsService: StatsService,
   ) {}
@@ -32,20 +29,6 @@ export default class ViewController {
     this.statsService.incrementPageViewCount('home').catch(err => {
       console.error('Failed to increment home page view count:', err);
     });
-    return this.service.render(renderMethod || RenderMethodKind.SSR);
-  }
-
-  @OverrideView('NewsDetailView')
-  public async newsDetailView(
-    @PrimaryRenderMethod() renderMethod: RenderMethodKind,
-    @Param('id') id: string,
-  ) {
-    const newsId = parseInt(id, 10);
-    if (!isNaN(newsId)) {
-      this.newsService.incrementViewCount(newsId).catch(err => {
-        console.error('Failed to increment news view count:', err);
-      });
-    }
     return this.service.render(renderMethod || RenderMethodKind.SSR);
   }
 

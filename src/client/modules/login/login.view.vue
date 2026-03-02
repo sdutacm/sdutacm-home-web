@@ -2,7 +2,7 @@
 import { Vue, Options } from 'vue-class-component';
 import { View } from 'bwcx-client-vue3';
 import { RenderMethod, RenderMethodKind } from 'bwcx-client-vue3';
-import { ElForm, ElInput, ElFormItem, ElButton } from 'element-plus';
+import { ElForm, ElInput, ElFormItem, ElButton, ElMessage } from 'element-plus';
 import { RegisterAdminReqDTO } from '@common/modules/admin/admin.dto';
 
 @View('/login')
@@ -11,6 +11,7 @@ import { RegisterAdminReqDTO } from '@common/modules/admin/admin.dto';
     ElForm,
     ElInput,
     ElFormItem,
+    ElMessage,
     ElButton,
   },
 })
@@ -30,6 +31,7 @@ export default class LoginView extends Vue {
       this.$router.push('/admin');
     } catch (error) {
       console.error('Login failed:', error);
+      ElMessage.error('Failed to login.');
     } finally {
     }
   }

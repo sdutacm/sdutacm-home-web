@@ -78,7 +78,7 @@ export default class NewsContainer extends Vue {
           <el-icon><CalendarDays /></el-icon>
           <span>{{ parseDate(newsInfo.publishedAt) }}</span>
         </p>
-        <div class="news-preview-desc" v-if="newsInfo.viewCount">
+        <div class="news-preview-desc" v-if="newsInfo.id">
           <el-icon><Eye /></el-icon>
           <span>{{ newsInfo.viewCount }}</span>
         </div>
@@ -92,7 +92,7 @@ export default class NewsContainer extends Vue {
       <el-divider border-style="dashed" v-if="newsInfo.id" />
     </div>
     <main class="news-preview-main" v-html="newsInfo?.content" v-if="newsInfo.id"></main>
-    <aside class="aside-info">编辑：{{ newsInfo.updatedBy?.username }}</aside>
+    <asid v-if="newsInfo.id" class="aside-info">编辑：{{ newsInfo.updatedBy?.username }}</asid>
   </div>
   <div class="news-found-error" v-else>
     <h2>找不到您想要查看的新闻 😢</h2>
@@ -108,11 +108,15 @@ export default class NewsContainer extends Vue {
   width: 100%;
   min-height: 100vh;
   align-items: center;
-
   --news-container-width: 60%;
-  @media screen and (max-width: 1000px) {
-    --news-container-width: 90%;
+  @media screen and (max-width: 1024px) {
+    --news-container-width: 80%;
   }
+
+  @media screen and (max-width: 768px) {
+    --news-container-width: 100%;
+  }
+
   & .news-preview-header {
     width: 100%;
     display: flex;
@@ -124,9 +128,10 @@ export default class NewsContainer extends Vue {
       width: 100%;
       height: 500px;
 
-      @media screen and (max-width: 1000px) {
+      @media screen and (max-width: 768px) {
         height: 300px;
       }
+
       position: relative;
     }
 
@@ -140,6 +145,10 @@ export default class NewsContainer extends Vue {
       padding: 0 1rem;
       padding-top: 0.5rem;
       position: relative;
+
+      @media screen and (max-width: 768px) {
+        padding: 0 0.5rem;
+      }
 
       & .admin-info {
         position: absolute;
@@ -271,6 +280,11 @@ export default class NewsContainer extends Vue {
   border-radius: 0.2rem;
   transition: transform 0.2s ease;
   z-index: 1000;
+
+  @media screen and (max-width: 768px) {
+    right: .5rem;
+    top: 2rem;
+  }
 
   &:hover {
     transform: scale(1.05);

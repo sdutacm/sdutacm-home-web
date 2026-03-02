@@ -11,13 +11,12 @@ export default class SdutacmLogoPure extends Vue {
 
 <template>
   <svg
-    width="256"
-    height="256"
     viewBox="0 0 256 256"
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"
     version="1.1"
     baseProfile="full"
+    class="sdutacm-logo"
     fill="currentColor"
   >
     <g transform="scale(1.000000,-1.000000) translate(0,-256)">
@@ -39,3 +38,17 @@ export default class SdutacmLogoPure extends Vue {
     </g>
   </svg>
 </template>
+
+<style scoped lang="less">
+.sdutacm-logo {
+  display: block;
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: currentColor;
+
+  @media screen and (max-width: 768px) {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+}
+</style>

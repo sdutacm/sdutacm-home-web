@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import "reflect-metadata"
 
+require('dotenv').config();
+
 const isProd = process.env.NODE_ENV === 'production';
 const moduleAlias = require('module-alias');
 
@@ -77,12 +79,13 @@ export default class OurApp extends App {
       console.error('Error during Data Source initialization', error);
       throw error;
     }
-    // 设置签名密钥用于 session cookies
-    this.instance.keys = ['sdutacm-secret-key-1', 'sdutacm-secret-key-2'];
+    // 设置签名密钥用于 session cookies（从环境变量读取，用逗号分隔多个密钥）
+    const sessionKeys = process.env.SESSION_KEYS?.split(',') || ['sdutacm-secret-key-1', 'sdutacm-secret-key-2'];
+    this.instance.keys = sessionKeys;
     // session
     const sessionConfig = {
       key: 'sdutacm:sess',
-      maxAge: 86400000, // 24小时
+      maxAge: Infinity,
       autoCommit: true,
       overwrite: true,
       httpOnly: true,

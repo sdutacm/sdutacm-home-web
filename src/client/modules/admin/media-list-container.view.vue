@@ -78,7 +78,7 @@ export default class MediaListContainer extends Vue {
   };
 
   currentPage = 1;
-  pageSize = 44;
+  pageSize = 40;
 
   mediaDialogVisible = false;
   mediaDialogMode: MediaDialogMode = 'upload';

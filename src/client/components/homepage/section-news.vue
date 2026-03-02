@@ -41,16 +41,6 @@ export default class SectionNews extends Vue {
           <span class="news-date">{{ item.publishedAt }}</span>
         </div>
       </div>
-      <!-- <div class="n-link">
-        <div class="news-img">
-          <img :src="item.coverImage" alt="" />
-        </div>
-        <div class="news-info">
-          <span class="news-title">{{ item.title }}</span>
-          <span class="news-summary">{{ item.summary }}</span>
-          <span class="news-date">{{ item.publishedAt }}</span>
-        </div>
-      </div> -->
     </div>
   </div>
 </template>
