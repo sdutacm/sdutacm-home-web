@@ -1,7 +1,7 @@
 {
   "name": "sdutacm-home-web",
   "version": "1.0.0",
-  "description": "SDUTACM 官网及其后台管理系统",
+  "description": "SDUTACM official website and its backend management system",
   "main": "index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
