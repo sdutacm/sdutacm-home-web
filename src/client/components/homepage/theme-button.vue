@@ -22,8 +22,10 @@ export default class ThemeButton extends Vue {
 
 <template>
   <div class="theme-button" @click="handleToggle">
-    <Moon v-if="isDark" :size="18" />
-    <Sun v-else :size="18" />
+    <client-only>
+      <Moon v-if="isDark" :size="18" />
+      <Sun v-else :size="18" />
+    </client-only>
   </div>
 </template>
 

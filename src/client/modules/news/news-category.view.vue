@@ -236,6 +236,7 @@ export default class NewsCategoryView extends Vue {
 
     .category-info {
       .category-title {
+        width: 100%;
         font-size: 0.72rem;
         font-weight: 700;
         color: var(--ah-c-text1);
@@ -320,6 +321,7 @@ export default class NewsCategoryView extends Vue {
         flex: 1;
         display: flex;
         gap: 0.5rem;
+        min-width: 0;
 
         .news-item-cover {
           flex-shrink: 0;
@@ -346,6 +348,7 @@ export default class NewsCategoryView extends Vue {
           min-width: 0;
 
           .news-item-title {
+            width: 100%;
             font-size: 0.36rem;
             font-weight: 600;
             color: var(--ah-c-text1);

@@ -11,7 +11,7 @@ import AuditService from '@server/modules/audit/audit.service';
 import { AuditActionType } from '@common/modules/audit/audit.dto';
 
 @Service()
-export default class AdminService {
+export default class GlobalConfigService {
   public constructor(
     @InjectCtx()
     private readonly ctx: RequestContext,

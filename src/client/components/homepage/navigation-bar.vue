@@ -27,7 +27,8 @@ export default class NavigationBar extends Vue {
     { title: '最新动态', link: '/news/overview' },
     { title: '光锥实验室', link: 'https://lcl.sdutacm.cn' },
     { title: 'SDUT OJ', link: 'https://oj.sdutacm.cn/' },
-    { title: 'RankLand', link: 'https://rl.algoux.cn'}
+    { title: 'RankLand', link: 'https://rl.algoux.cn'},
+    { title: '训练计划', link: 'https://stepbystep.sdutacm.cn'}
   ];
 
   @Prop()
@@ -37,10 +38,6 @@ export default class NavigationBar extends Vue {
     this.fastlinkShowIndex = index === this.fastlinkShowIndex ? 0 : index;
   };
   throttle = throttle;
-
-  mounted() {
-    console.log(this.logoPath);
-  }
 }
 </script>
 

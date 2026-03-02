@@ -1,5 +1,6 @@
-import {Data, Controller, InjectCtx, RequestContext, Post, Contract } from 'bwcx-ljsm';
+import {Data, Controller, InjectCtx, RequestContext, Post, Contract, UseGuards } from 'bwcx-ljsm';
 import { Inject } from 'bwcx-core';
+import LoginGuard from '@server/guards/login';
 import { Api } from 'bwcx-api';
 import { ApiController } from '@server/decorators';
 import AuthService from './auth.service';
@@ -20,9 +21,9 @@ export default class AuthController {
   /** routes */
   @Api.Summary('管理员注册')
   @Post('/register')
+  @UseGuards(LoginGuard)
   @Contract(RegisterAdminReqDTO, null)
   public async register(@Data() data: RegisterAdminReqDTO): Promise<void> {
-    // 注册逻辑
     await this.authService.register(data);
   }
 
@@ -37,7 +38,6 @@ export default class AuthController {
   @Post('/logout')
   @Contract(null, null)
   public async logout(): Promise<void> {
-    // 记录登出审计日志
     await this.auditService.logLogout();
     this.ctx.session.admin = null;
   }
@@ -51,6 +51,7 @@ export default class AuthController {
 
   @Api.Summary('更新管理员头像')
   @Post('/updateAdminAvatar')
+  @UseGuards(LoginGuard)
   @Contract(UpdateAdminAvatarReqDTO, null)
   public async updateAdminAvatar(@Data() data: UpdateAdminAvatarReqDTO): Promise<void> {
     await this.authService.updateAdminAvatar(data);
@@ -58,6 +59,7 @@ export default class AuthController {
 
   @Api.Summary('获取所有管理员')
   @Post('/getAllAdmins')
+  @UseGuards(LoginGuard)
   @Contract(null, GetAllAdminsListResDTO)
   public async getAllAdmins(): Promise<GetAllAdminsListResDTO> {
     return await this.authService.getAllAdmins();
@@ -65,6 +67,7 @@ export default class AuthController {
 
   @Api.Summary('更新管理员角色')
   @Post('/updateAdminRole')
+  @UseGuards(LoginGuard)
   @Contract(UpdateAdminRoleReqDTO, null)
   public async updateAdminRole(@Data() data: UpdateAdminRoleReqDTO): Promise<void> {
     await this.authService.updateAdminRole(data);
@@ -72,6 +75,7 @@ export default class AuthController {
 
   @Api.Summary('重置管理员密码')
   @Post('/resetAdminPassword')
+  @UseGuards(LoginGuard)
   @Contract(ResetAdminPasswordReqDTO, null)
   public async resetAdminPassword(@Data() data: ResetAdminPasswordReqDTO): Promise<void> {
     await this.authService.resetAdminPassword(data);
@@ -79,6 +83,7 @@ export default class AuthController {
 
   @Api.Summary('删除管理员')
   @Post('/deleteAdmin')
+  @UseGuards(LoginGuard)
   @Contract(DeleteAdminReqDTO, null)
   public async deleteAdmin(@Data() data: DeleteAdminReqDTO): Promise<void> {
     await this.authService.deleteAdmin(data);

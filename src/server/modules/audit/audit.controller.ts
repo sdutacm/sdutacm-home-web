@@ -48,8 +48,6 @@ export default class AuditController {
     return await this.auditService.getAuditLogDetail(data);
   }
 
-  // ============ 版本管理接口 ============
-
   @Api.Summary('获取实体版本历史')
   @Post('/getVersionHistory')
   @Contract(GetVersionHistoryReqDTO, GetVersionHistoryResDTO)
@@ -81,8 +79,6 @@ export default class AuditController {
   public async restoreVersion(@Data() data: RestoreVersionReqDTO): Promise<RestoreVersionResDTO> {
     return await this.auditService.restoreVersion(data);
   }
-
-  // ============ 统计接口 ============
 
   @Api.Summary('获取审计统计信息')
   @Post('/getAuditStats')

@@ -49,7 +49,6 @@ export default class NewsDetailView extends Vue {
 
   async mounted() {
     this.id = parseInt(this.$route.params.id as string);
-    console.log('NewsDetailView mounted with id:', this.id);
     try {
       this.newsInfo = await this.$api.getPublishedNews({ id: this.id });
       // 增加阅览数（客户端路由跳转时触发）

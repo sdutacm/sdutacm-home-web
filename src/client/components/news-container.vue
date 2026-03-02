@@ -3,10 +3,13 @@
 import { Vue, Options } from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { GetNewsDetailResDTO } from '@common/modules/news/news.dto';
+import QRCode from 'qrcode';
 
 import UserAvatar from './user-avatar.vue';
-import { ElDivider, ElIcon, ElImage, ElButton, vLoading } from 'element-plus';
-import { Undo2, TextAlignEnd, CalendarDays, Share, Eye } from 'lucide-vue-next';
+import { ElDivider, ElIcon, ElImage, ElButton, ElDialog, vLoading } from 'element-plus';
+import { Undo2, TextAlignEnd, CalendarDays, Share, Eye, Mail, Link } from 'lucide-vue-next';
+import IconWechatPure from './homepage/icon/icon-wechat-pure.vue';
+
 @Options({
   components: {
     UserAvatar,
@@ -18,7 +21,11 @@ import { Undo2, TextAlignEnd, CalendarDays, Share, Eye } from 'lucide-vue-next';
     CalendarDays,
     ElImage,
     ElButton,
+    ElDialog,
     Share,
+    Mail,
+    IconWechatPure,
+    Link,
   },
   directives: {
     loading: vLoading,
@@ -28,6 +35,57 @@ export default class NewsContainer extends Vue {
   @Prop() newsInfo!: GetNewsDetailResDTO;
   @Prop({ required: true }) showLoading!: boolean;
   @Prop() newsLoadedFailed: boolean = false;
+  wechatDialogVisible = false;
+  linkCopied = false;
+  qrcodeLoading = true;
+  qrcodeDataUrl = '';
+
+  get currentUrl() {
+    return typeof window !== 'undefined' ? window.location.href : '';
+  }
+
+  async shareToWechat() {
+    this.qrcodeLoading = true;
+    this.wechatDialogVisible = true;
+    await this.generateQRCode();
+  }
+
+  async generateQRCode() {
+    try {
+      this.qrcodeDataUrl = await QRCode.toDataURL(this.currentUrl, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+      });
+      this.qrcodeLoading = false;
+    } catch (err) {
+      console.error('Failed to generate QR code:', err);
+      this.qrcodeLoading = false;
+    }
+  }
+
+  shareToMail() {
+    const subject = encodeURIComponent(this.newsInfo.title || 'SDUTACM 新闻分享');
+    const body = encodeURIComponent(`${this.newsInfo.title}\n\n${this.currentUrl}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+  }
+
+  shareLink() {
+    navigator.clipboard.writeText(this.currentUrl).then(
+      () => {
+        this.linkCopied = true;
+        setTimeout(() => {
+          this.linkCopied = false;
+        }, 1500);
+      },
+      (err) => {
+        console.error('Failed to copy link:', err);
+      },
+    );
+  }
 
   private parseDate(str: Date): string {
     if (!str) return '';
@@ -70,10 +128,7 @@ export default class NewsContainer extends Vue {
       </div>
       <div class="news-preview-dexc-group">
         <h1 class="news-preview-title" v-if="newsInfo.title">{{ newsInfo.title }}</h1>
-        <p class="news-preview-desc" v-if="newsInfo.summary">
-          <el-icon><TextAlignEnd /></el-icon>
-          <span>{{ newsInfo.summary }}</span>
-        </p>
+        <h2 class="news-preview-subtitle" v-if="newsInfo.summary">{{ newsInfo.summary }}</h2>
         <p class="news-preview-desc" v-if="newsInfo.publishedAt">
           <el-icon><CalendarDays /></el-icon>
           <span>{{ parseDate(newsInfo.publishedAt) }}</span>
@@ -82,22 +137,37 @@ export default class NewsContainer extends Vue {
           <el-icon><Eye /></el-icon>
           <span>{{ newsInfo.viewCount }}</span>
         </div>
+        <div class="news-preview-desc news-share-tools" v-if="newsInfo.id">
+          <el-icon size="20" @click="shareToWechat" class="share-icon"><IconWechatPure /></el-icon>
+          <el-icon size="18" @click="shareToMail" class="share-icon"><Mail /></el-icon>
+          <span class="share-link-wrapper">
+            <el-icon size="18" @click="shareLink" class="share-icon"><Link /></el-icon>
+            <span class="link-copied-tip" :class="{ show: linkCopied }">Copied!</span>
+          </span>
+        </div>
       </div>
     </header>
-    <div class="share-button" @click="copyLink" v-if="newsInfo.id">
-      <el-icon size="medium"><Share /></el-icon>
-      <span class="copy-text">Copied!</span>
-    </div>
     <div class="divider-container">
       <el-divider border-style="dashed" v-if="newsInfo.id" />
     </div>
     <main class="news-preview-main" v-html="newsInfo?.content" v-if="newsInfo.id"></main>
-    <asid v-if="newsInfo.id" class="aside-info">编辑：{{ newsInfo.updatedBy?.username }}</asid>
+    <aside v-if="newsInfo.id" class="aside-info">编辑：{{ newsInfo.updatedBy?.username }}</aside>
   </div>
   <div class="news-found-error" v-else>
     <h2>找不到您想要查看的新闻 😢</h2>
     <p>请检查链接是否正确，或返回首页查看更多新闻。</p>
   </div>
+
+  <client-only>
+    <el-dialog v-model="wechatDialogVisible" width="320px" center>
+      <div class="wechat-qrcode-container">
+        <div class="wechat-qrcode-wrapper" v-loading="qrcodeLoading">
+          <img v-if="qrcodeDataUrl" :src="qrcodeDataUrl" alt="微信扫码" class="wechat-qrcode" />
+        </div>
+        <p class="wechat-tip">微信扫描二维码分享文章</p>
+      </div>
+    </el-dialog>
+  </client-only>
 </template>
 
 <style scoped lang="less">
@@ -145,6 +215,7 @@ export default class NewsContainer extends Vue {
       padding: 0 1rem;
       padding-top: 0.5rem;
       position: relative;
+      gap: 0.3rem;
 
       @media screen and (max-width: 768px) {
         padding: 0 0.5rem;
@@ -183,7 +254,12 @@ export default class NewsContainer extends Vue {
       & .news-preview-title {
         font-size: 0.8rem;
         font-weight: 900;
-        margin-bottom: 10px;
+      }
+
+      & .news-preview-subtitle {
+        font-size: 0.5rem;
+        font-weight: 700;
+        color: var(--ah-c-text2);
       }
 
       & .news-preview-desc {
@@ -191,7 +267,7 @@ export default class NewsContainer extends Vue {
         margin-bottom: 5px;
         display: flex;
         align-items: center;
-        gap: 0.1rem;
+        gap: 0.2rem;
         color: gray;
       }
     }
@@ -282,7 +358,7 @@ export default class NewsContainer extends Vue {
   z-index: 1000;
 
   @media screen and (max-width: 768px) {
-    right: .5rem;
+    right: 0.5rem;
     top: 2rem;
   }
 
@@ -329,5 +405,69 @@ export default class NewsContainer extends Vue {
   color: gray;
   border-bottom-left-radius: 0.3rem;
   border-bottom-right-radius: 0.3rem;
+}
+
+.news-share-tools {
+  z-index: 10;
+  gap: 0.3rem !important;
+
+  .share-icon {
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.2s ease;
+
+    &:hover {
+      transform: scale(1.2);
+      color: var(--ah-c-brand);
+    }
+  }
+
+  .share-link-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+
+    .link-copied-tip {
+      position: absolute;
+      left: calc(100% + 0.2rem);
+      font-size: 0.28rem;
+      color: var(--ah-c-brand);
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateX(-0.2rem);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+
+      &.show {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+  }
+}
+
+.wechat-qrcode-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+
+  .wechat-qrcode-wrapper {
+    width: 200px;
+    height: 200px;
+    // border-radius: 0.2rem;
+    overflow: hidden;
+  }
+
+  .wechat-qrcode {
+    width: 200px;
+    height: 200px;
+    // border-radius: 0.2rem;
+    display: block;
+  }
+
+  .wechat-tip {
+    margin-top: 0.5rem;
+    font-size: 0.32rem;
+    color: var(--ah-c-text3);
+  }
 }
 </style>

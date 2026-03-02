@@ -39,7 +39,6 @@ export default class HomeView extends Vue {
   }
 
   mounted() {
-    console.log(this.homeState);
     console.log(
       String.raw`      _/_/_/  _/_/_/    _/    _/  _/_/_/_/_/    _/_/      _/_/_/  _/      _/   ` +
         '\n' +

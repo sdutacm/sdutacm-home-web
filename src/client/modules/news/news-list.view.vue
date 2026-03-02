@@ -107,7 +107,7 @@ export default class NewsListView extends Vue {
     <div v-else :class="isMobile ? 'news-latest-carousel-small' : 'news-latest-carousel'">
       <el-carousel
         trigger="click"
-        :height="isMobile ? '200px' : '450px'"
+        class="my-carousel"
         indicator-position="outside"
         :type="isMobile ? 'default' : 'card'"
       >
@@ -249,9 +249,8 @@ export default class NewsListView extends Vue {
 </template>
 
 <style scoped lang="less">
-// 轮播图骨架屏
 .carousel-skeleton {
-  width: 90%;
+  width: 95%;
   min-width: 350px;
   padding: 0.5rem 0;
 
@@ -311,7 +310,7 @@ export default class NewsListView extends Vue {
   min-height: 100vh;
 
   .news-latest-carousel {
-    width: 90%;
+    width: 95%;
     height: fit-content;
     min-width: 350px;
     padding: 0.5rem 0;
@@ -345,6 +344,10 @@ export default class NewsListView extends Vue {
     .carousel-item {
       cursor: pointer;
       border-radius: 0.3rem;
+
+      @media screen and (max-width: 768px) {
+        border-radius: 0;
+      }
       overflow: hidden;
     }
 
@@ -360,7 +363,6 @@ export default class NewsListView extends Vue {
     }
   }
 
-  // 栏目骨架屏
   .category-skeleton {
     width: 85%;
     margin: 1rem 0;
@@ -388,7 +390,6 @@ export default class NewsListView extends Vue {
     }
   }
 
-  // 栏目区块
   .category-section {
     width: 85%;
     margin-bottom: 2rem;
@@ -405,19 +406,16 @@ export default class NewsListView extends Vue {
     --card-height: 450px;
 
     @media screen and (max-width: 768px) {
-      //
       flex-direction: column;
       padding: 0.5rem;
     }
 
-    // 左侧新闻卡片（1大2小布局）
     .category-card-left {
       flex: 8;
       display: flex;
       gap: 0.5rem;
       height: var(--card-height);
 
-      // 左侧大卡片
       .news-card-large {
         flex: 6;
         height: var(--card-height);
@@ -439,7 +437,6 @@ export default class NewsListView extends Vue {
         }
       }
 
-      // 右侧小卡片容器
       .news-card-small-group {
         flex: 4;
         display: flex;
@@ -507,7 +504,6 @@ export default class NewsListView extends Vue {
       }
     }
 
-    // 右侧新闻列表
     .category-card-right {
       flex: 2;
       display: flex;
@@ -520,12 +516,6 @@ export default class NewsListView extends Vue {
         display: flex;
         flex-direction: column;
         gap: 0.1rem;
-
-        // @media screen and (max-width: 1020px) {
-        //   flex-direction: row;
-        //   flex-wrap: wrap;
-        //   gap: 0.5rem;
-        // }
 
         .news-list-item {
           display: flex;
@@ -603,7 +593,6 @@ export default class NewsListView extends Vue {
         }
       }
 
-      // 移动端隐藏新闻列表
       @media (max-width: 768px) {
         .news-list-simple {
           display: none;
@@ -616,7 +605,6 @@ export default class NewsListView extends Vue {
       }
     }
 
-    // 移动端卡片等宽布局
     @media (max-width: 768px) {
       flex-direction: column;
 
@@ -663,22 +651,21 @@ export default class NewsListView extends Vue {
     }
   }
 
-  // 新闻卡片样式
   .news-card {
     display: flex;
     flex-direction: column;
-    border-radius: 0.2rem;
     overflow: hidden;
-    // box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    border-radius: .2rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     background-color: var(--ah-c-background);
 
     &:hover {
-      box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
-      transform: translateY(-4px);
+      box-shadow: 0 0 20px  rgba(0, 0, 0, 0.2);
+      // transform: translateY(-4px);
 
-      .cover-image {
+      .news-card-cover {
         transform: scale(1.05);
       }
     }
@@ -687,12 +674,12 @@ export default class NewsListView extends Vue {
       width: 100%;
       height: 160px;
       overflow: hidden;
+      transition: transform 0.3s ease;
 
       .cover-image {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.3s ease;
       }
     }
 
@@ -747,8 +734,6 @@ export default class NewsListView extends Vue {
   width: 100%;
   height: 3rem;
   bottom: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4), transparent);
-  backdrop-filter: blur(4px);
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -757,6 +742,30 @@ export default class NewsListView extends Vue {
   color: #fff;
   border-bottom-left-radius: 0.3rem;
   border-bottom-right-radius: 0.3rem;
+  isolation: isolate;
+
+  // 渐变模糊层
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0) 100%);
+    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0) 100%);
+    border-radius: inherit;
+    z-index: -1;
+  }
+
+  // 背景渐变层
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+    border-radius: inherit;
+    z-index: -1;
+  }
 
   @media screen and (max-width: 768px) {
     border-bottom-left-radius: 0;
@@ -774,7 +783,7 @@ export default class NewsListView extends Vue {
     -webkit-box-orient: vertical;
     font-weight: 700;
     color: #fff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
   }
 
   & p {
@@ -785,11 +794,15 @@ export default class NewsListView extends Vue {
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+
   }
 
   & .date {
     font-size: 0.24rem;
     color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+
   }
 }
 
@@ -816,11 +829,14 @@ export default class NewsListView extends Vue {
 }
 
 .my-carousel {
+  :deep(.el-carousel__container) {
   height: 450px;
 
   @media screen and (max-width: 768px) {
     height: 200px;
   }
+  }
+
 }
 
 .view-icon-wrapper {
@@ -830,5 +846,13 @@ export default class NewsListView extends Vue {
   font-size: 0.24rem;
   gap: 0.08rem;
   color: var(--ah-c-text3);
+}
+
+.news-card-border {
+  outline: .4px solid gray;
+
+  &:hover {
+    box-shadow: 0 0 15px rgba(0, 0, 0, .5);
+  }
 }
 </style>
