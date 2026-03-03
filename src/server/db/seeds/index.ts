@@ -1,12 +1,8 @@
 import appDataSource from '..';
-import { seedGlobalConfig } from './global.seed';
-import { seedNews } from './news.seed';
-import { seedProjects } from './project.seed';
+import { seedAdmin } from './admin.seed';
 
 export async function runSeed() {
   await appDataSource.initialize();
-  await seedGlobalConfig(appDataSource);
-  await seedNews(appDataSource);
-  await seedProjects(appDataSource);
+  await seedAdmin(appDataSource);
   console.log('Database seeded');
 }
