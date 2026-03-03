@@ -14,4 +14,7 @@ public/logo/*
 public/audio/*
 public/video/*
 public/image/*
+public/news-cover/*
+public/project-cover/*
+public/admin-avatar/*
 public/*
