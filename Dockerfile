@@ -1,4 +1,4 @@
-FROM sdutacm/nodebase:16
+FROM sdutacm/nodebase:16.15.0
 
 WORKDIR /app/
 
