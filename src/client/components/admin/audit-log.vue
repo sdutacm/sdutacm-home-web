@@ -156,7 +156,6 @@ export default class AuditLogContainer extends Vue {
   ];
 
   async mounted() {
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // 模拟加载延迟
     await this.loadAuditLogs();
     await this.loadStats();
     this.loading = false;

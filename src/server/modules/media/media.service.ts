@@ -350,7 +350,6 @@ export default class MediaService {
       throw new Error(`缺少分片: ${missing.join(', ')}`);
     }
 
-    // 创建目标目录
     const publicDir = path.join(process.cwd(), 'public');
     const typeDir = path.join(publicDir, state.type);
     if (!fs.existsSync(typeDir)) {
@@ -388,7 +387,6 @@ export default class MediaService {
     }
     writeStream.end();
 
-    // 等待写入完成
     await new Promise<void>((resolve, reject) => {
       writeStream.on('finish', resolve);
       writeStream.on('error', reject);

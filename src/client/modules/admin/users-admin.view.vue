@@ -392,7 +392,6 @@ export default class UsersAdminView extends Vue {
 
   async mounted() {
     this.userInfo = await this.$api.getSession();
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // 模拟加载延迟
     if (this.isSuperAdmin) {
       await this.loadAdminList();
     }

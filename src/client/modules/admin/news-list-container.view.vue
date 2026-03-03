@@ -374,7 +374,6 @@ export default class NewsListContainer extends Vue {
 
   async mounted() {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
       await this.loadNewsList();
     } finally {
       this.loading = false;
