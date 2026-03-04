@@ -180,7 +180,7 @@ export default class ProjectListContainer extends Vue {
       await this.loadProjectList();
     } catch (error) {
       if (error !== 'cancel') {
-        console.error('删除项目失败:', error);
+        console.error('Failed to delete project:', error);
         ElMessage.error('Failed to delete project');
       }
     }
@@ -207,7 +207,7 @@ export default class ProjectListContainer extends Vue {
       this.dialogVisible = false;
       await this.loadProjectList();
     } catch (error) {
-      console.error('Save project failed:', error);
+      console.error('Failed to save project:', error);
       ElMessage.error('Failed to save project');
     } finally {
       loading.close();
@@ -237,29 +237,20 @@ export default class ProjectListContainer extends Vue {
 
     this.uploadingCover = true;
     try {
-      const formData = new FormData();
-      formData.append('file', this.coverImageFile);
-      formData.append('type', MediaTypeEnum.PROJECT_COVER);
-      formData.append('alt', `project-cover-${Date.now()}`);
-
-      const response = await fetch('/api/uploadMedia', {
-        method: 'POST',
-        body: formData,
+      const uploadResult = await this.$api.uploadMedia({
+        file: this.coverImageFile,
+        type: MediaTypeEnum.PROJECT_COVER,
+        alt: `project-cover-${Date.now()}`,
       });
 
-      if (!response.ok) {
-        throw new Error('上传失败');
-      }
-
-      const result = await response.json();
-      const coverPath = result.data.data.path;
+      const coverPath = uploadResult.path;
       this.projectForm.coverImage = coverPath;
       this.coverImageFile = null;
 
-      ElMessage.success('封面上传成功');
+      ElMessage.success('Cover image uploaded successfully');
     } catch (error) {
-      console.error('上传封面失败:', error);
-      ElMessage.error('上传封面失败');
+      console.error('Failed to upload cover image:', error);
+      ElMessage.error('Failed to upload cover image');
     } finally {
       this.uploadingCover = false;
     }
