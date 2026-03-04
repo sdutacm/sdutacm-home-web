@@ -10,7 +10,7 @@ const appDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   logging: false,
-  synchronize: !isProd,
+  synchronize: true,
   entities: [__dirname + '/entity/*.{ts,js}'],
 });
 
