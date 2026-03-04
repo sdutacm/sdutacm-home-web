@@ -26,6 +26,7 @@ import { IPageRenderer } from './lib/page-renderer.interface';
 import { BwcxClientVueClientRoutesMapId } from 'bwcx-client-vue/server';
 import { clientRoutesMap } from '@common/router/client-routes';
 import appDataSource from './db';
+import { seedAdmin } from './db/seeds/admin.seed';
 
 export default class OurApp extends App {
   protected baseDir = path.join(__dirname, '..');
@@ -75,6 +76,8 @@ export default class OurApp extends App {
   protected async beforeWire() {
     try {
       await appDataSource.initialize();
+      // 自动初始化 root 管理员（幂等，已存在则跳过）
+      await seedAdmin(appDataSource);
     } catch (error) {
       console.error('Error during Data Source initialization', error);
       throw error;
