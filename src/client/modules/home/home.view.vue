@@ -40,7 +40,9 @@ export default class HomeView extends Vue {
   }
 
   mounted() {
-    console.log('HomeView mounted with data:', { ...this.homeState});
+    this.$api.recordPageView({ pageKey: 'home' }).catch(err => {
+      console.error('Failed to record page view:', err);
+    });
     console.log(
       String.raw`      _/_/_/  _/_/_/    _/    _/  _/_/_/_/_/    _/_/      _/_/_/  _/      _/   ` +
         '\n' +

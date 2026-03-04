@@ -8,6 +8,7 @@ import {
   GetDailyViewStatsReqDTO,
   GetDailyViewStatsResDTO,
   GetAllPageViewStatsResDTO,
+  RecordPageViewReqDTO,
 } from '@common/modules/stats/stats.dto';
 
 @ApiController()
@@ -45,5 +46,12 @@ export default class StatsController {
   public async getAllPageViewStats(): Promise<GetAllPageViewStatsResDTO> {
     const rows = await this.statsService.getAllPageViewStats();
     return { rows };
+  }
+
+  @Api.Summary('记录页面访问')
+  @Post('/recordPageView')
+  @Contract(RecordPageViewReqDTO, null)
+  public async recordPageView(@Data() data: RecordPageViewReqDTO): Promise<void> {
+    await this.statsService.incrementPageViewCount(data.pageKey);
   }
 }

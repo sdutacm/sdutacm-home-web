@@ -62,3 +62,11 @@ export class GetDailyViewStatsResDTO {
 export class GetAllPageViewStatsResDTO {
   rows: PageViewItem[];
 }
+
+// 记录页面访问请求
+export class RecordPageViewReqDTO {
+  @FromBody()
+  @IsNotEmpty()
+  @IsString()
+  pageKey: string;
+}

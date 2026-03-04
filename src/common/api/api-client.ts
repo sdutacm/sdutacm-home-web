@@ -14,7 +14,7 @@ import { GetHomeDataResDTO, GetHomeNewsResDTO } from '../modules/home/home.dto';
 import { GetMediaListReqDTO, GetMediaListResDTO, UploadMediaReqDTO, MediaDetailResDTO, GetMediaByIdReqDTO, UpdateMediaReqDTO, DeleteMediaReqDTO, InitChunkUploadReqDTO, InitChunkUploadResDTO, UploadChunkReqDTO, UploadChunkResDTO, CompleteChunkUploadReqDTO, CompleteChunkUploadResDTO, GetChunkUploadProgressReqDTO, GetChunkUploadProgressResDTO } from '../modules/media/media.dto';
 import { CreateNewsReqDTO, UpdateNewsReqDTO, DeleteNewsReqDTO, GetNewsReqDTO, GetNewsDetailResDTO, GetAllNewsReqDTO, GetAllNewsResDTO, GetPublishedNewsListReqDTO, GetPublishedNewsListResDTO, CreateNewsCategoryReqDTO, UpdateNewsCategoryReqDTO, DeleteNewsCategoryReqDTO, GetNewsCategoryReqDTO, GetNewsCategoryResDTO, GetAllNewsCategoriesResDTO, GetVisibleNewsCategoriesResDTO, SetNewsCategoryReqDTO, BatchSetNewsCategoryReqDTO, GetNewsByCategoryReqDTO, GetNewsByCategoryResDTO, GetCategoryPreviewReqDTO, GetCategoryPreviewResDTO, GetAllCategoriesPreviewResDTO } from '../modules/news/news.dto';
 import { CreateProjectReqDTO, UpdateProjectReqDTO, DeleteProjectReqDTO, GetProjectReqDTO, GetProjectDetailResDTO, GetAllProjectsReqDTO, GetAllProjectsResDTO } from '../modules/project/project.dto';
-import { GetOverviewStatsResDTO, GetDailyViewStatsReqDTO, GetDailyViewStatsResDTO, GetAllPageViewStatsResDTO } from '../modules/stats/stats.dto';
+import { GetOverviewStatsResDTO, GetDailyViewStatsReqDTO, GetDailyViewStatsResDTO, GetAllPageViewStatsResDTO, RecordPageViewReqDTO } from '../modules/stats/stats.dto';
 
 const urlcat = configureUrlcat({ arrayFormat: 'repeat' });
 
@@ -655,6 +655,17 @@ export class ApiClient<T = undefined> {
    */
   public async getAllPageViewStats(req?: null, opts?: T): Promise<GetAllPageViewStatsResDTO> {
     return this._r(this._rArgs.be(req, opts)).then((resp) => this._rp.pat(GetAllPageViewStatsResDTO, resp));
+  }
+
+  /**
+   * 记录页面访问
+   *
+   * @param {RecordPageViewReqDTO} req The request data (compatible with ReqDTO).
+   * @param {T} opts Extra request options.
+   * @returns {null} The response data (RespDTO).
+   */
+  public async recordPageView(req: RecordPageViewReqDTO, opts?: T): Promise<null> {
+    return this._r(this._rArgs.bf(req, opts)).then((resp) => this._rp.pat(null, resp));
   }
 
   private _rArgs = {
@@ -1859,6 +1870,26 @@ export class ApiClient<T = undefined> {
           path: '/api/getAllPageViewStats',
           req: null as null,
           resp: GetAllPageViewStatsResDTO,
+        },
+      };
+    },
+    bf: (req: RecordPageViewReqDTO, opts?: any) => {
+      return {
+        method: 'POST' as AllowedRequestMethod,
+        url: this._uf('/api/recordPageView', {
+          param: {},
+          query: {},
+        }),
+        data: {
+          pageKey: req.pageKey,
+        },
+        extraOpts: opts,
+        metadata: {
+          name: 'recordPageView',
+          method: 'POST',
+          path: '/api/recordPageView',
+          req: RecordPageViewReqDTO,
+          resp: null as null,
         },
       };
     },
