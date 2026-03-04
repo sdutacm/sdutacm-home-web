@@ -30,13 +30,13 @@ export default class HomeService  {
 
       const globalConfig = globalConfigs[0];
 
-      const newsPreviews = await newsPreviewRepo.find({
-        where: { visible: true },
-        relations: ['news'],
-      });
-
-      // 过滤掉未发布的新闻
-      const publishedNewsPreviews = newsPreviews.filter(preview => preview.news.isPublished);
+      const publishedNewsPreviews = await newsPreviewRepo
+        .createQueryBuilder('preview')
+        .leftJoinAndSelect('preview.news', 'news')
+        .where('preview.visible = :visible', { visible: true })
+        .andWhere('news.isPublished = :isPublished', { isPublished: true })
+        .orderBy('news.publishedAt', 'DESC')
+        .getMany();
 
       const projectPreviews = await projectPreviewRepo.find({
         where: { visible: true },
@@ -75,12 +75,13 @@ export default class HomeService  {
   async getHomeNews(): Promise<GetHomeNewsResDTO> {
     try {
       const newsPreviewRepo = appDataSource.getRepository(HomeNewsPreview);
-      const newsPreviews = await newsPreviewRepo.find({
-        where: { visible: true },
-        relations: ['news'],
-      });
-
-      const publishedNewsPreviews = newsPreviews.filter(preview => preview.news.isPublished);
+      const publishedNewsPreviews = await newsPreviewRepo
+        .createQueryBuilder('preview')
+        .leftJoinAndSelect('preview.news', 'news')
+        .where('preview.visible = :visible', { visible: true })
+        .andWhere('news.isPublished = :isPublished', { isPublished: true })
+        .orderBy('news.publishedAt', 'DESC')
+        .getMany();
 
       const res: GetHomeNewsResDTO = {
         rows: publishedNewsPreviews.map((preview) => ({

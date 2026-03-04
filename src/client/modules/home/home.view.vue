@@ -33,12 +33,14 @@ export default class HomeView extends Vue {
 
   async asyncData({ apiClient }: AsyncDataOptions) {
     const res = await apiClient.getHomeData();
+    console.log('fetch data'+res.newsPreview);
     return {
       homeState: res,
     };
   }
 
   mounted() {
+    console.log('HomeView mounted with data:', { ...this.homeState});
     console.log(
       String.raw`      _/_/_/  _/_/_/    _/    _/  _/_/_/_/_/    _/_/      _/_/_/  _/      _/   ` +
         '\n' +
