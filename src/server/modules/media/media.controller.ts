@@ -18,6 +18,8 @@ import {
   UploadChunkResDTO,
   CompleteChunkUploadReqDTO,
   CompleteChunkUploadResDTO,
+  GetChunkUploadProgressReqDTO,
+  GetChunkUploadProgressResDTO,
 } from '@common/modules/media/media.dto';
 
 @ApiController()
@@ -91,5 +93,13 @@ export default class MediaController {
   @Contract(CompleteChunkUploadReqDTO, CompleteChunkUploadResDTO)
   public async completeChunkUpload(@Data() data: CompleteChunkUploadReqDTO): Promise<CompleteChunkUploadResDTO> {
     return await this.mediaService.completeChunkUpload(data);
+  }
+
+  @Api.Summary('查询分片上传进度')
+  @Post('/getChunkUploadProgress')
+  @UseGuards(LoginGuard)
+  @Contract(GetChunkUploadProgressReqDTO, GetChunkUploadProgressResDTO)
+  public async getChunkUploadProgress(@Data() data: GetChunkUploadProgressReqDTO): Promise<GetChunkUploadProgressResDTO> {
+    return this.mediaService.getChunkUploadProgress(data.uploadId);
   }
 }

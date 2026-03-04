@@ -16,6 +16,7 @@ import { validateMediaFile, getMediaTypeConfig } from '@common/config/media-type
 import appDataSource from '@server/db';
 import { Media } from '@server/db/entity/media';
 import AuditService from '@server/modules/audit/audit.service';
+import CosService from '@server/modules/media/cos.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -32,6 +33,10 @@ interface ChunkUploadState {
   tempDir: string;
   createdAt: Date;
   admin: any; // 保存上传时的管理员信息
+  /** 当前阶段: uploading=分片上传中, merging=合并中, cos_uploading=COS上传中, done=完成 */
+  phase: 'uploading' | 'merging' | 'cos_uploading' | 'done';
+  /** COS 上传进度 0-1 */
+  cosProgress: number;
 }
 
 // 内存存储分片上传状态（生产环境可考虑使用 Redis）
@@ -47,6 +52,8 @@ export default class MediaService {
     private readonly ctx: RequestContext,
     @Inject()
     private readonly auditService: AuditService,
+    @Inject()
+    private readonly cosService: CosService,
   ) {}
 
   async getMediaList(type: MediaTypeEnum, page: number = 1, pageSize: number = 20): Promise<GetMediaListResDTO> {
@@ -100,14 +107,6 @@ export default class MediaService {
       throw new Error(validation.error);
     }
 
-    const publicDir = path.join(process.cwd(), 'public');
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
-    const typeDir = path.join(publicDir, type);
-    if (!fs.existsSync(typeDir)) {
-      fs.mkdirSync(typeDir, { recursive: true });
-    }
     const mediaRepo = appDataSource.getRepository(Media);
     let newAlt = alt || '';
     if (!newAlt || newAlt.length === 0) {
@@ -126,10 +125,25 @@ export default class MediaService {
     const originalName = file.originalname;
     const extName = path.extname(originalName);
     const fileName = `${media.id}${extName}`;
-    const filePath = path.join(typeDir, fileName);
     const fileBuffer = file.buffer || fs.readFileSync(file.path);
-    fs.writeFileSync(filePath, fileBuffer);
-    const relativePath = `/${type}/${fileName}`;
+
+    // 上传到 COS 或本地
+    let relativePath: string;
+    if (this.cosService.isAvailable()) {
+      relativePath = await this.cosService.upload(fileBuffer, fileName, type);
+    } else {
+      const publicDir = path.join(process.cwd(), 'public');
+      if (!fs.existsSync(publicDir)) {
+        fs.mkdirSync(publicDir, { recursive: true });
+      }
+      const typeDir = path.join(publicDir, type);
+      if (!fs.existsSync(typeDir)) {
+        fs.mkdirSync(typeDir, { recursive: true });
+      }
+      const filePath = path.join(typeDir, fileName);
+      fs.writeFileSync(filePath, fileBuffer);
+      relativePath = `/${type}/${fileName}`;
+    }
     media.path = relativePath;
     await mediaRepo.save(media);
 
@@ -240,9 +254,18 @@ export default class MediaService {
     // 记录删除日志并标记版本为已删除
     await this.auditService.logDelete('media', media.id, media.alt || media.path, oldData);
 
-    const filePath = path.join(process.cwd(), 'public', media.path);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // 删除 COS 或本地文件
+    if (this.cosService.isAvailable() && (media.path.startsWith('http://') || media.path.startsWith('https://'))) {
+      try {
+        await this.cosService.delete(media.path);
+      } catch (err) {
+        console.error('COS 文件删除失败:', err);
+      }
+    } else {
+      const filePath = path.join(process.cwd(), 'public', media.path);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
     }
 
     // 删除数据库记录
@@ -288,6 +311,8 @@ export default class MediaService {
       tempDir,
       createdAt: new Date(),
       admin: this.ctx.session.admin,
+      phase: 'uploading',
+      cosProgress: 0,
     };
     chunkUploadStates.set(uploadId, state);
 
@@ -378,25 +403,40 @@ export default class MediaService {
     const fileName = `${media.id}${extName}`;
     const finalPath = path.join(typeDir, fileName);
 
-    // 合并分片
-    const writeStream = fs.createWriteStream(finalPath);
+    // 合并分片到内存
+    state.phase = 'merging';
+    let totalSize = 0;
+    const chunkBuffers: Buffer[] = [];
     for (let i = 0; i < state.totalChunks; i++) {
       const chunkPath = path.join(state.tempDir, `chunk_${i}`);
       const chunkData = fs.readFileSync(chunkPath);
-      writeStream.write(chunkData);
+      chunkBuffers.push(chunkData as any);
+      totalSize += chunkData.length;
     }
-    writeStream.end();
+    const mergedBuffer = Buffer.alloc(totalSize);
+    let offset = 0;
+    for (const chunk of chunkBuffers) {
+      (chunk as any).copy(mergedBuffer, offset);
+      offset += chunk.length;
+    }
+    const actualFileSize = mergedBuffer.length;
 
-    await new Promise<void>((resolve, reject) => {
-      writeStream.on('finish', resolve);
-      writeStream.on('error', reject);
-    });
-
-    // 获取实际文件大小
-    const actualFileSize = fs.statSync(finalPath).size;
+    // 上传到 COS 或本地
+    let relativePath: string;
+    if (this.cosService.isAvailable()) {
+      state.phase = 'cos_uploading';
+      state.cosProgress = 0;
+      relativePath = await this.cosService.upload(mergedBuffer, fileName, state.type, (percent) => {
+        state.cosProgress = percent;
+      });
+      state.cosProgress = 1;
+      state.phase = 'done';
+    } else {
+      fs.writeFileSync(finalPath, mergedBuffer as any);
+      relativePath = `/${state.type}/${fileName}`;
+    }
 
     // 更新数据库记录的路径和实际文件大小
-    const relativePath = `/${state.type}/${fileName}`;
     media.path = relativePath;
     media.size = actualFileSize;
     await mediaRepo.save(media);
@@ -423,6 +463,23 @@ export default class MediaService {
             avatar: state.admin.avatar,
           }
         : undefined,
+    };
+  }
+
+  /**
+   * 查询分片上传进度（包括 COS 上传进度）
+   */
+  getChunkUploadProgress(uploadId: string): { phase: string; cosProgress: number; receivedChunks: number; totalChunks: number } {
+    const state = chunkUploadStates.get(uploadId);
+    if (!state) {
+      // 上传已完成或不存在
+      return { phase: 'done', cosProgress: 1, receivedChunks: 0, totalChunks: 0 };
+    }
+    return {
+      phase: state.phase,
+      cosProgress: state.cosProgress,
+      receivedChunks: state.receivedChunks.size,
+      totalChunks: state.totalChunks,
     };
   }
 

@@ -69,7 +69,7 @@ export default class AdminTools extends Vue {
     [this.adminToolSectionEnum.NEWS_MANAGEMENT]: '/admin/news-list',
     [this.adminToolSectionEnum.MEDIA_MANAGEMENT]: '/admin/media-list/logo',
     [this.adminToolSectionEnum.PROJECT_MANAGEMENT]: '/admin/project-list',
-    [this.adminToolSectionEnum.USERS]: '/admin/users',
+    [this.adminToolSectionEnum.USERS]: '/admin/settings',
   };
 
   handleSelect(index: string) {

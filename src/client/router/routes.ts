@@ -78,8 +78,8 @@ const clientRoutes = parseRoutes([
       },
       {
         name: 'UsersAdminView',
-        path: '/admin/users',
-        fullPath: '/admin/users',
+        path: '/admin/settings',
+        fullPath: '/admin/settings',
         component: () => import(/* webpackChunkName: "UsersAdminView" */ '../modules/admin/users-admin.view.vue'),
         routeProps: undefined,
         priority: undefined,

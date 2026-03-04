@@ -37,6 +37,17 @@ export default class NewsCategoryView extends Vue {
   currentPage = 1;
   pageSize = 20;
 
+  // 每张图片的加载状态
+  imageLoaded: Record<number, boolean> = {};
+
+  onImageLoad(newsId: number) {
+    this.imageLoaded = { ...this.imageLoaded, [newsId]: true };
+  }
+
+  isImageLoaded(newsId: number): boolean {
+    return !!this.imageLoaded[newsId];
+  }
+
   get categoryId(): number {
     return Number(this.$route.params.id);
   }
@@ -175,7 +186,12 @@ export default class NewsCategoryView extends Vue {
                 <div class="news-item-date">{{ formatDate(news.publishedAt || news.createdAt) }}</div>
                 <div class="news-item-content">
                   <div class="news-item-cover" v-if="news.coverImage">
-                    <ElImage :src="news.coverImage" fit="cover" lazy />
+                    <ElSkeleton v-if="!isImageLoaded(news.id)" :rows="0" animated class="image-skeleton-overlay">
+                      <template #template>
+                        <ElSkeletonItem variant="image" style="width: 100%; height: 100%" />
+                      </template>
+                    </ElSkeleton>
+                    <ElImage :src="news.coverImage" fit="cover" lazy @load="onImageLoad(news.id)" />
                   </div>
                   <div class="news-item-info">
                     <h3 class="news-item-title">{{ news.title }}</h3>
@@ -329,6 +345,13 @@ export default class NewsCategoryView extends Vue {
           height: 80px;
           border-radius: 0.15rem;
           overflow: hidden;
+          position: relative;
+
+          .image-skeleton-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+          }
 
           :deep(.el-image) {
             width: 100%;

@@ -22,6 +22,7 @@ import { Upload, Image as IconPicture, Eye, SquarePen } from 'lucide-vue-next';
 import { defineAsyncComponent } from 'vue';
 import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import SelectMediaDialog from './select-logo-dialog.vue';
+import { resolveMediaUrl } from '@client/utils';
 
 const QuillEditor = defineAsyncComponent(() =>
   import('@vueup/vue-quill').then(module => module.QuillEditor)
@@ -54,6 +55,8 @@ const QuillEditor = defineAsyncComponent(() =>
 export default class NewsEditDialog extends Vue {
   // QuillEditor 实例引用
   quillEditorRef: any = null;
+
+  resolveMediaUrl = resolveMediaUrl;
 
   // 图片选择对话框状态
   imageSelectDialogVisible = false;
@@ -160,7 +163,7 @@ export default class NewsEditDialog extends Vue {
         // 如果有封面图片文件，先上传
         const uploadResult = await this.$api.uploadMedia({
           file: coverImageFile,
-          type: MediaTypeEnum.NEWS_COVER,
+          type: MediaTypeEnum.IMAGE,
           alt: title,
         });
         coverImagePath = uploadResult.path;
@@ -202,7 +205,7 @@ export default class NewsEditDialog extends Vue {
       } else if (coverImageFile) {
         const uploadResult = await this.$api.uploadMedia({
           file: coverImageFile,
-          type: MediaTypeEnum.NEWS_COVER,
+          type: MediaTypeEnum.IMAGE,
           alt: title,
         });
         coverImagePath = uploadResult.path;
@@ -286,7 +289,7 @@ export default class NewsEditDialog extends Vue {
   // 处理从媒体库选择的图片
   handleImageSelect(media: any) {
     if (media && media.path) {
-      this.insertImageToEditor(media.path);
+      this.insertImageToEditor(resolveMediaUrl(media.path));
     }
   }
 
@@ -353,7 +356,7 @@ export default class NewsEditDialog extends Vue {
         <el-form-item label="Cover Image">
           <div class="cover-upload-wrapper">
             <div class="avatar-wrapper" @click="openCoverSelectDialog">
-              <el-image :src="newsForm.coverImage" style="height: 3rem" fit="cover">
+              <el-image :src="resolveMediaUrl(newsForm.coverImage)" style="height: 3rem" fit="cover">
                 <template #error>
                   <div class="image-viewer-slot image-slot">
                     <p>Click to select</p>
@@ -437,7 +440,7 @@ export default class NewsEditDialog extends Vue {
     <!-- 封面图片选择对话框 -->
     <SelectMediaDialog
       v-model:visible="coverSelectDialogVisible"
-      :media-type="MediaTypeEnum.NEWS_COVER"
+      :media-type="MediaTypeEnum.IMAGE"
       :current-media-url="newsForm.coverImage"
       :show-upload-tab="true"
       @select="handleCoverSelect"

@@ -4,6 +4,7 @@ import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import { GetMediaListResDTO } from '@common/modules/media/media.dto';
 import { View, RenderMethod, RenderMethodKind, ChildOf } from 'bwcx-client-vue3';
 import { MEDIA_TYPE_CONFIG } from '@common/config/media-type-config';
+import { resolveMediaUrl } from '@client/utils';
 
 import {
   ElButton,
@@ -67,6 +68,8 @@ import TipButton from '@client/components/admin/tip-button.vue';
 })
 export default class MediaListContainer extends Vue {
   mediaType: MediaTypeEnum = MediaTypeEnum.IMAGE;
+
+  resolveMediaUrl = resolveMediaUrl;
 
   get mediaTypeConfig() {
     return MEDIA_TYPE_CONFIG[this.mediaType];
@@ -176,8 +179,7 @@ export default class MediaListContainer extends Vue {
   }
 
   handleCopyMediaURL(path: string) {
-    const host = window.location.origin;
-    const fullURL = `${host}${path}`;
+    const fullURL = resolveMediaUrl(path);
     navigator.clipboard.writeText(fullURL).then(
       () => {
         ElMessage.primary('Media URL copied to clipboard');
@@ -189,15 +191,24 @@ export default class MediaListContainer extends Vue {
     );
   }
 
-  handleDownload(path: string) {
-    const host = window.location.origin;
-    const fullURL = `${host}${path}`;
-    const link = document.createElement('a');
-    link.href = fullURL;
-    link.download = fullURL.split('/').pop() || 'download';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  async handleDownload(path: string) {
+    const fullURL = resolveMediaUrl(path);
+    const fileName = fullURL.split('/').pop() || 'download';
+    try {
+      const res = await fetch(fullURL);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+      ElMessage.error('下载失败，请重试');
+    }
   }
 
 }
@@ -231,7 +242,7 @@ export default class MediaListContainer extends Vue {
           <div class="media-list-image-container">
             <el-image
               v-if="media.type === 'image' || media.type === 'logo'"
-              :src="media.path"
+              :src="resolveMediaUrl(media.path)"
               class="media-list-card-image"
               fit="contain"
               style="width: 100%; height: 100%"

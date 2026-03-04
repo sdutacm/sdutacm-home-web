@@ -146,3 +146,20 @@ export class CompleteChunkUploadReqDTO {
 
 export class CompleteChunkUploadResDTO extends MediaDetailResDTO {}
 
+// 查询分片上传进度（含 COS 上传进度）
+export class GetChunkUploadProgressReqDTO {
+  @FromBody()
+  @IsString()
+  uploadId: string;
+}
+
+export class GetChunkUploadProgressResDTO {
+  /** 当前阶段: uploading / merging / cos_uploading / done */
+  phase: string;
+  /** COS 上传进度 0-1 */
+  cosProgress: number;
+  /** 已接收分片数 */
+  receivedChunks: number;
+  /** 总分片数 */
+  totalChunks: number;
+}

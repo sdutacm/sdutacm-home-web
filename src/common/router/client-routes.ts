@@ -16,7 +16,7 @@ export const clientRoutesMap = new Map<string, { path: string; routeProps: Newab
   ['NewsPreviewView', { path: '/admin/news-preview/:id', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
   ['OverviewView', { path: '/admin/overview', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
   ['ProjectListContainer', { path: '/admin/project-list', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
-  ['UsersAdminView', { path: '/admin/users', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
+  ['UsersAdminView', { path: '/admin/settings', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],
   ['DemoDetail', { path: '/demo/detail/:id', routeProps: DemoDetailRPO, renderMethod: RenderMethodKind.SSR }],
   ['HomeView', { path: '/', routeProps: undefined, renderMethod: RenderMethodKind.SSR }],
   ['LoginView', { path: '/login', routeProps: undefined, renderMethod: RenderMethodKind.CSR }],

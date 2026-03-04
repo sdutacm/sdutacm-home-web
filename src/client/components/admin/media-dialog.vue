@@ -27,6 +27,7 @@ import {
   ElProgress,
 } from 'element-plus';
 import { Upload, FileMusic, FileVideoCamera } from 'lucide-vue-next';
+import { resolveMediaUrl } from '@client/utils';
 
 export type MediaDialogMode = 'upload' | 'edit';
 
@@ -62,6 +63,8 @@ export default class MediaDialog extends Vue {
   @Prop({ required: true, default: false })
   visible!: boolean;
 
+  resolveMediaUrl = resolveMediaUrl;
+
   @Prop({ required: true, default: 'upload' })
   mode!: MediaDialogMode;
 
@@ -91,6 +94,9 @@ export default class MediaDialog extends Vue {
   // 分片上传进度
   uploadProgress = 0;
   isChunkUploading = false;
+  /** 是否处于合并/COS上传的不确定进度阶段 */
+  isCosUploading = false;
+  uploadPhaseText = '';
 
   @Watch('visible')
   async onVisibleChange(val: boolean) {
@@ -129,6 +135,8 @@ export default class MediaDialog extends Vue {
     this.resetEditForm();
     this.uploadProgress = 0;
     this.isChunkUploading = false;
+    this.isCosUploading = false;
+    this.uploadPhaseText = '';
   }
 
   handleClose() {
@@ -136,7 +144,6 @@ export default class MediaDialog extends Vue {
     this.resetAll();
   }
 
-  // ==================== 上传模式方法 ====================
 
   /** 检查是否为大文件类型（音视频） */
   get isLargeFileType() {
@@ -175,6 +182,9 @@ export default class MediaDialog extends Vue {
 
     const { uploadId, chunkSize } = initRes;
 
+    // 阶段1：上传分片到服务器 (0% - 100%)
+    this.uploadPhaseText = 'Uploading to server...';
+    this.isCosUploading = false;
     for (let i = 0; i < totalChunks; i++) {
       const start = i * chunkSize;
       const end = Math.min(start + chunkSize, file.size);
@@ -189,7 +199,14 @@ export default class MediaDialog extends Vue {
       this.uploadProgress = Math.round(((i + 1) / totalChunks) * 100);
     }
 
+    // 阶段2：合并 + 上传到 COS，使用不确定进度条
+    this.uploadProgress = 100;
+    this.isCosUploading = true;
+    this.uploadPhaseText = 'Uploading to cloud storage...';
+
     const result = await this.$api.completeChunkUpload({ uploadId });
+    this.isCosUploading = false;
+    this.uploadPhaseText = '';
     return result;
   }
 
@@ -230,6 +247,7 @@ export default class MediaDialog extends Vue {
     } finally {
       this.loading = false;
       this.isChunkUploading = false;
+      this.isCosUploading = false;
     }
   }
 
@@ -281,8 +299,6 @@ export default class MediaDialog extends Vue {
       this.loading = false;
     }
   }
-
-  // ==================== 计算属性 ====================
 
   get dialogTitle() {
     if (this.mode === 'upload') {
@@ -371,13 +387,29 @@ export default class MediaDialog extends Vue {
               </template>
             </el-upload>
 
-            <!-- 分片上传进度条 -->
-            <el-progress
-              v-if="isChunkUploading"
-              :percentage="uploadProgress"
-              :stroke-width="10"
-              class="chunk-upload-progress"
-            />
+          </el-form-item>
+
+          <!-- 分片上传进度条 -->
+          <el-form-item v-if="isChunkUploading" label="Progress">
+            <div class="chunk-upload-progress">
+              <el-progress
+                v-if="!isCosUploading"
+                :percentage="uploadProgress"
+                :stroke-width="18"
+                :text-inside="true"
+              />
+              <el-progress
+                v-else
+                :percentage="100"
+                :stroke-width="18"
+                :text-inside="true"
+                :indeterminate="true"
+                :duration="3"
+                striped
+                striped-flow
+              />
+              <div v-if="uploadPhaseText" class="upload-phase-text">{{ uploadPhaseText }}</div>
+            </div>
           </el-form-item>
 
           <el-form-item label="Description">
@@ -395,7 +427,7 @@ export default class MediaDialog extends Vue {
       <template v-else-if="mode === 'edit'">
         <div v-if="mediaDetail" class="media-detail">
           <div class="preview-section">
-            <el-image v-if="mediaType === 'logo' || mediaType === 'image'" style="width: 2.5rem" :src="mediaDetail.path" fit="cover" class="preview-image" />
+            <el-image v-if="mediaType === 'logo' || mediaType === 'image'" style="width: 2.5rem" :src="resolveMediaUrl(mediaDetail.path)" fit="cover" class="preview-image" />
             <el-icon v-else-if="mediaType === 'video'" size="48"><FileVideoCamera /></el-icon>
             <el-icon v-else-if="mediaType === 'audio'" size="48"><FileMusic /></el-icon>
           </div>
@@ -467,6 +499,12 @@ export default class MediaDialog extends Vue {
 
 .chunk-upload-progress {
   margin-top: 16px;
+}
+
+.upload-phase-text {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #909399;
 }
 
 .media-detail {

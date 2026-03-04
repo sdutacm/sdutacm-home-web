@@ -392,7 +392,7 @@ export default class AuditLogContainer extends Vue {
     <template v-if="loading">
       <!-- 统计卡片骨架屏 -->
       <div class="stats-row">
-        <ElCard v-for="i in 4" :key="'stat-skeleton-' + i" class="stat-card" shadow="none">
+        <ElCard v-for="i in 4" :key="'stat-skeleton-' + i" class="stat-card" shadow="never">
           <el-skeleton :rows="0" animated>
             <template #template>
               <div class="stat-content">
@@ -408,7 +408,7 @@ export default class AuditLogContainer extends Vue {
       </div>
 
       <!-- 筛选区域骨架屏 -->
-      <ElCard class="filter-card" shadow="none">
+      <ElCard class="filter-card" shadow="never">
         <el-skeleton :rows="0" animated>
           <template #template>
             <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">

@@ -6,7 +6,7 @@ import { GetNewsDetailResDTO } from '@common/modules/news/news.dto';
 import QRCode from 'qrcode';
 
 import UserAvatar from './user-avatar.vue';
-import { ElDivider, ElIcon, ElImage, ElButton, ElDialog, vLoading } from 'element-plus';
+import { ElDivider, ElIcon, ElImage, ElButton, ElDialog, ElSkeleton, ElSkeletonItem, vLoading } from 'element-plus';
 import { Undo2, TextAlignEnd, CalendarDays, Share, Eye, Mail, Link } from 'lucide-vue-next';
 import IconWechatPure from './homepage/icon/icon-wechat-pure.vue';
 
@@ -22,6 +22,8 @@ import IconWechatPure from './homepage/icon/icon-wechat-pure.vue';
     ElImage,
     ElButton,
     ElDialog,
+    ElSkeleton,
+    ElSkeletonItem,
     Share,
     Mail,
     IconWechatPure,
@@ -39,6 +41,11 @@ export default class NewsContainer extends Vue {
   linkCopied = false;
   qrcodeLoading = true;
   qrcodeDataUrl = '';
+  coverImageLoaded = false;
+
+  onCoverLoad() {
+    this.coverImageLoaded = true;
+  }
 
   get currentUrl() {
     return typeof window !== 'undefined' ? window.location.href : '';
@@ -124,7 +131,12 @@ export default class NewsContainer extends Vue {
   <div class="news-preview-container" v-loading="showLoading" v-if="!newsLoadedFailed">
     <header class="news-preview-header" v-if="newsInfo.id">
       <div class="news-preview-img-wrapper" v-if="newsInfo.coverImage">
-        <el-image v-if="newsInfo.coverImage" :src="newsInfo.coverImage" fit="cover" style="width: 100%; height: 100%" />
+        <el-skeleton v-if="!coverImageLoaded" :rows="0" animated class="image-skeleton-overlay">
+          <template #template>
+            <el-skeleton-item variant="image" style="width: 100%; height: 100%" />
+          </template>
+        </el-skeleton>
+        <el-image v-if="newsInfo.coverImage" :src="newsInfo.coverImage" fit="cover" style="width: 100%; height: 100%" @load="onCoverLoad" />
       </div>
       <div class="news-preview-dexc-group">
         <h1 class="news-preview-title" v-if="newsInfo.title">{{ newsInfo.title }}</h1>
@@ -203,6 +215,12 @@ export default class NewsContainer extends Vue {
       }
 
       position: relative;
+
+      .image-skeleton-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+      }
     }
 
     & .news-preview-dexc-group {

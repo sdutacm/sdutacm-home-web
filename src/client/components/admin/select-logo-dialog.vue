@@ -17,6 +17,7 @@ import {
   ElInput,
 } from 'element-plus';
 import { Upload, FolderOpen, Search } from 'lucide-vue-next';
+import { resolveMediaUrl } from '@client/utils';
 
 // 媒体类型的显示配置
 const MEDIA_TYPE_CONFIG: Record<MediaTypeEnum, { title: string; emptyText: string }> = {
@@ -53,6 +54,8 @@ const MEDIA_TYPE_CONFIG: Record<MediaTypeEnum, { title: string; emptyText: strin
 export default class SelectMediaDialog extends Vue {
   @Prop({ required: true, default: false })
   visible!: boolean;
+
+  resolveMediaUrl = resolveMediaUrl;
 
   // 媒体类型，默认为 LOGO
   @Prop({ default: MediaTypeEnum.LOGO })
@@ -121,6 +124,8 @@ export default class SelectMediaDialog extends Vue {
     try {
       const result = await this.$api.getMediaList({
         type: this.mediaType,
+        page: 1,
+        pageSize: 1000,
       });
       this.mediaList = result.rows || [];
 
@@ -238,7 +243,7 @@ export default class SelectMediaDialog extends Vue {
               }"
             >
               <div class="media-image-wrapper">
-                <el-image :src="item.path" fit="contain" class="media-image">
+                <el-image :src="resolveMediaUrl(item.path)" fit="contain" class="media-image">
                   <template #error>
                     <div class="image-error">Failed to load image</div>
                   </template>

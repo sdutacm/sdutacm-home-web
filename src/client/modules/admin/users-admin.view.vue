@@ -34,7 +34,7 @@ import {
 import AuditLogContainer from '@client/components/admin/audit-log.vue';
 import { Upload, MoreVertical } from 'lucide-vue-next';
 
-@View('/admin/users')
+@View('/admin/settings')
 @ChildOf('AdminView')
 @RenderMethod(RenderMethodKind.CSR)
 @Options({
