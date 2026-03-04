@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const isProd = process.env.NODE_ENV === 'production';
 const moduleAlias = require('module-alias');
+const host = process.env.HOST || '0.0.0.0'
 
 moduleAlias.addAlias('@server', __dirname);
 moduleAlias.addAlias('@common', require('path').join(__dirname, '../common'));
@@ -39,7 +40,7 @@ export default class OurApp extends App {
     '!./common/api/**',
   ];
 
-  protected hostname = '127.0.0.1';
+  protected hostname = host;
 
   protected port = 3000;
 
