@@ -1,11 +1,18 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
+import { Prop } from 'vue-property-decorator';
 import { View, RenderMethod, RenderMethodKind, ChildOf } from 'bwcx-client-vue3';
 
 import { ElCarousel, ElCarouselItem, ElImage, ElSkeleton, ElSkeletonItem, ElEmpty, ElIcon } from 'element-plus';
 import { ArrowRight, TextAlignEnd, TextAlignStart, Eye } from 'lucide-vue-next';
 import { GetHomeNewsResDTO } from '@common/modules/home/home.dto';
 import { GetCategoryPreviewResDTO } from '@common/modules/news/news.dto';
+import { AsyncDataOptions } from '@client/typings';
+
+interface NewsListState {
+  latestNewsList: GetHomeNewsResDTO;
+  categoryPreviews: GetCategoryPreviewResDTO[];
+}
 
 @View('/news/overview')
 @RenderMethod(RenderMethodKind.SSR)
@@ -27,6 +34,9 @@ import { GetCategoryPreviewResDTO } from '@common/modules/news/news.dto';
   },
 })
 export default class NewsListView extends Vue {
+  @Prop()
+  newsListState?: NewsListState;
+
   latestNewsList: GetHomeNewsResDTO = {
     rows: [],
   };
@@ -38,6 +48,19 @@ export default class NewsListView extends Vue {
 
   // 每张图片的加载状态，key 为 newsId
   imageLoaded: Record<number, boolean> = {};
+
+  async asyncData({ apiClient }: AsyncDataOptions): Promise<{ newsListState: NewsListState }> {
+    const [homeNews, categoriesPreview] = await Promise.all([
+      apiClient.getHomeNews(),
+      apiClient.getAllCategoriesPreview(),
+    ]);
+    return {
+      newsListState: {
+        latestNewsList: homeNews,
+        categoryPreviews: categoriesPreview.categories.filter((c) => c.totalNewsCount >= 1),
+      },
+    };
+  }
 
   onImageLoad(newsId: number) {
     this.imageLoaded = { ...this.imageLoaded, [newsId]: true };
@@ -63,10 +86,22 @@ export default class NewsListView extends Vue {
     this.$router.push(`/news/category/${categoryId}`);
   }
 
-  async mounted() {
+  mounted() {
     if (window.innerWidth < 768) {
       this.isMobile = true;
     }
+    // 如果 SSR 已经预取了数据，直接使用
+    if (this.newsListState) {
+      this.latestNewsList = this.newsListState.latestNewsList;
+      this.categoryPreviews = this.newsListState.categoryPreviews;
+      this.loading = false;
+    } else {
+      // 客户端导航时需要重新获取数据
+      this.fetchData();
+    }
+  }
+
+  async fetchData() {
     try {
       this.loading = true;
       const [homeNews, categoriesPreview] = await Promise.all([

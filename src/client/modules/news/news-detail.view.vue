@@ -1,10 +1,16 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
+import { Prop } from 'vue-property-decorator';
 import { View, RenderMethod, RenderMethodKind, ChildOf } from 'bwcx-client-vue3';
 import NewsContainer from '@client/components/news-container.vue';
 import { GetNewsDetailResDTO } from '@common/modules/news/news.dto';
 import { Share } from 'lucide-vue-next';
 import { ElIcon } from 'element-plus';
+import { AsyncDataOptions } from '@client/typings';
+
+interface NewsDetailState {
+  newsInfo: GetNewsDetailResDTO;
+}
 
 @View('/news/:id')
 @RenderMethod(RenderMethodKind.SSR)
@@ -17,6 +23,9 @@ import { ElIcon } from 'element-plus';
   },
 })
 export default class NewsDetailView extends Vue {
+  @Prop()
+  newsDetailState?: NewsDetailState;
+
   id: number = 0;
   showLoading: boolean = true;
   newsLoadedFailed: boolean = false;
@@ -37,6 +46,16 @@ export default class NewsDetailView extends Vue {
     },
   };
 
+  async asyncData({ apiClient, to }: AsyncDataOptions): Promise<{ newsDetailState: NewsDetailState }> {
+    const id = parseInt(to.params.id as string);
+    const newsInfo = await apiClient.getPublishedNews({ id });
+    return {
+      newsDetailState: {
+        newsInfo,
+      },
+    };
+  }
+
   copyLink() {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(
@@ -49,12 +68,25 @@ export default class NewsDetailView extends Vue {
 
   async mounted() {
     this.id = parseInt(this.$route.params.id as string);
+
+    // 如果 SSR 已经预取了数据，直接使用
+    if (this.newsDetailState) {
+      this.newsInfo = this.newsDetailState.newsInfo;
+      this.showLoading = false;
+    } else {
+      // 客户端导航时需要重新获取数据
+      await this.fetchData();
+    }
+
+    // 增加阅览数（客户端路由跳转时触发）
+    this.$api.incrementNewsViewCount({ id: this.id }).catch((err) => {
+      console.error('Failed to increment news view count:', err);
+    });
+  }
+
+  async fetchData() {
     try {
       this.newsInfo = await this.$api.getPublishedNews({ id: this.id });
-      // 增加阅览数（客户端路由跳转时触发）
-      this.$api.incrementNewsViewCount({ id: this.id }).catch((err) => {
-        console.error('Failed to increment news view count:', err);
-      });
     } catch (error) {
       console.error('Failed to fetch news detail:', error);
       this.newsLoadedFailed = true;
