@@ -16,6 +16,7 @@ export interface NewsItemVO {
   viewCount?: number;
   categoryId?: number;
   categoryName?: string;
+  wxOfficialLink?: string;
 }
 
 export class GetNewsPreviewResDTO {
@@ -68,6 +69,11 @@ export class CreateNewsReqDTO {
   @IsOptional()
   @IsDateString()
   publishedAt?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  wxOfficialLink?: string;
 }
 
 // 更新新闻
@@ -111,6 +117,11 @@ export class UpdateNewsReqDTO {
   @IsOptional()
   @IsDateString()
   publishedAt?: string;
+
+  @FromBody()
+  @IsOptional()
+  @IsString()
+  wxOfficialLink?: string;
 }
 
 // 删除新闻
@@ -136,6 +147,7 @@ export class GetNewsDetailResDTO {
   viewCount?: number;
   categoryId?: number;
   categoryName?: string;
+  wxOfficialLink?: string;
 }
 
 // 获取新闻列表

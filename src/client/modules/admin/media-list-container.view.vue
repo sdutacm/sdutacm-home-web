@@ -91,6 +91,17 @@ export default class MediaListContainer extends Vue {
   reqId = 0;
   loading = false;
 
+  // 图片加载状态
+  imageLoaded: Record<number, boolean> = {};
+
+  onImageLoad(mediaId: number) {
+    this.imageLoaded = { ...this.imageLoaded, [mediaId]: true };
+  }
+
+  isImageLoaded(mediaId: number): boolean {
+    return !!this.imageLoaded[mediaId];
+  }
+
   showUploadDialog() {
     this.mediaDialogMode = 'upload';
     this.selectedMediaId = null;
@@ -162,6 +173,7 @@ export default class MediaListContainer extends Vue {
     this.mediaType = newType;
     this.currentPage = 1;
     this.mediaList = { rows: [], total: 0 };
+    this.imageLoaded = {};
     this.reqId++;
 
     await this.fetchMediaList();
@@ -240,13 +252,20 @@ export default class MediaListContainer extends Vue {
       <div v-else class="media-list-grid">
         <el-card v-for="media in mediaList.rows" :key="media.id" shadow="hover" class="media-list-card">
           <div class="media-list-image-container">
-            <el-image
-              v-if="media.type === 'image' || media.type === 'logo'"
-              :src="resolveMediaUrl(media.path)"
-              class="media-list-card-image"
-              fit="contain"
-              style="width: 100%; height: 100%"
-            />
+            <template v-if="media.type === 'image' || media.type === 'logo'">
+              <el-skeleton v-if="!isImageLoaded(media.id)" :rows="0" animated class="image-skeleton-overlay">
+                <template #template>
+                  <el-skeleton-item variant="image" style="width: 100%; height: 100%" />
+                </template>
+              </el-skeleton>
+              <el-image
+                :src="resolveMediaUrl(media.path)"
+                class="media-list-card-image"
+                fit="contain"
+                style="width: 100%; height: 100%"
+                @load="onImageLoad(media.id)"
+              />
+            </template>
             <el-icon v-else-if="media.type === 'video'"><FileVideoCamera /></el-icon>
             <el-icon v-else-if="media.type === 'audio'"><FileMusic /></el-icon>
           </div>
@@ -324,6 +343,15 @@ export default class MediaListContainer extends Vue {
       align-items: center;
       position: relative;
       overflow: hidden;
+
+      .image-skeleton-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
     }
 
     .media-list-card-alt {

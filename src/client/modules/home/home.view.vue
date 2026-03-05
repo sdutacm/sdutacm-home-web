@@ -33,16 +33,17 @@ export default class HomeView extends Vue {
 
   async asyncData({ apiClient }: AsyncDataOptions) {
     const res = await apiClient.getHomeData();
-    console.log('fetch data'+res.newsPreview);
+    console.log('fetch data' + res.newsPreview);
     return {
       homeState: res,
     };
   }
 
   mounted() {
-    this.$api.recordPageView({ pageKey: 'home' }).catch(err => {
+    this.$api.recordPageView({ pageKey: 'home' }).catch((err) => {
       console.error('Failed to record page view:', err);
     });
+    console.log('HomeView mounted with state:', { ...this.homeState });
     console.log(
       String.raw`      _/_/_/  _/_/_/    _/    _/  _/_/_/_/_/    _/_/      _/_/_/  _/      _/   ` +
         '\n' +

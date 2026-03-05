@@ -1313,6 +1313,7 @@ export class ApiClient<T = undefined> {
           isPublished: req.isPublished,
           categoryId: req.categoryId,
           publishedAt: req.publishedAt,
+          wxOfficialLink: req.wxOfficialLink,
         },
         extraOpts: opts,
         metadata: {
@@ -1340,6 +1341,7 @@ export class ApiClient<T = undefined> {
           isPublished: req.isPublished,
           categoryId: req.categoryId,
           publishedAt: req.publishedAt,
+          wxOfficialLink: req.wxOfficialLink,
         },
         extraOpts: opts,
         metadata: {

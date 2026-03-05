@@ -7,6 +7,7 @@ import HomeFooter from '@client/components/home-footer.vue';
 @View('/news')
 @RenderMethod(RenderMethodKind.SSR)
 @Options({
+  inheritAttrs: false,
   components: {
     NewsNav,
     HomeFooter,
@@ -17,6 +18,8 @@ export default class NewsView extends Vue {}
 
 <template>
   <NewsNav />
-  <router-view></router-view>
+  <router-view v-slot="{ Component, route }">
+    <component :is="Component" v-bind="route.meta.state" />
+  </router-view>
   <HomeFooter />
 </template>

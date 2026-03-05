@@ -40,6 +40,9 @@ export class News {
   @Column({ default: 0, name: 'view_count', comment: '浏览次数' })
   viewCount: number;
 
+  @Column({ length: 500, nullable: true, name: 'wx_official_link', comment: '微信公众号链接' })
+  wxOfficialLink?: string;
+
   @OneToOne(() => HomeNewsPreview, (preview) => preview.news)
   homePreview?: HomeNewsPreview;
 

@@ -63,6 +63,7 @@ export default class NewsService {
       publishedAt,
       updatedBy: this.ctx.session.admin,
       categoryId: data.categoryId || null,
+      wxOfficialLink: data.wxOfficialLink || null,
     });
 
     const savedNews = await newsRepo.save(news);
@@ -76,6 +77,7 @@ export default class NewsService {
       isPublished: savedNews.isPublished,
       publishedAt: savedNews.publishedAt,
       categoryId: savedNews.categoryId,
+      wxOfficialLink: savedNews.wxOfficialLink,
     });
   }
 
@@ -96,12 +98,14 @@ export default class NewsService {
       isPublished: news.isPublished,
       publishedAt: news.publishedAt,
       categoryId: news.categoryId,
+      wxOfficialLink: news.wxOfficialLink,
     };
 
     if (data.title !== undefined) news.title = data.title;
     if (data.summary !== undefined) news.summary = data.summary;
     if (data.content !== undefined) news.content = data.content;
     if (data.coverImage !== undefined) news.coverImage = data.coverImage;
+    if (data.wxOfficialLink !== undefined) news.wxOfficialLink = data.wxOfficialLink;
 
     // 处理栏目更新 - 直接设置外键字段
     if (data.categoryId !== undefined) {
@@ -138,6 +142,7 @@ export default class NewsService {
       isPublished: news.isPublished,
       publishedAt: news.publishedAt,
       categoryId: news.category?.id,
+      wxOfficialLink: news.wxOfficialLink,
     };
     await this.auditService.logUpdate('news', news.id, news.title, oldData, newData);
   }
@@ -190,6 +195,7 @@ export default class NewsService {
       viewCount: news.viewCount,
       categoryId: news.category?.id,
       categoryName: news.category?.name,
+      wxOfficialLink: news.wxOfficialLink,
       updatedBy: news.updatedBy
         ? {
             id: news.updatedBy.id,
@@ -222,6 +228,7 @@ export default class NewsService {
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,
       viewCount: news.viewCount,
+      wxOfficialLink: news.wxOfficialLink,
       updatedBy: news.updatedBy
         ? {
             id: news.updatedBy.id,
@@ -260,6 +267,7 @@ export default class NewsService {
         viewCount: news.viewCount,
         categoryId: news.category?.id,
         categoryName: news.category?.name,
+        wxOfficialLink: news.wxOfficialLink,
         updatedBy: news.updatedBy
           ? {
               id: news.updatedBy.id,

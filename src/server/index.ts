@@ -78,21 +78,17 @@ export default class OurApp extends App {
   protected async beforeWire() {
     try {
       await appDataSource.initialize();
-      // 自动初始化 root 管理员（幂等，已存在则跳过）
       await seedAdmin(appDataSource);
-      // 自动初始化全局配置（幂等，已存在则跳过）
       await seedGlobalConfig(appDataSource);
     } catch (error) {
       console.error('Error during Data Source initialization', error);
       throw error;
     }
-    // 设置签名密钥用于 session cookies（从环境变量读取，用逗号分隔多个密钥）
     const sessionKeys = process.env.SESSION_KEYS?.split(',') || ['sdutacm-secret-key-1', 'sdutacm-secret-key-2'];
     this.instance.keys = sessionKeys;
     // session
     const sessionConfig = {
       key: 'sdutacm:sess',
-      maxAge: Infinity,
       autoCommit: true,
       overwrite: true,
       httpOnly: true,

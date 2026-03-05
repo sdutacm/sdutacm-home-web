@@ -14,16 +14,10 @@ interface NewsListState {
   categoryPreviews: GetCategoryPreviewResDTO[];
 }
 
-const defaultNewsListState: NewsListState = {
-  latestNewsList: { rows: [] },
-  categoryPreviews: [],
-};
-
 @View('/news/overview')
 @RenderMethod(RenderMethodKind.SSR)
 @ChildOf('NewsView')
 @Options({
-  name: 'NewsListView',
   components: {
     ElImage,
     Eye,
@@ -39,27 +33,12 @@ const defaultNewsListState: NewsListState = {
   },
 })
 export default class NewsListView extends Vue {
-  @Prop({ default: () => ({ ...defaultNewsListState }) })
+  @Prop()
   newsListState!: NewsListState;
-
   isMobile: boolean = false;
-  loading = true;
 
   // 每张图片的加载状态，key 为 newsId
   imageLoaded: Record<number, boolean> = {};
-
-  async asyncData({ apiClient }: AsyncDataOptions): Promise<{ newsListState: NewsListState }> {
-    const [homeNews, categoriesPreview] = await Promise.all([
-      apiClient.getHomeNews(),
-      apiClient.getAllCategoriesPreview(),
-    ]);
-    return {
-      newsListState: {
-        latestNewsList: homeNews,
-        categoryPreviews: categoriesPreview.categories.filter((c) => c.totalNewsCount >= 1),
-      },
-    };
-  }
 
   onImageLoad(newsId: number) {
     this.imageLoaded = { ...this.imageLoaded, [newsId]: true };
@@ -89,29 +68,21 @@ export default class NewsListView extends Vue {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.isMobile = true;
     }
-    // 如果 SSR 已经预取了数据，直接使用
-    if (this.newsListState.latestNewsList.rows.length > 0) {
-      this.loading = false;
-    } else {
-      // 客户端导航时需要重新获取数据
-      this.fetchData();
-    }
+    console.log(this.newsListState);
   }
 
-  async fetchData() {
-    try {
-      this.loading = true;
-      const [homeNews, categoriesPreview] = await Promise.all([
-        this.$api.getHomeNews(),
-        this.$api.getAllCategoriesPreview(),
-      ]);
-      this.newsListState.latestNewsList = homeNews;
-      this.newsListState.categoryPreviews = categoriesPreview.categories.filter((c) => c.totalNewsCount >= 1);
-    } catch (error) {
-      console.error('Failed to load news data:', error);
-    } finally {
-      this.loading = false;
-    }
+  async asyncData({ apiClient }: AsyncDataOptions) {
+    const [homeNews, categoriesPreview] = await Promise.all([
+      apiClient.getHomeNews(),
+      apiClient.getAllCategoriesPreview(),
+    ]);
+    console.log('Fetched home news and category previews:', homeNews, categoriesPreview);
+    return {
+      newsListState: {
+        latestNewsList: homeNews,
+        categoryPreviews: categoriesPreview.categories.filter((c) => c.totalNewsCount >= 1),
+      },
+    };
   }
 }
 </script>
@@ -129,79 +100,39 @@ export default class NewsListView extends Vue {
       <el-icon><TextAlignStart /></el-icon>
     </h2>
 
-    <!-- 轮播图骨架屏 -->
-    <template v-if="loading">
-      <div class="carousel-skeleton" :class="isMobile ? 'carousel-skeleton-small' : 'carousel-skeleton-card'">
-        <el-skeleton :rows="0" animated>
-          <template #template>
-            <div class="skeleton-carousel-wrapper">
-              <el-skeleton-item variant="image" class="skeleton-carousel-image" />
-              <div class="skeleton-carousel-content">
-                <el-skeleton-item variant="h3" style="width: 60%" />
-                <el-skeleton-item variant="text" style="width: 100%" />
-                <el-skeleton-item variant="text" style="width: 40%" />
-              </div>
-            </div>
-          </template>
-        </el-skeleton>
-      </div>
-    </template>
-
-    <div v-else :class="isMobile ? 'news-latest-carousel-small' : 'news-latest-carousel'">
-      <el-carousel
-        trigger="click"
-        class="my-carousel"
-        indicator-position="outside"
-        :type="isMobile ? 'default' : 'card'"
-      >
-        <el-carousel-item
-          v-for="item in newsListState.latestNewsList.rows"
-          :key="item.id"
-          class="carousel-item"
-          @click="goToNewsDetail(item.id)"
+    <div :class="isMobile ? 'news-latest-carousel-small' : 'news-latest-carousel'">
+      <client-only>
+        <el-carousel
+          trigger="click"
+          class="my-carousel"
+          indicator-position="outside"
+          :type="isMobile ? 'default' : 'card'"
         >
-          <div class="carousel-image-wrapper">
-            <el-skeleton v-if="!isImageLoaded(item.id)" :rows="0" animated class="image-skeleton-overlay">
-              <template #template>
-                <el-skeleton-item variant="image" style="width: 100%; height: 100%" />
-              </template>
-            </el-skeleton>
-            <el-image :src="item.coverImage" fit="cover" class="carousel-image" @load="onImageLoad(item.id)" />
-          </div>
-          <div class="latest-news-descs">
-            <h4 class="title">{{ item.title }}</h4>
-            <p class="summary">{{ item.summary }}</p>
-            <p class="date">{{ parseDate(item.publishedAt) }}</p>
-          </div>
-        </el-carousel-item>
-      </el-carousel>
+          <el-carousel-item
+            v-for="item in newsListState.latestNewsList.rows"
+            :key="item.id"
+            class="carousel-item"
+            @click="goToNewsDetail(item.id)"
+          >
+            <div class="carousel-image-wrapper">
+              <el-skeleton v-if="!isImageLoaded(item.id)" :rows="0" animated class="image-skeleton-overlay">
+                <template #template>
+                  <el-skeleton-item variant="image" style="width: 100%; height: 100%" />
+                </template>
+              </el-skeleton>
+              <el-image :src="item.coverImage" fit="cover" class="carousel-image" @load="onImageLoad(item.id)" />
+            </div>
+            <div class="latest-news-descs">
+              <h4 class="title">{{ item.title }}</h4>
+              <p class="summary">{{ item.summary }}</p>
+              <p class="date">{{ parseDate(item.publishedAt) }}</p>
+            </div>
+          </el-carousel-item>
+        </el-carousel>
+      </client-only>
     </div>
 
-    <!-- 栏目列表 -->
-    <template v-if="loading">
-      <div class="category-skeleton">
-        <el-skeleton :rows="0" animated>
-          <template #template>
-            <div class="skeleton-category-card">
-              <div class="skeleton-left">
-                <el-skeleton-item variant="image" style="width: 100%; height: 200px" />
-                <el-skeleton-item variant="image" style="width: 100%; height: 200px" />
-                <el-skeleton-item variant="image" style="width: 100%; height: 200px" />
-              </div>
-              <div class="skeleton-right">
-                <el-skeleton-item variant="h3" style="width: 60%" />
-                <el-skeleton-item variant="text" style="width: 100%" />
-                <el-skeleton-item variant="text" style="width: 100%" />
-                <el-skeleton-item variant="text" style="width: 100%" />
-                <el-skeleton-item variant="text" style="width: 80%" />
-              </div>
-            </div>
-          </template>
-        </el-skeleton>
-      </div>
-    </template>
-
-    <template v-else-if="newsListState.categoryPreviews.length === 0">
+    <template v-if="newsListState.categoryPreviews.length === 0">
       <el-empty description="暂无栏目数据" />
     </template>
 
@@ -219,12 +150,22 @@ export default class NewsListView extends Vue {
               @click="goToNewsDetail(preview.cardNews[0].id)"
             >
               <div class="news-card-cover">
-                <el-skeleton v-if="!isImageLoaded(preview.cardNews[0].id)" :rows="0" animated class="image-skeleton-overlay">
+                <el-skeleton
+                  v-if="!isImageLoaded(preview.cardNews[0].id)"
+                  :rows="0"
+                  animated
+                  class="image-skeleton-overlay"
+                >
                   <template #template>
                     <el-skeleton-item variant="image" style="width: 100%; height: 100%" />
                   </template>
                 </el-skeleton>
-                <el-image :src="preview.cardNews[0].coverImage" fit="cover" class="cover-image" @load="onImageLoad(preview.cardNews[0].id)" />
+                <el-image
+                  :src="preview.cardNews[0].coverImage"
+                  fit="cover"
+                  class="cover-image"
+                  @load="onImageLoad(preview.cardNews[0].id)"
+                />
               </div>
               <div class="news-card-content">
                 <h3 class="news-card-title">{{ preview.cardNews[0].title }}</h3>
@@ -245,12 +186,22 @@ export default class NewsListView extends Vue {
                 @click="goToNewsDetail(preview.cardNews[1].id)"
               >
                 <div class="news-card-cover">
-                  <el-skeleton v-if="!isImageLoaded(preview.cardNews[1].id)" :rows="0" animated class="image-skeleton-overlay">
+                  <el-skeleton
+                    v-if="!isImageLoaded(preview.cardNews[1].id)"
+                    :rows="0"
+                    animated
+                    class="image-skeleton-overlay"
+                  >
                     <template #template>
                       <el-skeleton-item variant="image" style="width: 100%; height: 100%" />
                     </template>
                   </el-skeleton>
-                  <el-image :src="preview.cardNews[1].coverImage" fit="cover" class="cover-image" @load="onImageLoad(preview.cardNews[1].id)" />
+                  <el-image
+                    :src="preview.cardNews[1].coverImage"
+                    fit="cover"
+                    class="cover-image"
+                    @load="onImageLoad(preview.cardNews[1].id)"
+                  />
                 </div>
                 <div class="news-card-content">
                   <h3 class="news-card-title">{{ preview.cardNews[1].title }}</h3>
@@ -269,12 +220,22 @@ export default class NewsListView extends Vue {
                 @click="goToNewsDetail(preview.cardNews[2].id)"
               >
                 <div class="news-card-cover">
-                  <el-skeleton v-if="!isImageLoaded(preview.cardNews[2].id)" :rows="0" animated class="image-skeleton-overlay">
+                  <el-skeleton
+                    v-if="!isImageLoaded(preview.cardNews[2].id)"
+                    :rows="0"
+                    animated
+                    class="image-skeleton-overlay"
+                  >
                     <template #template>
                       <el-skeleton-item variant="image" style="width: 100%; height: 100%" />
                     </template>
                   </el-skeleton>
-                  <el-image :src="preview.cardNews[2].coverImage" fit="cover" class="cover-image" @load="onImageLoad(preview.cardNews[2].id)" />
+                  <el-image
+                    :src="preview.cardNews[2].coverImage"
+                    fit="cover"
+                    class="cover-image"
+                    @load="onImageLoad(preview.cardNews[2].id)"
+                  />
                 </div>
                 <div class="news-card-content">
                   <h3 class="news-card-title">{{ preview.cardNews[2].title }}</h3>
@@ -720,14 +681,14 @@ export default class NewsListView extends Vue {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-radius: .2rem;
+    border-radius: 0.2rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     background-color: var(--ah-c-background);
 
     &:hover {
-      box-shadow: 0 0 20px  rgba(0, 0, 0, 0.2);
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
       // transform: translateY(-4px);
 
       .news-card-cover {
@@ -861,14 +822,12 @@ export default class NewsListView extends Vue {
     -webkit-box-orient: vertical;
     color: rgba(255, 255, 255, 0.9);
     text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-
   }
 
   & .date {
     font-size: 0.24rem;
     color: rgba(255, 255, 255, 0.7);
     text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-
   }
 }
 
@@ -896,13 +855,12 @@ export default class NewsListView extends Vue {
 
 .my-carousel {
   :deep(.el-carousel__container) {
-  height: 450px;
+    height: 450px;
 
-  @media screen and (max-width: 768px) {
-    height: 200px;
+    @media screen and (max-width: 768px) {
+      height: 200px;
+    }
   }
-  }
-
 }
 
 .view-icon-wrapper {
@@ -915,10 +873,10 @@ export default class NewsListView extends Vue {
 }
 
 .news-card-border {
-  outline: .4px solid gray;
+  outline: 0.4px solid gray;
 
   &:hover {
-    box-shadow: 0 0 15px rgba(0, 0, 0, .5);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
   }
 }
 

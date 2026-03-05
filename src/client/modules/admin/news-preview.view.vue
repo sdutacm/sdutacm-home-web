@@ -29,6 +29,7 @@ export default class NewsPreviewView extends Vue {
     isPublished: false,
     createdAt: null,
     updatedAt: null,
+    wxOfficialLink: '',
     updatedBy: {
       id: 0,
       username: '',

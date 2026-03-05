@@ -1,17 +1,31 @@
 <script lang="ts">
-import { Vue, Options, prop } from 'vue-class-component';
+import { Vue, Options } from 'vue-class-component';
+import { Prop } from 'vue-property-decorator';
 import { View, RenderMethod, RenderMethodKind, ChildOf } from 'bwcx-client-vue3';
 
 import { ElTimeline, ElTimelineItem, ElImage, ElSkeleton, ElSkeletonItem, ElEmpty, ElPagination } from 'element-plus';
 import { ArrowLeft } from 'lucide-vue-next';
-import { GetNewsByCategoryResDTO, NewsCategoryVO, GetNewsDetailResDTO } from '@common/modules/news/news.dto';
+import { NewsCategoryVO, GetNewsDetailResDTO } from '@common/modules/news/news.dto';
 import { Head } from '@vueuse/head';
+import { AsyncDataOptions } from '@client/typings';
 
 interface NewsGroup {
   year: number;
   month: number;
   news: GetNewsDetailResDTO[];
 }
+
+interface NewsCategoryState {
+  category: NewsCategoryVO | null;
+  newsList: GetNewsDetailResDTO[];
+  totalCount: number;
+}
+
+const defaultState: NewsCategoryState = {
+  category: null,
+  newsList: [],
+  totalCount: 0,
+};
 
 @View('/news/category/:id')
 @RenderMethod(RenderMethodKind.SSR)
@@ -30,15 +44,34 @@ interface NewsGroup {
   },
 })
 export default class NewsCategoryView extends Vue {
-  category: NewsCategoryVO | null = null;
-  newsList: GetNewsDetailResDTO[] = [];
-  loading = true;
-  totalCount = 0;
+  @Prop({ default: () => defaultState })
+  newsCategoryState!: NewsCategoryState;
+
   currentPage = 1;
   pageSize = 20;
 
+  // 本地状态用于分页后更新
+  localNewsList: GetNewsDetailResDTO[] | null = null;
+  localTotalCount: number | null = null;
+
   // 每张图片的加载状态
   imageLoaded: Record<number, boolean> = {};
+
+  async asyncData({ apiClient, to }: AsyncDataOptions): Promise<{ newsCategoryState: NewsCategoryState }> {
+    const categoryId = Number(to.params.id);
+    const data = await apiClient.getNewsByCategory({
+      categoryId,
+      page: 1,
+      pageSize: 20,
+    });
+    return {
+      newsCategoryState: {
+        category: data.category,
+        newsList: data.rows,
+        totalCount: data.total,
+      },
+    };
+  }
 
   onImageLoad(newsId: number) {
     this.imageLoaded = { ...this.imageLoaded, [newsId]: true };
@@ -50,6 +83,18 @@ export default class NewsCategoryView extends Vue {
 
   get categoryId(): number {
     return Number(this.$route.params.id);
+  }
+
+  get category(): NewsCategoryVO | null {
+    return this.newsCategoryState.category;
+  }
+
+  get newsList(): GetNewsDetailResDTO[] {
+    return this.localNewsList ?? this.newsCategoryState.newsList;
+  }
+
+  get totalCount(): number {
+    return this.localTotalCount ?? this.newsCategoryState.totalCount;
   }
 
   // 按年月分组新闻
@@ -88,27 +133,22 @@ export default class NewsCategoryView extends Vue {
   }
 
   async loadCategory() {
-    this.loading = true;
     try {
       const data = await this.$api.getNewsByCategory({
         categoryId: this.categoryId,
         page: this.currentPage,
         pageSize: this.pageSize,
       });
-      this.category = data.category;
-      this.newsList = data.rows;
-      this.totalCount = data.total;
+      this.localNewsList = data.rows;
+      this.localTotalCount = data.total;
     } catch (e) {
       console.error('Failed to load category:', e);
-    } finally {
-      this.loading = false;
     }
   }
 
   handlePageChange(page: number) {
     this.currentPage = page;
     this.loadCategory();
-    // 滚动到顶部
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -120,9 +160,9 @@ export default class NewsCategoryView extends Vue {
     this.$router.push('/news/overview');
   }
 
-  async created() {
-    window.scrollTo({ top: 0});
-    await this.loadCategory();
+  mounted() {
+    window.scrollTo({ top: 0 });
+    console.log(this.newsCategoryState);
   }
 }
 </script>
@@ -147,7 +187,7 @@ export default class NewsCategoryView extends Vue {
     </div>
 
     <!-- 加载骨架屏 -->
-    <div class="timeline-skeleton" v-if="loading">
+    <!-- <div class="timeline-skeleton" v-if="loading>
       <ElSkeleton :rows="5" animated>
         <template #template>
           <div class="skeleton-group" v-for="i in 3" :key="i">
@@ -159,10 +199,10 @@ export default class NewsCategoryView extends Vue {
           </div>
         </template>
       </ElSkeleton>
-    </div>
+    </div> -->
 
     <!-- 空状态 -->
-    <ElEmpty v-else-if="!loading && newsList.length === 0" description="暂无新闻" />
+    <ElEmpty v-if="newsList.length === 0" description="暂无新闻" />
 
     <!-- 时间轴 -->
     <div class="timeline-wrapper" v-else>

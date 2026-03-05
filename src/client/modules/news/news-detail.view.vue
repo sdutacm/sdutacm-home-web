@@ -22,6 +22,7 @@ const defaultNewsInfo: GetNewsDetailResDTO = {
   isPublished: false,
   createdAt: null,
   updatedAt: null,
+  wxOfficialLink: '',
   updatedBy: {
     id: 0,
     username: '',
@@ -44,12 +45,12 @@ export default class NewsDetailView extends Vue {
   newsDetailState!: NewsDetailState;
 
   id: number = 0;
-  showLoading: boolean = true;
   newsLoadedFailed: boolean = false;
 
   async asyncData({ apiClient, to }: AsyncDataOptions): Promise<{ newsDetailState: NewsDetailState }> {
     const id = parseInt(to.params.id as string);
     const newsInfo = await apiClient.getPublishedNews({ id });
+    console.log('Fetched news detail for id', id, newsInfo);
     return {
       newsDetailState: {
         newsInfo,
@@ -70,31 +71,10 @@ export default class NewsDetailView extends Vue {
   async mounted() {
     this.id = parseInt(this.$route.params.id as string);
 
-    // 如果 SSR 已经预取了数据，直接使用
-    if (this.newsDetailState.newsInfo.id) {
-      this.showLoading = false;
-    } else {
-      // 客户端导航时需要重新获取数据
-      await this.fetchData();
-    }
-
     // 增加阅览数（客户端路由跳转时触发）
     this.$api.incrementNewsViewCount({ id: this.id }).catch((err) => {
       console.error('Failed to increment news view count:', err);
     });
-  }
-
-  async fetchData() {
-    try {
-      // 直接修改 prop 内的数据（在客户端导航时）
-      const newsInfo = await this.$api.getPublishedNews({ id: this.id });
-      this.newsDetailState.newsInfo = newsInfo;
-    } catch (error) {
-      console.error('Failed to fetch news detail:', error);
-      this.newsLoadedFailed = true;
-    } finally {
-      this.showLoading = false;
-    }
   }
 }
 </script>
@@ -105,7 +85,10 @@ export default class NewsDetailView extends Vue {
     <meta name="description" :content="newsDetailState.newsInfo.summary" />
   </Head>
   <div class="news-detail">
-    <NewsContainer :newsInfo="newsDetailState.newsInfo" :showLoading="showLoading" :newsLoadedFailed="newsLoadedFailed" />
+    <NewsContainer
+      :newsInfo="newsDetailState.newsInfo"
+      :newsLoadedFailed="newsLoadedFailed"
+    />
   </div>
 </template>
 

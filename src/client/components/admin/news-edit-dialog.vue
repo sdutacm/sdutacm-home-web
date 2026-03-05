@@ -24,9 +24,7 @@ import { MediaTypeEnum } from '@common/enums/media-type.enum';
 import SelectMediaDialog from './select-logo-dialog.vue';
 import { resolveMediaUrl } from '@client/utils';
 
-const QuillEditor = defineAsyncComponent(() =>
-  import('@vueup/vue-quill').then(module => module.QuillEditor)
-);
+const QuillEditor = defineAsyncComponent(() => import('@vueup/vue-quill').then((module) => module.QuillEditor));
 
 @Options({
   components: {
@@ -124,6 +122,7 @@ export default class NewsEditDialog extends Vue {
         this.newsForm.isPublished,
         this.selectedCategoryId,
         this.publishedAt,
+        this.newsForm.wxOfficialLink,
       );
     } else {
       await this.handleUpdateNews(
@@ -135,6 +134,7 @@ export default class NewsEditDialog extends Vue {
         this.newsForm.isPublished,
         this.selectedCategoryId,
         this.publishedAt,
+        this.newsForm.wxOfficialLink,
       );
     }
     await this.fetchNewsList();
@@ -152,6 +152,7 @@ export default class NewsEditDialog extends Vue {
     isPublished: boolean,
     categoryId: number | null,
     publishedAt: Date | string | null,
+    wxOfficialLink?: string,
   ) {
     try {
       let coverImagePath = '';
@@ -176,7 +177,12 @@ export default class NewsEditDialog extends Vue {
         coverImage: coverImagePath,
         isPublished,
         categoryId: categoryId || undefined,
-        publishedAt: publishedAt ? (publishedAt instanceof Date ? publishedAt.toISOString() : new Date(publishedAt).toISOString()) : undefined,
+        publishedAt: publishedAt
+          ? publishedAt instanceof Date
+            ? publishedAt.toISOString()
+            : new Date(publishedAt).toISOString()
+          : undefined,
+        wxOfficialLink: wxOfficialLink || undefined,
       });
       ElMessage.success('News created successfully');
       this.closeDialog();
@@ -195,6 +201,7 @@ export default class NewsEditDialog extends Vue {
     isPublished: boolean,
     categoryId: number | null,
     publishedAt: Date | string | null,
+    wxOfficialLink?: string,
   ) {
     try {
       let coverImagePath: string | undefined = undefined;
@@ -219,7 +226,12 @@ export default class NewsEditDialog extends Vue {
         coverImage: coverImagePath,
         isPublished,
         categoryId: categoryId ?? 0, // 0 表示移除栏目
-        publishedAt: publishedAt ? (publishedAt instanceof Date ? publishedAt.toISOString() : new Date(publishedAt).toISOString()) : undefined,
+        publishedAt: publishedAt
+          ? publishedAt instanceof Date
+            ? publishedAt.toISOString()
+            : new Date(publishedAt).toISOString()
+          : undefined,
+        wxOfficialLink: wxOfficialLink || undefined,
       });
       ElMessage.success('News updated successfully');
       this.closeDialog();
@@ -337,7 +349,6 @@ export default class NewsEditDialog extends Vue {
     this.newsForm.content = '';
   }
 }
-
 </script>
 
 <template>
@@ -346,7 +357,7 @@ export default class NewsEditDialog extends Vue {
       <h4 :id="titleId" :class="titleClass" style="display: flex; align-items: center; gap: 0.1rem">
         <el-icon><SquarePen /></el-icon>
         <span>{{ dialogTitle }}</span>
-        <el-button @click="previewNews" circle size="small" style="margin-left: .3rem;" v-if="dialogType === 'edit'">
+        <el-button @click="previewNews" circle size="small" style="margin-left: 0.3rem" v-if="dialogType === 'edit'">
           <el-icon><Eye /></el-icon>
         </el-button>
       </h4>
@@ -373,22 +384,15 @@ export default class NewsEditDialog extends Vue {
           <el-input v-model="newsForm.title" />
         </el-form-item>
         <el-form-item label="Category">
-          <el-select
-            v-model="selectedCategoryId"
-            clearable
-            style="width: 100%"
-            :loading="categoryLoading"
-          >
-            <el-option
-              v-for="category in categories"
-              :key="category.id"
-              :label="category.name"
-              :value="category.id"
-            />
+          <el-select v-model="selectedCategoryId" clearable style="width: 100%" :loading="categoryLoading">
+            <el-option v-for="category in categories" :key="category.id" :label="category.name" :value="category.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="Summary">
           <el-input v-model="newsForm.summary" />
+        </el-form-item>
+        <el-form-item label="WeChat Official Link">
+          <el-input v-model="newsForm.wxOfficialLink" placeholder="https://" />
         </el-form-item>
         <el-form-item label="Content">
           <div class="editor-container">
@@ -422,6 +426,7 @@ export default class NewsEditDialog extends Vue {
             style="width: 100%"
           />
         </el-form-item>
+
         <el-form-item>
           <el-button @click="closeDialog">Cancel</el-button>
           <el-button type="primary" @click="handleSubmmit">{{ dialogType === 'create' ? 'Create' : 'Save' }}</el-button>
@@ -492,5 +497,4 @@ export default class NewsEditDialog extends Vue {
   color: #8c939d;
   border: 1px solid #dcdfe6;
 }
-
 </style>

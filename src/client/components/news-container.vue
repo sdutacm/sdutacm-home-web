@@ -3,10 +3,9 @@
 import { Vue, Options } from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { GetNewsDetailResDTO } from '@common/modules/news/news.dto';
-import QRCode from 'qrcode';
 
 import UserAvatar from './user-avatar.vue';
-import { ElDivider, ElIcon, ElImage, ElButton, ElDialog, ElSkeleton, ElSkeletonItem, vLoading } from 'element-plus';
+import { ElDivider, ElIcon, ElImage, ElButton, ElSkeleton, ElSkeletonItem } from 'element-plus';
 import { Undo2, TextAlignEnd, CalendarDays, Share, Eye, Mail, Link } from 'lucide-vue-next';
 import IconWechatPure from './homepage/icon/icon-wechat-pure.vue';
 
@@ -21,7 +20,6 @@ import IconWechatPure from './homepage/icon/icon-wechat-pure.vue';
     CalendarDays,
     ElImage,
     ElButton,
-    ElDialog,
     ElSkeleton,
     ElSkeletonItem,
     Share,
@@ -29,18 +27,11 @@ import IconWechatPure from './homepage/icon/icon-wechat-pure.vue';
     IconWechatPure,
     Link,
   },
-  directives: {
-    loading: vLoading,
-  },
 })
 export default class NewsContainer extends Vue {
   @Prop() newsInfo!: GetNewsDetailResDTO;
-  @Prop({ required: true }) showLoading!: boolean;
   @Prop() newsLoadedFailed: boolean = false;
-  wechatDialogVisible = false;
   linkCopied = false;
-  qrcodeLoading = true;
-  qrcodeDataUrl = '';
   coverImageLoaded = false;
 
   onCoverLoad() {
@@ -51,26 +42,9 @@ export default class NewsContainer extends Vue {
     return typeof window !== 'undefined' ? window.location.href : '';
   }
 
-  async shareToWechat() {
-    this.qrcodeLoading = true;
-    this.wechatDialogVisible = true;
-    await this.generateQRCode();
-  }
-
-  async generateQRCode() {
-    try {
-      this.qrcodeDataUrl = await QRCode.toDataURL(this.currentUrl, {
-        width: 200,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#ffffff',
-        },
-      });
-      this.qrcodeLoading = false;
-    } catch (err) {
-      console.error('Failed to generate QR code:', err);
-      this.qrcodeLoading = false;
+  openWxOfficialLink() {
+    if (this.newsInfo.wxOfficialLink) {
+      window.open(this.newsInfo.wxOfficialLink, '_blank');
     }
   }
 
@@ -103,24 +77,6 @@ export default class NewsContainer extends Vue {
     return `${year}-${month}-${day}`;
   }
 
-  private copyLink() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(
-      () => {
-        const copyText = document.querySelector('.copy-text');
-        if (copyText) {
-          copyText.classList.add('copied');
-          setTimeout(() => {
-            copyText.classList.remove('copied');
-          }, 1000);
-        }
-      },
-      (err) => {
-        console.error('Failed to copy link:', err);
-      },
-    );
-  }
-
   mounted() {
     window.scrollTo(0, 0);
   }
@@ -128,7 +84,7 @@ export default class NewsContainer extends Vue {
 </script>
 
 <template>
-  <div class="news-preview-container" v-loading="showLoading" v-if="!newsLoadedFailed">
+  <div class="news-preview-container" v-if="!newsLoadedFailed">
     <header class="news-preview-header" v-if="newsInfo.id">
       <div class="news-preview-img-wrapper" v-if="newsInfo.coverImage">
         <el-skeleton v-if="!coverImageLoaded" :rows="0" animated class="image-skeleton-overlay">
@@ -150,7 +106,7 @@ export default class NewsContainer extends Vue {
           <span>{{ newsInfo.viewCount }}</span>
         </div>
         <div class="news-preview-desc news-share-tools" v-if="newsInfo.id">
-          <el-icon size="20" @click="shareToWechat" class="share-icon"><IconWechatPure /></el-icon>
+          <el-icon v-if="newsInfo.wxOfficialLink" size="20" @click="openWxOfficialLink" class="share-icon"><IconWechatPure /></el-icon>
           <el-icon size="18" @click="shareToMail" class="share-icon"><Mail /></el-icon>
           <span class="share-link-wrapper">
             <el-icon size="18" @click="shareLink" class="share-icon"><Link /></el-icon>
@@ -169,17 +125,6 @@ export default class NewsContainer extends Vue {
     <h2>找不到您想要查看的新闻 😢</h2>
     <p>请检查链接是否正确，或返回首页查看更多新闻。</p>
   </div>
-
-  <client-only>
-    <el-dialog v-model="wechatDialogVisible" width="320px" center>
-      <div class="wechat-qrcode-container">
-        <div class="wechat-qrcode-wrapper" v-loading="qrcodeLoading">
-          <img v-if="qrcodeDataUrl" :src="qrcodeDataUrl" alt="微信扫码" class="wechat-qrcode" />
-        </div>
-        <p class="wechat-tip">微信扫描二维码分享文章</p>
-      </div>
-    </el-dialog>
-  </client-only>
 </template>
 
 <style scoped lang="less">
@@ -459,33 +404,6 @@ export default class NewsContainer extends Vue {
         transform: translateX(0);
       }
     }
-  }
-}
-
-.wechat-qrcode-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.5rem;
-
-  .wechat-qrcode-wrapper {
-    width: 200px;
-    height: 200px;
-    // border-radius: 0.2rem;
-    overflow: hidden;
-  }
-
-  .wechat-qrcode {
-    width: 200px;
-    height: 200px;
-    // border-radius: 0.2rem;
-    display: block;
-  }
-
-  .wechat-tip {
-    margin-top: 0.5rem;
-    font-size: 0.32rem;
-    color: var(--ah-c-text3);
   }
 }
 </style>
