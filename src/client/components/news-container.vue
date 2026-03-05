@@ -251,6 +251,10 @@ export default class NewsContainer extends Vue {
 
     & :deep(p) {
       line-height: 1.6;
+
+      span {
+        color: inherit !important;
+      }
     }
 
     & :deep(strong),

@@ -4,6 +4,7 @@ import { Prop, Watch } from 'vue-property-decorator';
 import { Image } from 'lucide-vue-next';
 import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
+import { effectiveTheme } from '@client/utils/theme';
 
 @Options({
   components: {
@@ -26,16 +27,26 @@ export default class MediaTypePieChart extends Vue {
   chartInstance: echarts.ECharts | null = null;
 
   get isDarkMode() {
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    return effectiveTheme.value === 'dark';
   }
+
+  themeWatcher: (() => void) | null = null;
 
   mounted() {
     this.initChart();
     window.addEventListener('resize', this.handleResize);
+    // 监听主题变化
+    this.themeWatcher = this.$watch(
+      () => effectiveTheme.value,
+      () => this.initChart(),
+    );
   }
 
   beforeUnmount() {
     window.removeEventListener('resize', this.handleResize);
+    if (this.themeWatcher) {
+      this.themeWatcher();
+    }
     if (this.chartInstance) {
       this.chartInstance.dispose();
     }
