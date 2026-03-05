@@ -66,11 +66,12 @@ export function mainEntry({
   });
 
   router.beforeResolve(async (to, from, next) => {
-    const component = to.matched[0].components.default;
-    // const instance = to.matched[0].instances.default;
+    // 处理所有匹配的路由组件的 asyncData（包括嵌套路由）
+    const matchedComponents = to.matched
+      .map((record) => record.components?.default)
+      .filter((component) => component && (component as any).asyncData);
 
-    // @ts-ignore
-    if (!component.asyncData || !component) {
+    if (matchedComponents.length === 0) {
       return next();
     }
 
@@ -81,10 +82,16 @@ export function mainEntry({
 
     // 可以在这里加入全局 loading 进度条。或改写这个钩子实现 Route-Update-First 的导航
     try {
-      // @ts-ignore
-      const result = await component.asyncData({ app, router, initialState, to, from, api, apiClient });
+      const results = await Promise.all(
+        matchedComponents.map((component) =>
+          // @ts-ignore
+          component.asyncData({ app, router, initialState, to, from, api, apiClient }),
+        ),
+      );
+      // 合并所有 asyncData 的结果
+      const mergedState = results.reduce((acc, result) => ({ ...acc, ...result }), {});
       // eslint-disable-next-line no-param-reassign
-      to.meta.state = result;
+      to.meta.state = mergedState;
       return next();
     } catch (e) {
       console.error(`[asyncData] failed to run while navigating to ${to.fullPath}`);

@@ -5,8 +5,36 @@ import viteSSR from 'vite-ssr/vue/entry-client';
 import { ApiFactory } from './api/api-factory.client';
 import { ApiClientFactory, API_REQUEST_TOKEN, API_CLIENT_TOKEN } from './api';
 import { mainEntry } from './main';
+import type { RouteRecordRaw } from 'vue-router';
 
-export default viteSSR(App, { routes }, (hookParams) => {
+// 递归为所有路由（包括嵌套子路由）添加 props getter
+// vite-ssr 默认只处理顶级路由，不处理 children
+function addPropsGetterToAllRoutes(routeList: RouteRecordRaw[]) {
+  routeList.forEach((route) => {
+    const originalProps = route.props;
+    // @ts-ignore
+    route.props = (r: any) => {
+      const resolvedProps =
+        originalProps === true
+          ? r.params
+          : typeof originalProps === 'function'
+            ? originalProps(r)
+            : originalProps;
+      return {
+        ...(r.meta?.state || {}),
+        ...(resolvedProps || {}),
+      };
+    };
+    if (route.children) {
+      addPropsGetterToAllRoutes(route.children);
+    }
+  });
+}
+
+// 在传递给 viteSSR 之前处理嵌套路由
+addPropsGetterToAllRoutes(routes);
+
+export default viteSSR(App, { routes, pageProps: { passToPage: false } }, (hookParams) => {
   const { app } = hookParams;
 
   // init api

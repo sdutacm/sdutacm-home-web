@@ -14,6 +14,11 @@ interface NewsListState {
   categoryPreviews: GetCategoryPreviewResDTO[];
 }
 
+const defaultNewsListState: NewsListState = {
+  latestNewsList: { rows: [] },
+  categoryPreviews: [],
+};
+
 @View('/news/overview')
 @RenderMethod(RenderMethodKind.SSR)
 @ChildOf('NewsView')
@@ -34,16 +39,10 @@ interface NewsListState {
   },
 })
 export default class NewsListView extends Vue {
-  @Prop()
-  newsListState?: NewsListState;
+  @Prop({ default: () => ({ ...defaultNewsListState }) })
+  newsListState!: NewsListState;
 
-  latestNewsList: GetHomeNewsResDTO = {
-    rows: [],
-  };
   isMobile: boolean = false;
-
-  // 栏目预览数据
-  categoryPreviews: GetCategoryPreviewResDTO[] = [];
   loading = true;
 
   // 每张图片的加载状态，key 为 newsId
@@ -87,13 +86,11 @@ export default class NewsListView extends Vue {
   }
 
   mounted() {
-    if (window.innerWidth < 768) {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.isMobile = true;
     }
     // 如果 SSR 已经预取了数据，直接使用
-    if (this.newsListState) {
-      this.latestNewsList = this.newsListState.latestNewsList;
-      this.categoryPreviews = this.newsListState.categoryPreviews;
+    if (this.newsListState.latestNewsList.rows.length > 0) {
       this.loading = false;
     } else {
       // 客户端导航时需要重新获取数据
@@ -108,8 +105,8 @@ export default class NewsListView extends Vue {
         this.$api.getHomeNews(),
         this.$api.getAllCategoriesPreview(),
       ]);
-      this.latestNewsList = homeNews;
-      this.categoryPreviews = categoriesPreview.categories.filter((c) => c.totalNewsCount >= 1);
+      this.newsListState.latestNewsList = homeNews;
+      this.newsListState.categoryPreviews = categoriesPreview.categories.filter((c) => c.totalNewsCount >= 1);
     } catch (error) {
       console.error('Failed to load news data:', error);
     } finally {
@@ -158,7 +155,7 @@ export default class NewsListView extends Vue {
         :type="isMobile ? 'default' : 'card'"
       >
         <el-carousel-item
-          v-for="item in latestNewsList.rows"
+          v-for="item in newsListState.latestNewsList.rows"
           :key="item.id"
           class="carousel-item"
           @click="goToNewsDetail(item.id)"
@@ -204,12 +201,12 @@ export default class NewsListView extends Vue {
       </div>
     </template>
 
-    <template v-else-if="categoryPreviews.length === 0">
+    <template v-else-if="newsListState.categoryPreviews.length === 0">
       <el-empty description="暂无栏目数据" />
     </template>
 
     <template v-else>
-      <div v-for="preview in categoryPreviews" :key="preview.category.id" class="category-section">
+      <div v-for="preview in newsListState.categoryPreviews" :key="preview.category.id" class="category-section">
         <h2 class="news-divide-title">
           <span>{{ preview.category.name }}</span>
         </h2>
