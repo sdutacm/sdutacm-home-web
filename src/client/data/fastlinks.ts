@@ -456,7 +456,7 @@ const fastlinks = [
         net_icon: 'https://www.robocom.com.cn/favicon.ico',
         local_icon: base_url + 'robocom.ico',
         icon: IconRobocom,
-        link: 'https://www.robocom.com.cn/',
+        link: 'https://www.raicom.com.cn',
         desc: ''
       },
       {

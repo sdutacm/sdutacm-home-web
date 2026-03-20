@@ -339,6 +339,7 @@ export default class NewsListView extends Vue {
     width: 95%;
     height: fit-content;
     min-width: 350px;
+    min-height: 500px;
     padding: 0.5rem 0;
     position: relative;
     overflow-x: clip;
